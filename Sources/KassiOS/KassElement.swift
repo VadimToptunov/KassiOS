@@ -198,6 +198,7 @@ public extension KassElement {
         file: StaticString = #file,
         line: UInt = #line
     ) -> KassElement {
+        config.reporter?.stepStarted("scrollTo \(description)")
         do {
             try Waiter.retry(
                 timeout: config.timeout,
@@ -218,7 +219,9 @@ public extension KassElement {
                 }
                 throw KassError("not visible yet after scrolling \(direction)")
             }
+            config.reporter?.stepFinished(status: .passed, message: nil)
         } catch {
+            config.reporter?.stepFinished(status: .failed, message: "\(error)")
             let message = "KassiOS: \(description) — scrollTo failed: \(error)"
             config.logger.log("❌ \(message)")
             XCTFail(message, file: file, line: line)
@@ -235,6 +238,7 @@ public extension KassElement {
         line: UInt = #line,
         _ body: @escaping (XCUIElement) throws -> Void
     ) -> KassElement {
+        config.reporter?.stepStarted("\(name) \(description)")
         do {
             try Waiter.retry(
                 timeout: config.timeout,
@@ -243,7 +247,9 @@ public extension KassElement {
             ) {
                 try body(resolve())
             }
+            config.reporter?.stepFinished(status: .passed, message: nil)
         } catch {
+            config.reporter?.stepFinished(status: .failed, message: "\(error)")
             let message = "KassiOS: \(description) — \(name) failed: \(error)"
             config.logger.log("❌ \(message)")
             XCTFail(message, file: file, line: line)

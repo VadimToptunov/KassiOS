@@ -158,6 +158,29 @@ func test_home() {
 A failing test automatically attaches a screenshot of its final state to the
 report.
 
+## Allure reports
+
+Attach an `AllureReporter` and KassiOS writes [Allure 2](https://allurereport.org)
+result files — nested steps, interactions and screenshots included:
+
+```swift
+override func setUp() {
+    super.setUp()
+    config = KassConfig(reporter: AllureReporter())
+}
+```
+
+Results go to `$ALLURE_RESULTS_PATH` (set it in the UI test target's scheme) or
+`<temp>/allure-results`; the absolute path is logged at test start. Then:
+
+```sh
+allure serve <results-dir>
+```
+
+Every `step`, interaction and `device.screenshot` becomes a step/attachment in
+the report. Steps left open by a hard failure are attributed the test's
+terminal status, so the tree always closes cleanly.
+
 ## Configure
 
 ```swift
@@ -169,9 +192,9 @@ override func setUp() {
 
 ## Status
 
-v0.2 — core DSL, waits, flaky-safety, step logging, gestures + scroll-to, rich
-assertions, device/permission/deep-link helpers, reusable scenarios, and
-screenshot-on-failure. On the roadmap: Allure export and an optional EarlGrey
+v0.3 — core DSL, waits, flaky-safety, step logging, gestures + scroll-to, rich
+assertions, device/permission/deep-link helpers, reusable scenarios,
+screenshot-on-failure, and Allure export. On the roadmap: an optional EarlGrey
 synchronization backend.
 
 ## License

@@ -64,13 +64,15 @@ public struct KassDevice {
     /// Captures the app's current screen and attaches it to the test report
     /// (`.xcresult`) under `name`.
     public func screenshot(_ name: String) {
-        let attachment = XCTAttachment(screenshot: app.screenshot())
+        let shot = app.screenshot()
+        let attachment = XCTAttachment(screenshot: shot)
         attachment.name = name
         attachment.lifetime = .keepAlways
         XCTContext.runActivity(named: "📸 \(name)") { activity in
             activity.add(attachment)
         }
         config.logger.log("📸 \(name)")
+        config.reporter?.attach(name: name, type: "image/png", data: shot.pngRepresentation)
     }
 
     // MARK: - Lifecycle
