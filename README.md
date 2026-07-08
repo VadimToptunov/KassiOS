@@ -89,6 +89,75 @@ final class LoginFlowUITests: KassTestCase {
 - **Readable reports.** `onScreen` and `step` wrap `XCTContext.runActivity`,
   so Xcode's test report and `.xcresult` group actions the way you wrote them.
 
+## Interactions & assertions
+
+Every method below is chainable, self-waiting and flaky-safe:
+
+```swift
+// Interactions
+element.tap()
+element.typeText("hello")
+element.clearText()
+
+// Gestures
+element.doubleTap()
+element.longPress(forDuration: 1.5)
+element.swipeUp()   // .swipeDown() / .swipeLeft() / .swipeRight()
+
+// Scroll a container until the element is on screen
+row.scrollTo(in: list, direction: .up)
+
+// Assertions
+element.assertVisible()
+element.assertExists()
+element.assertNotExists()        // or .waitUntilGone()
+element.assertEnabled()          // .assertDisabled()
+element.assertSelected(true)
+element.assertHasText("partial") // substring of value-or-label
+element.assertHasValue("exact")  // exact match on .value
+element.assertLabel("exact")
+```
+
+## Device helpers
+
+`device` on a `KassTestCase` reaches outside the app's view tree:
+
+```swift
+device.autoAllowSystemDialogs(test: self)   // dismiss permission alerts
+app.tap()                                    // nudge XCUITest to deliver it
+device.hideKeyboard()
+device.screenshot("after login")            // attached to the .xcresult
+device.sendToBackground(for: 2)              // then reactivates
+device.rotate(to: .landscapeLeft)           // iOS only
+device.open(url: "https://example.com")     // deep link via Safari (iOS)
+```
+
+## Reusable flows (scenarios)
+
+Extract common journeys into a `KassScenario` and replay them anywhere:
+
+```swift
+struct LoginScenario: KassScenario {
+    let email: String, password: String
+    func run(in test: KassTestCase) {
+        test.onScreen(LoginScreen.self) { login in
+            login.email.typeText(email)
+            login.password.typeText(password)
+            login.loginButton.tap()
+        }
+    }
+}
+
+func test_home() {
+    launch()
+    scenario(LoginScenario(email: "a@b.c", password: "secret"))
+    onScreen(HomeScreen.self) { $0.welcome.assertVisible() }
+}
+```
+
+A failing test automatically attaches a screenshot of its final state to the
+report.
+
 ## Configure
 
 ```swift
@@ -100,9 +169,10 @@ override func setUp() {
 
 ## Status
 
-v0.1 — core DSL, waits, flaky-safety, step logging. On the roadmap: richer
-assertions, gestures/scroll-to, permission & deep-link helpers, Allure export,
-and an optional EarlGrey synchronization backend.
+v0.2 — core DSL, waits, flaky-safety, step logging, gestures + scroll-to, rich
+assertions, device/permission/deep-link helpers, reusable scenarios, and
+screenshot-on-failure. On the roadmap: Allure export and an optional EarlGrey
+synchronization backend.
 
 ## License
 
