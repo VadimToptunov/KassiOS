@@ -181,6 +181,20 @@ Every `step`, interaction and `device.screenshot` becomes a step/attachment in
 the report. Steps left open by a hard failure are attributed the test's
 terminal status, so the tree always closes cleanly.
 
+## Synchronization backends
+
+By default KassiOS is poll-based: `Waiter` re-tries until the UI is ready. For
+stronger flaky-safety you can plug in a `KassSynchronizer` that blocks each
+attempt until the app is *idle* (animations, network, main-queue work settled):
+
+```swift
+config = KassConfig(synchronizer: EarlGreySynchronizer())
+```
+
+The core ships `NoOpSynchronizer` and stays dependency-free; an EarlGrey-backed
+adapter is provided as an opt-in reference in
+[Examples/EarlGreySynchronizer.swift](Examples/EarlGreySynchronizer.swift).
+
 ## Configure
 
 ```swift
@@ -192,10 +206,11 @@ override func setUp() {
 
 ## Status
 
-v0.3 — core DSL, waits, flaky-safety, step logging, gestures + scroll-to, rich
+v0.4 — core DSL, waits, flaky-safety, step logging, gestures + scroll-to, rich
 assertions, device/permission/deep-link helpers, reusable scenarios,
-screenshot-on-failure, and Allure export. On the roadmap: an optional EarlGrey
-synchronization backend.
+screenshot-on-failure, Allure export, and a pluggable synchronization backend
+(no-op by default, EarlGrey adapter provided). Roadmap complete for now — next
+up: hardening on real devices and CI wiring.
 
 ## License
 

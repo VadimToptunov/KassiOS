@@ -205,6 +205,7 @@ public extension KassElement {
                 pollInterval: config.pollInterval,
                 enabled: config.flakySafetyEnabled
             ) {
+                config.synchronizer.waitForIdle(timeout: config.timeout)
                 let target = resolve()
                 if target.exists && target.isHittable { return }
                 let scroll = container.resolve()
@@ -245,6 +246,7 @@ public extension KassElement {
                 pollInterval: config.pollInterval,
                 enabled: config.flakySafetyEnabled
             ) {
+                config.synchronizer.waitForIdle(timeout: config.timeout)
                 try body(resolve())
             }
             config.reporter?.stepFinished(status: .passed, message: nil)

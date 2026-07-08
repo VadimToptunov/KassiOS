@@ -24,18 +24,24 @@ public struct KassConfig {
     /// interactions and attachments are recorded into a machine-readable report.
     public var reporter: KassReporter?
 
+    /// Backend that settles the app before each interaction attempt. Defaults to
+    /// `NoOpSynchronizer` (pure polling); swap for an EarlGrey-backed one.
+    public var synchronizer: KassSynchronizer
+
     public init(
         timeout: TimeInterval = 15,
         pollInterval: TimeInterval = 0.5,
         flakySafetyEnabled: Bool = true,
         logger: KassLogger = ConsoleKassLogger(),
-        reporter: KassReporter? = nil
+        reporter: KassReporter? = nil,
+        synchronizer: KassSynchronizer = NoOpSynchronizer()
     ) {
         self.timeout = timeout
         self.pollInterval = pollInterval
         self.flakySafetyEnabled = flakySafetyEnabled
         self.logger = logger
         self.reporter = reporter
+        self.synchronizer = synchronizer
     }
 
     public static let `default` = KassConfig()
