@@ -119,4 +119,100 @@ open class KassTestCase: XCTestCase {
             scenario.run(in: self)
         }
     }
+
+    // MARK: - Flow primitives (Kaspresso-style)
+
+    /// Retries `block` until it stops throwing or the time budget elapses, then
+    /// `XCTFail`s. Use for custom multi-step conditions; single interactions are
+    /// already flaky-safe on their own.
+    @discardableResult
+    public func flakySafely<T>(
+        timeout: TimeInterval? = nil,
+        pollInterval: TimeInterval? = nil,
+        file: StaticString = #file,
+        line: UInt = #line,
+        _ block: () throws -> T
+    ) -> T? {
+        do {
+            return try Waiter.retry(
+                timeout: timeout ?? config.timeout,
+                pollInterval: pollInterval ?? config.pollInterval,
+                enabled: config.flakySafetyEnabled,
+                action: block
+            )
+        } catch {
+            config.logger.log("❌ flakySafely failed: \(error)")
+            XCTFail("flakySafely failed: \(error)", file: file, line: line)
+            return nil
+        }
+    }
+
+    /// Asserts `block` keeps succeeding for the whole `duration` — fails the
+    /// instant it throws. The inverse of `flakySafely`.
+    public func continuously(
+        during duration: TimeInterval,
+        pollInterval: TimeInterval? = nil,
+        file: StaticString = #file,
+        line: UInt = #line,
+        _ block: () throws -> Void
+    ) {
+        do {
+            try KassFlow.continuously(during: duration, pollInterval: pollInterval ?? config.pollInterval, action: block)
+        } catch {
+            config.logger.log("❌ continuously failed: \(error)")
+            XCTFail("continuously failed: \(error)", file: file, line: line)
+        }
+    }
+
+    /// Passes if at least one branch succeeds; fails only if all do not. Use
+    /// when the UI may legitimately be in one of several states.
+    public func compose(
+        file: StaticString = #file,
+        line: UInt = #line,
+        _ branches: KassBranch...
+    ) {
+        do {
+            try KassFlow.compose(branches.map { ($0.name, $0.action) })
+        } catch {
+            config.logger.log("❌ compose failed: \(error)")
+            XCTFail("compose failed: \(error)", file: file, line: line)
+        }
+    }
+
+    /// Attempts `block` up to `times`, pausing between tries, then `XCTFail`s.
+    @discardableResult
+    public func retry<T>(
+        times: Int,
+        pollInterval: TimeInterval? = nil,
+        file: StaticString = #file,
+        line: UInt = #line,
+        _ block: () throws -> T
+    ) -> T? {
+        do {
+            return try KassFlow.retry(times: times, pollInterval: pollInterval ?? config.pollInterval, action: block)
+        } catch {
+            config.logger.log("❌ retry failed after \(times) attempt(s): \(error)")
+            XCTFail("retry failed after \(times) attempt(s): \(error)", file: file, line: line)
+            return nil
+        }
+    }
+
+    /// Taps the leading navigation-bar button (typically Back).
+    public func pressBack(file: StaticString = #file, line: UInt = #line) {
+        flakySafely(file: file, line: line) {
+            let back = self.app.navigationBars.buttons.element(boundBy: 0)
+            guard back.exists, back.isHittable else { throw KassError("no back button available") }
+            back.tap()
+        }
+    }
+}
+
+/// A named branch for `KassTestCase.compose`.
+public struct KassBranch {
+    let name: String
+    let action: () throws -> Void
+    public init(_ name: String, _ action: @escaping () throws -> Void) {
+        self.name = name
+        self.action = action
+    }
 }

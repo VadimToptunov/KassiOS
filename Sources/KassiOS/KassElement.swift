@@ -147,7 +147,60 @@ public extension KassElement {
         assertNotExists(file: file, line: line)
     }
 
+    @discardableResult
+    func assertHittable(file: StaticString = #file, line: UInt = #line) -> KassElement {
+        perform("assertHittable", file: file, line: line) { element in
+            guard element.exists else { throw KassError("does not exist") }
+            guard element.isHittable else { throw KassError("exists but is not hittable") }
+        }
+    }
+
+    @discardableResult
+    func assertNotHittable(file: StaticString = #file, line: UInt = #line) -> KassElement {
+        perform("assertNotHittable", file: file, line: line) { element in
+            guard !element.isHittable else { throw KassError("is hittable") }
+        }
+    }
+
+    // MARK: - Throwing checks (for composition inside flow primitives)
+
+    /// Single-shot, non-failing checks — they `throw` instead of calling
+    /// `XCTFail`, so they compose inside `flakySafely`/`continuously`/`compose`/
+    /// `retry`. Unlike `assert*`, they do not retry on their own.
+
+    func requireExists() throws {
+        guard resolve().exists else { throw KassError("\(description) does not exist") }
+    }
+
+    func requireVisible() throws {
+        let element = resolve()
+        guard element.exists else { throw KassError("\(description) does not exist") }
+        guard element.isHittable || !element.frame.isEmpty else {
+            throw KassError("\(description) exists but is not visible")
+        }
+    }
+
+    func requireHittable() throws {
+        let element = resolve()
+        guard element.exists else { throw KassError("\(description) does not exist") }
+        guard element.isHittable else { throw KassError("\(description) is not hittable") }
+    }
+
     // MARK: - Gestures
+
+    /// Clears any existing text, then types `text`.
+    @discardableResult
+    func replaceText(_ text: String, file: StaticString = #file, line: UInt = #line) -> KassElement {
+        perform("replaceText('\(text)')", file: file, line: line) { element in
+            guard element.exists else { throw KassError("does not exist") }
+            guard element.isHittable else { throw KassError("exists but is not hittable") }
+            element.tap()
+            if let value = element.value as? String, !value.isEmpty {
+                element.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: value.count))
+            }
+            element.typeText(text)
+        }
+    }
 
     @discardableResult
     func doubleTap(file: StaticString = #file, line: UInt = #line) -> KassElement {
@@ -187,6 +240,33 @@ public extension KassElement {
             }
         }
     }
+
+    #if os(iOS)
+    @discardableResult
+    func pinch(scale: CGFloat, velocity: CGFloat, file: StaticString = #file, line: UInt = #line) -> KassElement {
+        perform("pinch(scale: \(scale))", file: file, line: line) { element in
+            guard element.exists else { throw KassError("does not exist") }
+            element.pinch(withScale: scale, velocity: velocity)
+        }
+    }
+
+    @discardableResult
+    func rotate(_ rotation: CGFloat, velocity: CGFloat, file: StaticString = #file, line: UInt = #line) -> KassElement {
+        perform("rotate(\(rotation))", file: file, line: line) { element in
+            guard element.exists else { throw KassError("does not exist") }
+            element.rotate(rotation, withVelocity: velocity)
+        }
+    }
+
+    @discardableResult
+    func twoFingerTap(file: StaticString = #file, line: UInt = #line) -> KassElement {
+        perform("twoFingerTap", file: file, line: line) { element in
+            guard element.exists else { throw KassError("does not exist") }
+            guard element.isHittable else { throw KassError("exists but is not hittable") }
+            element.twoFingerTap()
+        }
+    }
+    #endif
 
     /// Scrolls `container` in `direction` until this element becomes hittable,
     /// or the shared time budget (`config.timeout`) elapses. Each attempt draws

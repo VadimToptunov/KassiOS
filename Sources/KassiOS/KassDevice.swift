@@ -42,6 +42,35 @@ public struct KassDevice {
         }
     }
 
+    /// The SpringBoard app — the home screen and host of system alerts.
+    public var springboard: XCUIApplication {
+        XCUIApplication(bundleIdentifier: "com.apple.springboard")
+    }
+
+    /// Dismisses a system permission dialog that is *currently* on screen by
+    /// tapping the first matching SpringBoard button. Returns whether it tapped.
+    /// Complements `autoAllowSystemDialogs`, which handles dialogs that appear
+    /// later via an interruption monitor.
+    @discardableResult
+    public func allowSystemDialogNow(
+        buttonTitles: [String] = ["Allow", "Allow While Using App", "Allow Once", "OK"]
+    ) -> Bool {
+        let sb = springboard
+        for title in buttonTitles {
+            let button = sb.buttons[title]
+            if button.exists && button.isHittable {
+                button.tap()
+                return true
+            }
+        }
+        return false
+    }
+
+    /// Blocks until the configured synchronizer reports the app is idle.
+    public func waitForIdle() {
+        config.synchronizer.waitForIdle(timeout: config.timeout)
+    }
+
     // MARK: - Keyboard
 
     /// Dismisses the software keyboard. Tries a common "return"/"done" key, then
@@ -76,6 +105,13 @@ public struct KassDevice {
     }
 
     // MARK: - Lifecycle
+
+    #if os(iOS)
+    /// Presses the hardware Home button. iOS only.
+    public func pressHome() {
+        XCUIDevice.shared.press(.home)
+    }
+    #endif
 
     /// Sends the app to the background for `seconds`, then reactivates it.
     public func sendToBackground(for seconds: TimeInterval = 1) {

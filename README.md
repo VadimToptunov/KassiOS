@@ -116,6 +116,39 @@ element.assertSelected(true)
 element.assertHasText("partial") // substring of value-or-label
 element.assertHasValue("exact")  // exact match on .value
 element.assertLabel("exact")
+element.assertHittable()          // .assertNotHittable()
+
+// Editing
+element.replaceText("new")        // clears, then types
+
+// Multitouch (iOS)
+element.pinch(scale: 2, velocity: 1)
+element.rotate(.pi / 4, velocity: 1)
+element.twoFingerTap()
+```
+
+## Flow primitives (Kaspresso-style)
+
+Compose custom conditions out of throwing checks (`requireExists`,
+`requireVisible`, `requireHittable`) with the same primitives Kaspresso offers:
+
+```swift
+// Retry a multi-step condition until it holds (or the budget elapses).
+flakySafely { try banner.requireVisible(); try dismiss.requireHittable() }
+
+// Assert something stays true for a duration (the inverse of flaky-safety).
+continuously(during: 1.0) { try spinner.requireExists() }
+
+// Pass if the UI is in any one of several valid states.
+compose(
+    KassBranch("logged in")  { try home.requireVisible() },
+    KassBranch("needs 2FA")  { try otpField.requireVisible() }
+)
+
+// Attempts-bounded retry.
+retry(times: 3) { try list.requireExists() }
+
+pressBack()   // taps the leading navigation-bar button
 ```
 
 ## Device helpers
@@ -127,9 +160,13 @@ device.autoAllowSystemDialogs(test: self)   // dismiss permission alerts
 app.tap()                                    // nudge XCUITest to deliver it
 device.hideKeyboard()
 device.screenshot("after login")            // attached to the .xcresult
+device.allowSystemDialogNow()                // tap an on-screen permission alert
 device.sendToBackground(for: 2)              // then reactivates
+device.pressHome()                           // iOS only
 device.rotate(to: .landscapeLeft)           // iOS only
 device.open(url: "https://example.com")     // deep link via Safari (iOS)
+device.waitForIdle()                         // via the configured synchronizer
+let springboard = device.springboard         // home screen / system alerts host
 ```
 
 ## Reusable flows (scenarios)
@@ -217,11 +254,17 @@ CI (`.github/workflows/ci.yml`) runs the same on every push and PR.
 
 ## Status
 
-v0.4 — core DSL, waits, flaky-safety, step logging, gestures + scroll-to, rich
-assertions, device/permission/deep-link helpers, reusable scenarios,
+v0.5 — core DSL, waits, flaky-safety, step logging, gestures + scroll-to +
+multitouch, rich assertions, Kaspresso-style flow primitives
+(`flakySafely`/`continuously`/`compose`/`retry`/`pressBack`),
+device/permission/deep-link/springboard helpers, reusable scenarios,
 screenshot-on-failure, Allure export, and a pluggable synchronization backend
-(no-op by default, EarlGrey adapter provided). Roadmap complete for now — next
-up: hardening on real devices and CI wiring.
+(no-op by default, EarlGrey adapter provided).
+
+Verified end-to-end against Apple's open-source
+[Food Truck](https://github.com/apple/sample-food-truck) app on the iOS
+Simulator — multi-screen navigation, flow primitives, screenshots and Allure
+export all green.
 
 ## License
 
