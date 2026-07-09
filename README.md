@@ -280,6 +280,34 @@ The core ships `NoOpSynchronizer` and stays dependency-free; an EarlGrey-backed
 adapter is provided as an opt-in reference in
 [Examples/EarlGreySynchronizer.swift](Examples/EarlGreySynchronizer.swift).
 
+## Strict identifiers, suites & structured runs
+
+Force the app to carry real accessibility identifiers — an element matched by
+label instead of an explicit id fails with an actionable message (and a
+screenshot):
+
+```swift
+config = KassConfig(requireAccessibilityIdentifiers: true)
+// 'Orders' was matched without an accessibility identifier (element id='') —
+// add .accessibilityIdentifier("Orders") to the view [strict mode]
+//   ↳ exists=true hittable=true id='' label='Orders' type=48 frame=(…)
+```
+
+Share one config across a group with `KassSuite`, and structure a body with
+`before`/`after`/`run`:
+
+```swift
+class CheckoutSuite: KassSuite {
+    override func configure() -> KassConfig {
+        KassConfig(reporter: AllureReporter(), requireAccessibilityIdentifiers: true)
+    }
+}
+
+before { launch() }.after { device.screenshot("end") }.run {
+    step("Checkout") { … }
+}
+```
+
 ## Configure
 
 ```swift
@@ -302,15 +330,16 @@ CI (`.github/workflows/ci.yml`) runs the same on every push and PR.
 
 ## Status
 
-v0.6 — core DSL, waits, flaky-safety, step logging, gestures + scroll-to +
+v0.7 — core DSL, waits, flaky-safety, step logging, gestures + scroll-to +
 multitouch, slider/switch/picker controls, rich assertions (incl.
 label-contains/value-regex/`waitUntil`), element collections for lists & tables,
 scoped child elements, Kaspresso-style flow primitives
 (`flakySafely`/`continuously`/`compose`/`retry`/`pressBack`), parameterized
-(data-driven) tests, device/permission/deep-link/springboard helpers, reusable
-scenarios, screenshot-on-failure, Allure export, and a pluggable synchronization
-backend (no-op by default, EarlGrey adapter provided). See the
-[full guide](Documentation/Guide.md).
+(data-driven) tests, `KassSuite` + structured `before`/`after`/`run`, a **strict
+mode that forces accessibility identifiers**, precise failure diagnostics (element
+snapshot + screenshot), device/permission/deep-link/springboard helpers, reusable
+scenarios, Allure export, and a pluggable synchronization backend (no-op by
+default, EarlGrey adapter provided). See the [full guide](Documentation/Guide.md).
 
 Verified end-to-end against Apple's open-source
 [Food Truck](https://github.com/apple/sample-food-truck) app on the iOS

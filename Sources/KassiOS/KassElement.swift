@@ -12,9 +12,19 @@ public struct KassElement {
     let description: String
     let config: KassConfig
 
-    init(description: String, config: KassConfig, resolve: @escaping () -> XCUIElement) {
+    /// The identifier this element was *asked* to resolve by, if any. Used by
+    /// strict mode to verify the app actually set an accessibility identifier.
+    let expectedIdentifier: String?
+
+    init(
+        description: String,
+        config: KassConfig,
+        expectedIdentifier: String? = nil,
+        resolve: @escaping () -> XCUIElement
+    ) {
         self.description = description
         self.config = config
+        self.expectedIdentifier = expectedIdentifier
         self.resolve = resolve
     }
 }
@@ -188,7 +198,7 @@ public extension KassElement {
     /// Resolves `type`/`id` *within* this element — for reaching into a specific
     /// cell/section, e.g. `cell.staticText("title")`.
     func descendant(_ type: XCUIElement.ElementType, _ id: String) -> KassElement {
-        KassElement(description: "\(description) › \(KassScreen.typeName(type)) '\(id)'", config: config) { [resolve] in
+        KassElement(description: "\(description) › \(KassScreen.typeName(type)) '\(id)'", config: config, expectedIdentifier: id) { [resolve] in
             resolve().descendants(matching: type)[id].firstMatch
         }
     }
@@ -253,7 +263,9 @@ public extension KassElement {
     /// `retry`. Unlike `assert*`, they do not retry on their own.
 
     func requireExists() throws {
-        guard resolve().exists else { throw KassError("\(description) does not exist") }
+        let element = resolve()
+        guard element.exists else { throw KassError("\(description) does not exist") }
+        try enforceIdentifierIfNeeded(element)
     }
 
     func requireVisible() throws {
@@ -262,12 +274,14 @@ public extension KassElement {
         guard element.isHittable || !element.frame.isEmpty else {
             throw KassError("\(description) exists but is not visible")
         }
+        try enforceIdentifierIfNeeded(element)
     }
 
     func requireHittable() throws {
         let element = resolve()
         guard element.exists else { throw KassError("\(description) does not exist") }
         guard element.isHittable else { throw KassError("\(description) is not hittable") }
+        try enforceIdentifierIfNeeded(element)
     }
 
     // MARK: - Gestures
@@ -413,14 +427,53 @@ public extension KassElement {
                 config.synchronizer.waitForIdle(timeout: config.timeout)
                 try body(resolve())
             }
+            // Strict mode: verify the element carried a real accessibility id.
+            try enforceIdentifierIfNeeded(resolve())
             config.reporter?.stepFinished(status: .passed, message: nil)
         } catch {
-            config.reporter?.stepFinished(status: .failed, message: "\(error)")
-            let message = "KassiOS: \(description) — \(name) failed: \(error)"
+            let message = "KassiOS: \(description) — \(name) failed: \(error)\(failureDiagnostics())"
             config.logger.log("❌ \(message)")
+            if config.captureScreenshotOnFailure {
+                attachFailureScreenshot(label: "\(name) — \(description)")
+            }
+            config.reporter?.stepFinished(status: .failed, message: message)
             XCTFail(message, file: file, line: line)
         }
         return self
+    }
+
+    // MARK: - Strict identifiers & failure diagnostics
+
+    /// In strict mode, throws if `element` exists but wasn't matched by an
+    /// explicit accessibility identifier (its `identifier` is empty or differs
+    /// from what we asked for).
+    func enforceIdentifierIfNeeded(_ element: XCUIElement) throws {
+        guard config.requireAccessibilityIdentifiers, let expected = expectedIdentifier else { return }
+        guard element.exists else { return }
+        guard element.identifier == expected else {
+            throw KassError(
+                "'\(expected)' was matched without an accessibility identifier (element id='\(element.identifier)') — "
+                + "add .accessibilityIdentifier(\"\(expected)\") to the view [strict mode]"
+            )
+        }
+    }
+
+    /// A one-line snapshot of the element's live state, appended to failures so
+    /// the report points precisely at the offending element.
+    private func failureDiagnostics() -> String {
+        let element = resolve()
+        guard element.exists else { return "\n  ↳ element not found in the current hierarchy" }
+        return "\n  ↳ exists=true hittable=\(element.isHittable) id='\(element.identifier)' "
+            + "label='\(element.label)' type=\(element.elementType.rawValue) frame=\(element.frame)"
+    }
+
+    private func attachFailureScreenshot(label: String) {
+        let screenshot = XCUIScreen.main.screenshot()
+        let attachment = XCTAttachment(screenshot: screenshot)
+        attachment.name = "Failure — \(label)"
+        attachment.lifetime = .keepAlways
+        XCTContext.runActivity(named: "❌ \(label)") { $0.add(attachment) }
+        config.reporter?.attach(name: "Failure — \(label)", type: "image/png", data: screenshot.pngRepresentation)
     }
 }
 

@@ -28,13 +28,25 @@ public struct KassConfig {
     /// `NoOpSynchronizer` (pure polling); swap for an EarlGrey-backed one.
     public var synchronizer: KassSynchronizer
 
+    /// When `true`, an element resolved by its identifier that turns out to have
+    /// been matched by label (i.e. the app set no `accessibilityIdentifier`)
+    /// fails the interaction with an actionable message. Off by default; turn it
+    /// on to *force* the app team to add stable identifiers.
+    public var requireAccessibilityIdentifiers: Bool
+
+    /// When `true` (default), a failed interaction attaches a screenshot of the
+    /// screen at the moment of failure to the report.
+    public var captureScreenshotOnFailure: Bool
+
     public init(
         timeout: TimeInterval = 15,
         pollInterval: TimeInterval = 0.5,
         flakySafetyEnabled: Bool = true,
         logger: KassLogger = ConsoleKassLogger(),
         reporter: KassReporter? = nil,
-        synchronizer: KassSynchronizer = NoOpSynchronizer()
+        synchronizer: KassSynchronizer = NoOpSynchronizer(),
+        requireAccessibilityIdentifiers: Bool = false,
+        captureScreenshotOnFailure: Bool = true
     ) {
         self.timeout = timeout
         self.pollInterval = pollInterval
@@ -42,6 +54,8 @@ public struct KassConfig {
         self.logger = logger
         self.reporter = reporter
         self.synchronizer = synchronizer
+        self.requireAccessibilityIdentifiers = requireAccessibilityIdentifiers
+        self.captureScreenshotOnFailure = captureScreenshotOnFailure
     }
 
     public static let `default` = KassConfig()

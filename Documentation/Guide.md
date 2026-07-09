@@ -16,6 +16,9 @@ waits, flaky-safety, readable reports, and zero external dependencies.
 - [Reporting: screenshots & Allure](#reporting-screenshots--allure)
 - [Synchronization backends](#synchronization-backends)
 - [Configuration reference](#configuration-reference)
+- [Enforcing accessibility identifiers](#enforcing-accessibility-identifiers)
+- [Failure diagnostics](#failure-diagnostics)
+- [Suites & structured runs](#suites--structured-runs)
 - [When to use KassiOS — and when not to](#when-to-use-kassios--and-when-not-to)
 
 ---
@@ -347,7 +350,9 @@ config = KassConfig(
     flakySafetyEnabled: true,    // false = attempt each interaction exactly once
     logger: ConsoleKassLogger(), // step/interaction log sink
     reporter: AllureReporter(),  // optional structured report
-    synchronizer: NoOpSynchronizer()
+    synchronizer: NoOpSynchronizer(),
+    requireAccessibilityIdentifiers: false,  // strict mode (see below)
+    captureScreenshotOnFailure: true         // attach a screenshot on failure
 )
 ```
 
@@ -355,6 +360,64 @@ Set it in `setUp` after `super.setUp()`; the reporter starts lazily on first use
 so a config assigned there is already in place.
 
 ---
+
+## Enforcing accessibility identifiers
+
+Tests are only as stable as the app's element identity. Turn on strict mode to
+**force the app team to add real accessibility identifiers** — an element found
+by its visible label instead of an explicit `accessibilityIdentifier` fails with
+an actionable message:
+
+```swift
+config = KassConfig(requireAccessibilityIdentifiers: true)
+```
+
+```
+'Orders' was matched without an accessibility identifier (element id='') —
+add .accessibilityIdentifier("Orders") to the view [strict mode]
+  ↳ exists=true hittable=true id='' label='Orders' type=48 frame=(33.0, 234.3, 91.3, 23.7)
+```
+
+Only elements built from an identifier (`button(_:)`, `staticText(_:)`, …,
+`descendant(_:_:)`) are checked; `custom(_:_:)` closures are exempt. XCUITest
+reports an empty `identifier` for label-matched elements, which is how KassiOS
+tells a real identifier from a label fallback.
+
+## Failure diagnostics
+
+Every failed interaction appends a one-line snapshot of the offending element —
+`exists`, `hittable`, `id`, `label`, `type`, `frame` — and (unless disabled via
+`captureScreenshotOnFailure`) attaches a screenshot of the screen at the moment
+of failure to the report. The message names the exact element, so a red run
+points straight at the problem.
+
+## Suites & structured runs
+
+Share one configuration across a group of tests with `KassSuite`:
+
+```swift
+class CheckoutSuite: KassSuite {
+    override func configure() -> KassConfig {
+        KassConfig(timeout: 20, reporter: AllureReporter(), requireAccessibilityIdentifiers: true)
+    }
+}
+
+final class CartTests: CheckoutSuite { /* inherits the config */ }
+```
+
+Structure a test body with `before` / `after` / `run`:
+
+```swift
+before { launch() }
+    .after { device.screenshot("end") }
+    .run {
+        step("Add to cart") { … }
+        step("Checkout")    { … }
+    }
+```
+
+`before` runs first and `after` on normal completion; for teardown that must
+survive a hard failure, use `tearDown`.
 
 ## When to use KassiOS — and when not to
 
