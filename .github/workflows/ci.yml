@@ -24,10 +24,39 @@ jobs:
       # The library wraps XCUITest, so it's built with Xcode (not `swift build`).
       # The unit tests are pure logic, so they run on the macOS destination —
       # fastest and free of simulator-name drift across runner images.
-      - name: Build & test
+      - name: Unit tests
         run: |
           set -o pipefail
           xcodebuild test \
             -scheme KassiOS \
             -destination 'platform=macOS' \
             | tail -50
+
+  ui-tests:
+    name: UI tests (simulator)
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      # Generate the integration project (app + UI-test target that compiles the
+      # KassiOS sources directly) and run the real UI tests on a simulator.
+      - name: Install xcodeproj
+        run: sudo gem install xcodeproj
+
+      - name: Generate integration project
+        working-directory: IntegrationTests
+        run: ruby gen.rb
+
+      - name: Pick an available iPhone simulator
+        id: sim
+        run: echo "udid=$(xcrun simctl list devices available | grep -m1 'iPhone' | grep -oE '[0-9A-Fa-f-]{36}')" >> "$GITHUB_OUTPUT"
+
+      - name: Run UI tests
+        working-directory: IntegrationTests
+        run: |
+          set -o pipefail
+          xcodebuild test \
+            -scheme KassDemoUITests \
+            -destination "id=${{ steps.sim.outputs.udid }}" \
+            CODE_SIGNING_ALLOWED=NO \
+            | tail -80

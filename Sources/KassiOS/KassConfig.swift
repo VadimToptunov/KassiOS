@@ -28,11 +28,11 @@ public struct KassConfig {
     /// `NoOpSynchronizer` (pure polling); swap for an EarlGrey-backed one.
     public var synchronizer: KassSynchronizer
 
-    /// When `true`, an element resolved by its identifier that turns out to have
-    /// been matched by label (i.e. the app set no `accessibilityIdentifier`)
-    /// fails the interaction with an actionable message. Off by default; turn it
-    /// on to *force* the app team to add stable identifiers.
-    public var requireAccessibilityIdentifiers: Bool
+    /// How to react when an element built from an identifier turns out to have
+    /// been matched by label (i.e. the app set no `accessibilityIdentifier`).
+    /// `.ignore` (default) says nothing, `.warn` surfaces an Xcode message
+    /// without failing, `.enforce` fails the interaction.
+    public var accessibilityIdentifierPolicy: KassIdentifierPolicy
 
     /// When `true` (default), a failed interaction attaches a screenshot of the
     /// screen at the moment of failure to the report.
@@ -45,7 +45,7 @@ public struct KassConfig {
         logger: KassLogger = ConsoleKassLogger(),
         reporter: KassReporter? = nil,
         synchronizer: KassSynchronizer = NoOpSynchronizer(),
-        requireAccessibilityIdentifiers: Bool = false,
+        accessibilityIdentifierPolicy: KassIdentifierPolicy = .ignore,
         captureScreenshotOnFailure: Bool = true
     ) {
         self.timeout = timeout
@@ -54,11 +54,22 @@ public struct KassConfig {
         self.logger = logger
         self.reporter = reporter
         self.synchronizer = synchronizer
-        self.requireAccessibilityIdentifiers = requireAccessibilityIdentifiers
+        self.accessibilityIdentifierPolicy = accessibilityIdentifierPolicy
         self.captureScreenshotOnFailure = captureScreenshotOnFailure
     }
 
     public static let `default` = KassConfig()
+}
+
+/// What KassiOS does when an element is used without a real accessibility
+/// identifier (it was matched by label instead).
+public enum KassIdentifierPolicy {
+    /// Say nothing.
+    case ignore
+    /// Log a message and add an Xcode activity, but let the test pass.
+    case warn
+    /// Fail the interaction with an actionable message.
+    case enforce
 }
 
 /// Outcome of a step or interaction, as understood by a `KassReporter`.

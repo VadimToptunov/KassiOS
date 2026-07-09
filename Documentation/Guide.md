@@ -17,6 +17,7 @@ waits, flaky-safety, readable reports, and zero external dependencies.
 - [Synchronization backends](#synchronization-backends)
 - [Configuration reference](#configuration-reference)
 - [Enforcing accessibility identifiers](#enforcing-accessibility-identifiers)
+- [Accessibility audit](#accessibility-audit)
 - [Failure diagnostics](#failure-diagnostics)
 - [Suites & structured runs](#suites--structured-runs)
 - [When to use KassiOS — and when not to](#when-to-use-kassios--and-when-not-to)
@@ -112,6 +113,17 @@ element.twoFingerTap()
 
 // Scroll a container until the element is on screen
 row.scrollTo(in: list, direction: .up)
+
+// Coordinates & drag
+element.tapAtNormalizedOffset(x: 0.9, y: 0.5)
+source.drag(to: destination)
+
+// A one-off timeout, longer or shorter than the global config
+slowRow.within(timeout: 30).assertVisible()
+
+// Read state without waiting
+let text = field.readValue()
+let label = row.readLabel()
 ```
 
 For anything unwrapped, `perform` runs your closure under the same flaky-safety:
@@ -140,6 +152,7 @@ element.assertLabel("exact")
 element.assertLabelContains("part")
 element.assertValueMatches("^\\d{4}$")   // regex on value-or-label
 
+element.assertPlaceholder("Email")
 element.waitUntil("is selected") { $0.isSelected }
 ```
 
@@ -351,7 +364,7 @@ config = KassConfig(
     logger: ConsoleKassLogger(), // step/interaction log sink
     reporter: AllureReporter(),  // optional structured report
     synchronizer: NoOpSynchronizer(),
-    requireAccessibilityIdentifiers: false,  // strict mode (see below)
+    accessibilityIdentifierPolicy: .ignore,  // .warn / .enforce (see below)
     captureScreenshotOnFailure: true         // attach a screenshot on failure
 )
 ```
@@ -363,13 +376,16 @@ so a config assigned there is already in place.
 
 ## Enforcing accessibility identifiers
 
-Tests are only as stable as the app's element identity. Turn on strict mode to
-**force the app team to add real accessibility identifiers** — an element found
-by its visible label instead of an explicit `accessibilityIdentifier` fails with
-an actionable message:
+Tests are only as stable as the app's element identity. The identifier policy
+**pushes the app team to add real accessibility identifiers** — when an element
+is found by its visible label instead of an explicit `accessibilityIdentifier`:
+
+- `.ignore` (default) — say nothing.
+- `.warn` — log a message and add an Xcode activity, but let the test pass.
+- `.enforce` — fail with an actionable message (and a screenshot).
 
 ```swift
-config = KassConfig(requireAccessibilityIdentifiers: true)
+config = KassConfig(accessibilityIdentifierPolicy: .enforce)
 ```
 
 ```
@@ -379,9 +395,22 @@ add .accessibilityIdentifier("Orders") to the view [strict mode]
 ```
 
 Only elements built from an identifier (`button(_:)`, `staticText(_:)`, …,
-`descendant(_:_:)`) are checked; `custom(_:_:)` closures are exempt. XCUITest
-reports an empty `identifier` for label-matched elements, which is how KassiOS
-tells a real identifier from a label fallback.
+`descendant(_:_:)`) are checked; `custom(_:_:)` closures and collection elements
+are exempt. XCUITest reports an empty `identifier` for label-matched elements,
+which is how KassiOS tells a real identifier from a label fallback.
+
+## Accessibility audit
+
+Run Apple's automated accessibility audit (iOS 17+) — contrast, hit-region size,
+clipped/overlapping text, missing labels — a natural companion to strict ids:
+
+```swift
+if #available(iOS 17.0, *) {
+    assertNoAccessibilityIssues()
+    // Narrow the checks if a heuristic is too strict for you:
+    assertNoAccessibilityIssues(for: XCUIAccessibilityAuditType.all.subtracting(.contrast))
+}
+```
 
 ## Failure diagnostics
 

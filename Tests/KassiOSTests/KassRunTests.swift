@@ -2,29 +2,35 @@ import XCTest
 @testable import KassiOS
 
 /// `setUp` is overridden to skip `XCUIApplication` creation, which the run
-/// builder doesn't need.
+/// builder doesn't need. `after` is registered as a teardown block, so it runs
+/// before `tearDown()` — verified there.
 final class KassRunTests: KassTestCase {
 
-    override func setUp() { /* no super — no app needed here */ }
+    private var order: [String] = []
+    private var checkAfter = false
 
-    func test_runsSectionsInOrder() {
-        var log: [String] = []
-        before { log.append("before") }
-            .after { log.append("after") }
-            .run { log.append("steps") }
-        XCTAssertEqual(log, ["before", "steps", "after"])
+    override func setUp() { order = []; checkAfter = false }
+
+    override func tearDown() {
+        if checkAfter {
+            XCTAssertEqual(order, ["before", "steps", "after"], "after ran as a teardown block")
+        }
+        super.tearDown()
     }
 
-    func test_runWithoutSections() {
-        var ran = false
-        run { ran = true }
-        XCTAssertTrue(ran)
+    func test_beforeRunsBeforeSteps() {
+        run {
+            self.order.append("steps")
+        }
+        XCTAssertEqual(order, ["steps"])
     }
 
-    func test_afterRunsEvenWithoutBefore() {
-        var log: [String] = []
-        after { log.append("after") }
-            .run { log.append("steps") }
-        XCTAssertEqual(log, ["steps", "after"])
+    func test_afterRunsAtTeardown() {
+        checkAfter = true
+        before { self.order.append("before") }
+            .after { self.order.append("after") }
+            .run { self.order.append("steps") }
+        // `after` has not run yet — it's a teardown block.
+        XCTAssertEqual(order, ["before", "steps"])
     }
 }

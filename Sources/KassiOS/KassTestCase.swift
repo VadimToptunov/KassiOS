@@ -256,6 +256,31 @@ open class KassTestCase: XCTestCase {
             back.tap()
         }
     }
+
+    // MARK: - Accessibility audit
+
+    /// Runs Apple's automated accessibility audit on the app and fails the test
+    /// for any issue found (contrast, hit-region size, clipped/overlapping text,
+    /// missing labels, …). A natural companion to strict identifiers. Pass
+    /// `auditTypes` to narrow the checks (e.g. exclude the sometimes-borderline
+    /// `.contrast` heuristic).
+    @available(iOS 17.0, macOS 14.0, tvOS 17.0, *)
+    public func assertNoAccessibilityIssues(
+        for auditTypes: XCUIAccessibilityAuditType = .all,
+        file: StaticString = #file,
+        line: UInt = #line
+    ) {
+        startReportingIfNeeded()
+        config.reporter?.stepStarted("assertNoAccessibilityIssues")
+        let failuresBefore = testRun?.failureCount ?? 0
+        do {
+            try app.performAccessibilityAudit(for: auditTypes)
+        } catch {
+            XCTFail("Accessibility audit could not run: \(error)", file: file, line: line)
+        }
+        let failed = (testRun?.failureCount ?? 0) > failuresBefore
+        config.reporter?.stepFinished(status: failed ? .failed : .passed, message: failed ? "accessibility issues found" : nil)
+    }
 }
 
 /// A named branch for `KassTestCase.compose`.

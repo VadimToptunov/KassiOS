@@ -28,8 +28,8 @@ open class KassSuite: KassTestCase {
 
 /// A structured test body: `before { } .after { } .run { }`.
 ///
-/// `before` runs first, `after` runs when `run` returns normally (for teardown
-/// that must survive a hard failure, prefer `tearDown`).
+/// `before` runs first; `after` is registered as an XCTest teardown block, so it
+/// runs after the body **even if a step fails hard** (unlike a plain `defer`).
 ///
 /// ```swift
 /// before { launch() }
@@ -61,8 +61,10 @@ public final class KassRunBuilder {
 
     public func run(_ steps: () -> Void) {
         test.config.logger.log("▶︎ run")
+        if let afterBlock = afterBlock {
+            test.addTeardownBlock(afterBlock)   // runs even if a step fails hard
+        }
         beforeBlock?()
-        defer { afterBlock?() }
         steps()
     }
 }

@@ -94,11 +94,19 @@ public extension KassElement {
     func assertHasText(_ expected: String, file: StaticString = #file, line: UInt = #line) -> KassElement {
         perform("assertHasText('\(expected)')", file: file, line: line) { element in
             guard element.exists else { throw KassError("does not exist") }
-            let actual = (element.value as? String) ?? element.label
+            let actual = Self.textOf(element)
             guard actual.contains(expected) else {
                 throw KassError("expected text containing '\(expected)' but found '\(actual)'")
             }
         }
+    }
+
+    /// The element's text for matching: its `value` if non-empty, else its
+    /// `label`. Many SwiftUI elements (e.g. `Text`) expose an empty `value` and
+    /// carry the text in `label`, so a plain `value ?? label` would read blank.
+    static func textOf(_ element: XCUIElement) -> String {
+        if let value = element.value as? String, !value.isEmpty { return value }
+        return element.label
     }
 
     @discardableResult
@@ -165,7 +173,7 @@ public extension KassElement {
     func assertValueMatches(_ pattern: String, file: StaticString = #file, line: UInt = #line) -> KassElement {
         perform("assertValueMatches('\(pattern)')", file: file, line: line) { element in
             guard element.exists else { throw KassError("does not exist") }
-            let actual = (element.value as? String) ?? element.label
+            let actual = Self.textOf(element)
             guard actual.range(of: pattern, options: .regularExpression) != nil else {
                 throw KassError("expected '\(actual)' to match /\(pattern)/")
             }
@@ -193,6 +201,36 @@ public extension KassElement {
         }
     }
 
+    // MARK: - Reads & placeholders
+
+    /// The element's current `value` as a string, if any (does not wait).
+    func readValue() -> String? { resolve().value as? String }
+
+    /// The element's accessibility label (does not wait).
+    func readLabel() -> String { resolve().label }
+
+    @discardableResult
+    func assertPlaceholder(_ expected: String, file: StaticString = #file, line: UInt = #line) -> KassElement {
+        perform("assertPlaceholder('\(expected)')", file: file, line: line) { element in
+            guard element.exists else { throw KassError("does not exist") }
+            guard element.placeholderValue == expected else {
+                throw KassError("expected placeholder '\(expected)' but found '\(element.placeholderValue ?? "nil")'")
+            }
+        }
+    }
+
+    // MARK: - Per-call configuration
+
+    /// Returns a copy of this element with an overridden timeout / poll interval,
+    /// for a one-off wait longer or shorter than the global config.
+    /// `slowRow.within(timeout: 30).assertVisible()`.
+    func within(timeout: TimeInterval? = nil, pollInterval: TimeInterval? = nil) -> KassElement {
+        var overridden = config
+        if let timeout = timeout { overridden.timeout = timeout }
+        if let pollInterval = pollInterval { overridden.pollInterval = pollInterval }
+        return KassElement(description: description, config: overridden, expectedIdentifier: expectedIdentifier, resolve: resolve)
+    }
+
     // MARK: - Scoped children
 
     /// Resolves `type`/`id` *within* this element — for reaching into a specific
@@ -212,12 +250,17 @@ public extension KassElement {
     // MARK: - Controls
 
     /// Toggles a switch to the desired state (no-op if already there).
+    ///
+    /// A SwiftUI `Toggle` outside a `Form`/`List` toggles only when its inner
+    /// switch control is tapped (not the row), so we tap the descendant switch
+    /// when present and fall back to the element itself (UIKit `UISwitch`).
     @discardableResult
     func setSwitch(on: Bool, file: StaticString = #file, line: UInt = #line) -> KassElement {
         perform("setSwitch(on: \(on))", file: file, line: line) { element in
             guard element.exists else { throw KassError("does not exist") }
-            let isOn = (element.value as? String) == "1"
-            if isOn != on { element.tap() }
+            guard (element.value as? String) != (on ? "1" : "0") else { return }
+            let control = element.switches.firstMatch
+            (control.exists ? control : element).tap()
         }
     }
 
@@ -366,6 +409,26 @@ public extension KassElement {
     }
     #endif
 
+    /// Taps at a point inside the element, given as a fraction of its size.
+    @discardableResult
+    func tapAtNormalizedOffset(x: CGFloat, y: CGFloat, file: StaticString = #file, line: UInt = #line) -> KassElement {
+        perform("tapAtNormalizedOffset(\(x), \(y))", file: file, line: line) { element in
+            guard element.exists else { throw KassError("does not exist") }
+            element.coordinate(withNormalizedOffset: CGVector(dx: x, dy: y)).tap()
+        }
+    }
+
+    /// Press-and-drags from this element onto `target`.
+    @discardableResult
+    func drag(to target: KassElement, file: StaticString = #file, line: UInt = #line) -> KassElement {
+        perform("drag(to: \(target.description))", file: file, line: line) { element in
+            guard element.exists else { throw KassError("does not exist") }
+            let destination = target.resolve()
+            guard destination.exists else { throw KassError("target \(target.description) does not exist") }
+            element.press(forDuration: 0.5, thenDragTo: destination)
+        }
+    }
+
     /// Scrolls `container` in `direction` until this element becomes hittable,
     /// or the shared time budget (`config.timeout`) elapses. Each attempt draws
     /// from that budget, so scrolling can't compound into a runaway timeout.
@@ -444,17 +507,22 @@ public extension KassElement {
 
     // MARK: - Strict identifiers & failure diagnostics
 
-    /// In strict mode, throws if `element` exists but wasn't matched by an
-    /// explicit accessibility identifier (its `identifier` is empty or differs
-    /// from what we asked for).
+    /// Applies `config.accessibilityIdentifierPolicy`. When the element exists
+    /// but was matched by label (its `identifier` is empty or differs from what
+    /// we asked for): `.warn` surfaces an Xcode message, `.enforce` throws.
     func enforceIdentifierIfNeeded(_ element: XCUIElement) throws {
-        guard config.requireAccessibilityIdentifiers, let expected = expectedIdentifier else { return }
-        guard element.exists else { return }
-        guard element.identifier == expected else {
-            throw KassError(
-                "'\(expected)' was matched without an accessibility identifier (element id='\(element.identifier)') — "
-                + "add .accessibilityIdentifier(\"\(expected)\") to the view [strict mode]"
-            )
+        guard config.accessibilityIdentifierPolicy != .ignore, let expected = expectedIdentifier else { return }
+        guard element.exists, element.identifier != expected else { return }
+        let message = "'\(expected)' was matched without an accessibility identifier "
+            + "(element id='\(element.identifier)') — add .accessibilityIdentifier(\"\(expected)\") to the view"
+        switch config.accessibilityIdentifierPolicy {
+        case .ignore:
+            return
+        case .warn:
+            config.logger.log("⚠️ \(message)")
+            XCTContext.runActivity(named: "⚠️ Missing accessibility identifier: '\(expected)'") { _ in }
+        case .enforce:
+            throw KassError(message + " [strict mode]")
         }
     }
 

@@ -282,24 +282,30 @@ adapter is provided as an opt-in reference in
 
 ## Strict identifiers, suites & structured runs
 
-Force the app to carry real accessibility identifiers — an element matched by
-label instead of an explicit id fails with an actionable message (and a
-screenshot):
+Force the app to carry real accessibility identifiers. `.warn` surfaces an Xcode
+message; `.enforce` fails the test (with a screenshot) when an element is matched
+by label instead of an explicit id:
 
 ```swift
-config = KassConfig(requireAccessibilityIdentifiers: true)
+config = KassConfig(accessibilityIdentifierPolicy: .enforce)  // or .warn / .ignore
 // 'Orders' was matched without an accessibility identifier (element id='') —
 // add .accessibilityIdentifier("Orders") to the view [strict mode]
 //   ↳ exists=true hittable=true id='' label='Orders' type=48 frame=(…)
 ```
 
+Run Apple's accessibility audit too:
+
+```swift
+if #available(iOS 17.0, *) { assertNoAccessibilityIssues() }
+```
+
 Share one config across a group with `KassSuite`, and structure a body with
-`before`/`after`/`run`:
+`before`/`after`/`run` (`after` runs even on a hard failure):
 
 ```swift
 class CheckoutSuite: KassSuite {
     override func configure() -> KassConfig {
-        KassConfig(reporter: AllureReporter(), requireAccessibilityIdentifiers: true)
+        KassConfig(reporter: AllureReporter(), accessibilityIdentifierPolicy: .enforce)
     }
 }
 
@@ -326,20 +332,33 @@ The library wraps XCUITest, so it builds with Xcode rather than bare
 xcodebuild test -scheme KassiOS -destination 'platform=macOS'
 ```
 
-CI (`.github/workflows/ci.yml`) runs the same on every push and PR.
+Real UI coverage lives in [`IntegrationTests/`](IntegrationTests): a bundled
+SwiftUI demo app plus KassiOS-driven UI tests that run on the simulator. Generate
+the project and run them:
+
+```sh
+cd IntegrationTests && ruby gen.rb          # needs the `xcodeproj` gem
+xcodebuild test -scheme KassDemoUITests -destination 'platform=iOS Simulator,name=iPhone 16'
+```
+
+CI (`.github/workflows/ci.yml`) runs both jobs — unit tests on macOS and the UI
+tests on a simulator — on every push and PR.
 
 ## Status
 
-v0.7 — core DSL, waits, flaky-safety, step logging, gestures + scroll-to +
-multitouch, slider/switch/picker controls, rich assertions (incl.
-label-contains/value-regex/`waitUntil`), element collections for lists & tables,
-scoped child elements, Kaspresso-style flow primitives
+v0.8 — core DSL, waits, flaky-safety, step logging, gestures + scroll-to +
+multitouch + coordinate/drag, slider/switch/picker controls, rich assertions
+(incl. label-contains/value-regex/placeholder/`waitUntil`), per-call
+`within(timeout:)`, element collections for lists & tables, scoped child
+elements, Kaspresso-style flow primitives
 (`flakySafely`/`continuously`/`compose`/`retry`/`pressBack`), parameterized
-(data-driven) tests, `KassSuite` + structured `before`/`after`/`run`, a **strict
-mode that forces accessibility identifiers**, precise failure diagnostics (element
-snapshot + screenshot), device/permission/deep-link/springboard helpers, reusable
-scenarios, Allure export, and a pluggable synchronization backend (no-op by
-default, EarlGrey adapter provided). See the [full guide](Documentation/Guide.md).
+(data-driven) tests, `KassSuite` + structured `before`/`after`/`run`
+(teardown-safe), an **accessibility-identifier policy** (`ignore`/`warn`/`enforce`),
+the **accessibility audit**, precise failure diagnostics (element snapshot +
+screenshot), device/permission/deep-link/springboard helpers, reusable scenarios,
+Allure export, and a pluggable synchronization backend. Real UI coverage runs on
+the simulator in CI via a bundled demo app. See the
+[full guide](Documentation/Guide.md).
 
 Verified end-to-end against Apple's open-source
 [Food Truck](https://github.com/apple/sample-food-truck) app on the iOS
