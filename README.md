@@ -6,6 +6,9 @@ with **zero external dependencies** and one-line SPM install.
 
 > Types use a short `Kass` prefix (`KassScreen`, `KassElement`, `KassTestCase`, `KassConfig`). Change with one find-replace if you prefer another.
 
+📖 **Full [documentation guide](Documentation/Guide.md)** — every feature, plus an
+honest [when-to-use / when-not-to](Documentation/Guide.md#when-to-use-kassios--and-when-not-to).
+
 ## Why
 
 Raw XCUITest makes you manage timing by hand. KassiOS bakes waiting and retries
@@ -116,7 +119,19 @@ element.assertSelected(true)
 element.assertHasText("partial") // substring of value-or-label
 element.assertHasValue("exact")  // exact match on .value
 element.assertLabel("exact")
+element.assertLabelContains("part")
+element.assertValueMatches("^\\d{4}$")     // regex on value-or-label
 element.assertHittable()          // .assertNotHittable()
+element.waitUntil("is selected") { $0.isSelected }
+
+// Scoped children — resolve within an element
+row.staticText("title").assertHasText("Inbox")
+row.button("delete").tap()
+
+// Controls
+element.setSwitch(on: true)                 // toggles only if needed
+element.adjustSlider(toNormalizedPosition: 0.75)   // iOS
+element.adjustPicker(toValue: "March")             // iOS
 
 // Editing
 element.replaceText("new")        // clears, then types
@@ -149,6 +164,39 @@ compose(
 retry(times: 3) { try list.requireExists() }
 
 pressBack()   // taps the leading navigation-bar button
+```
+
+## Collections (lists & tables)
+
+`KassElementCollection` is the query-level counterpart of `KassElement`:
+
+```swift
+screen.cells().assertNotEmpty()
+screen.cells().assertCount(24)
+screen.cells().element(at: 0).tap()
+screen.cells().containing(.staticText, "Inbox").first.tap()
+screen.staticTexts().matching(label: "Error").assertNotEmpty()
+screen.images().forEach { $0.assertExists() }
+```
+
+Builders: `all(_:)`, `all(_:type:)`, `buttons()`, `staticTexts()`, `cells()`,
+`images()`, `customCollection(_:_:)`.
+
+## Parameterized tests
+
+Run one body across many cases — each an isolated, reported activity (the
+XCUITest analogue of Swift Testing's `@Test(arguments:)`):
+
+```swift
+parameterized([("a@b.c", true), ("bad", false), ("", false)], name: { $0.0 }) { email, valid in
+    relaunch()                       // clean slate between cases
+    onScreen(LoginScreen.self) { login in
+        login.email.replaceText(email)
+        login.submit.tap()
+        valid ? onScreen(HomeScreen.self) { $0.welcome.assertVisible() }
+              : login.error.assertVisible()
+    }
+}
 ```
 
 ## Device helpers
@@ -254,12 +302,15 @@ CI (`.github/workflows/ci.yml`) runs the same on every push and PR.
 
 ## Status
 
-v0.5 — core DSL, waits, flaky-safety, step logging, gestures + scroll-to +
-multitouch, rich assertions, Kaspresso-style flow primitives
-(`flakySafely`/`continuously`/`compose`/`retry`/`pressBack`),
-device/permission/deep-link/springboard helpers, reusable scenarios,
-screenshot-on-failure, Allure export, and a pluggable synchronization backend
-(no-op by default, EarlGrey adapter provided).
+v0.6 — core DSL, waits, flaky-safety, step logging, gestures + scroll-to +
+multitouch, slider/switch/picker controls, rich assertions (incl.
+label-contains/value-regex/`waitUntil`), element collections for lists & tables,
+scoped child elements, Kaspresso-style flow primitives
+(`flakySafely`/`continuously`/`compose`/`retry`/`pressBack`), parameterized
+(data-driven) tests, device/permission/deep-link/springboard helpers, reusable
+scenarios, screenshot-on-failure, Allure export, and a pluggable synchronization
+backend (no-op by default, EarlGrey adapter provided). See the
+[full guide](Documentation/Guide.md).
 
 Verified end-to-end against Apple's open-source
 [Food Truck](https://github.com/apple/sample-food-truck) app on the iOS

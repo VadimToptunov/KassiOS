@@ -1,0 +1,380 @@
+# KassiOS Guide
+
+A complete tour of KassiOS — a Kaspresso-style DSL over XCUITest with implicit
+waits, flaky-safety, readable reports, and zero external dependencies.
+
+- [Installation](#installation)
+- [Core concepts](#core-concepts)
+- [Screens & elements](#screens--elements)
+- [Interactions](#interactions)
+- [Assertions](#assertions)
+- [Collections (lists & tables)](#collections-lists--tables)
+- [Flow primitives](#flow-primitives)
+- [Parameterized tests](#parameterized-tests)
+- [Steps & scenarios](#steps--scenarios)
+- [Device helpers](#device-helpers)
+- [Reporting: screenshots & Allure](#reporting-screenshots--allure)
+- [Synchronization backends](#synchronization-backends)
+- [Configuration reference](#configuration-reference)
+- [When to use KassiOS — and when not to](#when-to-use-kassios--and-when-not-to)
+
+---
+
+## Installation
+
+Swift Package Manager, linked to your **UI Test target**:
+
+```swift
+.package(url: "https://github.com/<you>/KassiOS.git", from: "0.1.0")
+```
+
+The library wraps XCUITest, so it builds with Xcode (not bare `swift build`).
+
+---
+
+## Core concepts
+
+Three types carry the whole DSL:
+
+| Type | Role |
+| --- | --- |
+| `KassTestCase` | Base class for tests. Owns `app`, `config`, `device`, and the `onScreen`/`step`/flow APIs. |
+| `KassScreen` | A page object. Declares elements as lazy properties and lists `onLoad` proof elements. |
+| `KassElement` | A lazy, self-waiting handle to one `XCUIElement`. Every interaction retries under one shared time budget. |
+
+`KassConfig` flows from the test case into every screen and element, so one place
+controls timing, flaky-safety, logging, reporting and synchronization.
+
+The key design choice: `KassElement` stores a `() -> XCUIElement` **closure**, not
+a cached element. It re-resolves on every attempt, which is what lets flaky-safety
+recover after the view hierarchy reloads.
+
+---
+
+## Screens & elements
+
+```swift
+final class LoginScreen: KassScreen {
+    lazy var email = textField("login_email")
+    lazy var password = secureTextField("login_password")
+    lazy var submit = button("login_submit")
+
+    // The screen is "loaded" once these are visible.
+    override var onLoad: [KassElement] { [email, submit] }
+}
+```
+
+Element builders (by accessibility identifier): `button`, `staticText`,
+`textField`, `secureTextField`, `image`, `cell`, `switchControl`, `other`, and the
+generic `element(_:type:)`. Identifiers resolve with `firstMatch`, so an ambiguous
+id takes the first hit rather than crashing.
+
+Escape hatches when identifiers aren't enough:
+
+```swift
+lazy var banner = custom("promo banner") { app.otherElements["promo"].firstMatch }
+```
+
+Reach *into* an element with scoped children:
+
+```swift
+row.staticText("title").assertHasText("Inbox")   // resolves within `row`
+row.button("delete").tap()
+```
+
+---
+
+## Interactions
+
+All are chainable, self-waiting and flaky-safe:
+
+```swift
+element.tap()
+element.typeText("hello")
+element.clearText()
+element.replaceText("new")              // clear, then type
+
+element.doubleTap()
+element.longPress(forDuration: 1.5)
+element.swipeUp()                       // .swipeDown/.swipeLeft/.swipeRight
+
+element.setSwitch(on: true)             // toggles only if needed
+element.adjustSlider(toNormalizedPosition: 0.75)   // iOS
+element.adjustPicker(toValue: "March")             // iOS
+
+// Multitouch (iOS)
+element.pinch(scale: 2, velocity: 1)
+element.rotate(.pi / 4, velocity: 1)
+element.twoFingerTap()
+
+// Scroll a container until the element is on screen
+row.scrollTo(in: list, direction: .up)
+```
+
+For anything unwrapped, `perform` runs your closure under the same flaky-safety:
+
+```swift
+element.perform("custom") { xcuiElement in
+    guard xcuiElement.isHittable else { throw KassError("not ready") }
+    xcuiElement.tap()
+}
+```
+
+---
+
+## Assertions
+
+```swift
+element.assertVisible()                 // exists + (hittable or rendered)
+element.assertExists()
+element.assertNotExists()               // or .waitUntilGone()
+element.assertEnabled()                 // .assertDisabled()
+element.assertSelected(true)
+element.assertHittable()                // .assertNotHittable()
+element.assertHasText("partial")        // substring of value-or-label
+element.assertHasValue("exact")         // exact match on .value
+element.assertLabel("exact")
+element.assertLabelContains("part")
+element.assertValueMatches("^\\d{4}$")   // regex on value-or-label
+
+element.waitUntil("is selected") { $0.isSelected }
+```
+
+Every assertion waits up to `config.timeout` before failing, and reports a
+readable reason (`KassiOS: button 'login_submit' — assertVisible failed: …`).
+
+---
+
+## Collections (lists & tables)
+
+`KassElementCollection` is the query-level counterpart of `KassElement` — lazy and
+re-evaluated on each access.
+
+```swift
+let donuts = screen.images()                    // all images
+donuts.assertNotEmpty()
+donuts.assertCount(24)
+XCTAssertGreaterThan(donuts.count, 5)
+
+screen.cells().element(at: 0).tap()
+screen.cells().first.assertVisible()
+screen.cells().last.assertExists()
+
+// Refine, then act
+screen.cells()
+    .containing(.staticText, "Inbox")
+    .first
+    .tap()
+
+screen.staticTexts()
+    .matching(label: "Error")
+    .assertNotEmpty()
+
+screen.cells().elementMatching(label: "Settings").tap()
+
+// Iterate live matches
+screen.cells().forEach { $0.assertExists() }
+let labels = screen.staticTexts().map { $0 }
+```
+
+Builders on `KassScreen`: `all(_:)`, `all(_:type:)`, and the shortcuts
+`buttons()`, `staticTexts()`, `cells()`, `images()`. Or wrap any query with
+`customCollection(_:_:)`.
+
+---
+
+## Flow primitives
+
+Kaspresso-style building blocks on `KassTestCase`. They take throwing closures —
+inside them, use the single-shot throwing checks (`requireExists`,
+`requireVisible`, `requireHittable`) or raw `XCUIElement` conditions.
+
+```swift
+// Retry a multi-step condition until it holds (or the budget elapses).
+flakySafely { try banner.requireVisible(); try dismiss.requireHittable() }
+
+// Assert something stays true for a duration (inverse of flaky-safety).
+continuously(during: 1.0) { try spinner.requireExists() }
+
+// Pass if the UI is in any one of several valid states.
+compose(
+    KassBranch("logged in") { try home.requireVisible() },
+    KassBranch("needs 2FA") { try otp.requireVisible() }
+)
+
+// Attempts-bounded retry.
+retry(times: 3) { try list.requireExists() }
+
+pressBack()   // taps the leading navigation-bar button
+```
+
+`flakySafely` / `retry` return the block's value (as an optional, `nil` on
+failure), so they compose:
+
+```swift
+let count = flakySafely { screen.cells().count } ?? 0
+```
+
+---
+
+## Parameterized tests
+
+Run one body across many cases — each grouped as its own activity and report
+step, with failures isolated so every case runs. The XCUITest analogue of Swift
+Testing's `@Test(arguments:)`.
+
+```swift
+func test_login_validation() {
+    parameterized(
+        [("a@b.c", true), ("bad-email", false), ("", false)],
+        name: { $0.0 }
+    ) { (email, valid) in
+        relaunch()                      // clean slate between cases
+        onScreen(LoginScreen.self) { login in
+            login.email.replaceText(email)
+            login.submit.tap()
+            if valid {
+                onScreen(HomeScreen.self) { $0.welcome.assertVisible() }
+            } else {
+                login.error.assertVisible()
+            }
+        }
+    }
+}
+```
+
+Because UI state persists between cases, reset inside the body when they aren't
+independent — `relaunch()` terminates and relaunches the app.
+
+---
+
+## Steps & scenarios
+
+`step` groups actions in Xcode's report (and the Allure report) and logs timing:
+
+```swift
+step("Enter credentials") {
+    login.email.typeText("test@example.com")
+    login.submit.tap()
+}
+```
+
+`KassScenario` extracts reusable journeys:
+
+```swift
+struct LoginScenario: KassScenario {
+    let email: String, password: String
+    func run(in test: KassTestCase) {
+        test.onScreen(LoginScreen.self) { login in
+            login.email.typeText(email)
+            login.password.typeText(password)
+            login.submit.tap()
+        }
+    }
+}
+
+scenario(LoginScenario(email: "a@b.c", password: "secret"))
+```
+
+---
+
+## Device helpers
+
+`device` reaches outside the app's view tree:
+
+```swift
+device.autoAllowSystemDialogs(test: self)   // monitor for later permission alerts
+app.tap()                                    // nudge XCUITest to deliver a pending one
+device.allowSystemDialogNow()                // tap an alert already on screen
+device.hideKeyboard()
+device.screenshot("after login")            // attached to the report
+device.sendToBackground(for: 2)              // then reactivates
+device.pressHome()                           // iOS
+device.rotate(to: .landscapeLeft)           // iOS
+device.open(url: "https://example.com")     // deep link via Safari (iOS)
+device.waitForIdle()                         // via the configured synchronizer
+let springboard = device.springboard         // home screen / system-alert host
+```
+
+> System-level operations that need `simctl`/adb (network, GPS, status bar,
+> granting permissions without a dialog) run *outside* the test process, in your
+> CI harness — the XCUITest process lives on the simulator and can't shell out.
+
+---
+
+## Reporting: screenshots & Allure
+
+A failing test automatically attaches a screenshot of its final state.
+
+Attach an `AllureReporter` for machine-readable [Allure 2](https://allurereport.org)
+results — nested steps, interactions and screenshots:
+
+```swift
+override func setUp() {
+    super.setUp()
+    config = KassConfig(reporter: AllureReporter())
+}
+```
+
+Results go to `$ALLURE_RESULTS_PATH` or `<temp>/allure-results`; the path is
+logged at test start. Then `allure serve <results-dir>`. Steps left open by a hard
+failure are attributed the test's terminal status, so the tree always closes.
+
+Implement `KassReporter` to route into any other backend.
+
+---
+
+## Synchronization backends
+
+By default KassiOS polls (via `Waiter`). Plug in a `KassSynchronizer` to also
+block until the app is *idle* (animations, network, main-queue work):
+
+```swift
+config = KassConfig(synchronizer: EarlGreySynchronizer())
+```
+
+The core ships `NoOpSynchronizer` and stays dependency-free; an EarlGrey-backed
+adapter is an opt-in reference in `Examples/EarlGreySynchronizer.swift`.
+
+---
+
+## Configuration reference
+
+```swift
+config = KassConfig(
+    timeout: 20,                 // total budget per interaction, incl. retries
+    pollInterval: 0.25,          // delay between attempts
+    flakySafetyEnabled: true,    // false = attempt each interaction exactly once
+    logger: ConsoleKassLogger(), // step/interaction log sink
+    reporter: AllureReporter(),  // optional structured report
+    synchronizer: NoOpSynchronizer()
+)
+```
+
+Set it in `setUp` after `super.setUp()`; the reporter starts lazily on first use,
+so a config assigned there is already in place.
+
+---
+
+## When to use KassiOS — and when not to
+
+KassiOS is a thin, opinionated layer, not a silver bullet. An honest take:
+
+**Reach for it when**
+- You write a lot of UI tests and want Kaspresso-parity ergonomics out of the box:
+  steps, scenarios, `compose`/`continuously`, flaky-safety with a shared budget,
+  Allure export, parameterized cases.
+- Your team comes from Android/Kaspresso and wants familiar structure.
+
+**Prefer plain XCUITest when**
+- You want minimum magic and the shortest path from a failure to the offending
+  line. KassiOS interactions call `XCTFail` internally and return `self`; with
+  `continueAfterFailure = true`, a chain keeps running past a failure.
+- A handful of `XCUIElement` extensions (a `tapWhenReady` helper + page objects)
+  would already cover your needs with types every iOS developer knows.
+- You value staying close to where Apple is heading (Swift Testing) over a bespoke
+  layer you must maintain.
+
+Two things dominate test readability regardless of framework: **good page objects**
+and **accessibility identifiers on the app**. Both are available on raw XCUITest.
+KassiOS adds convenience on top of them — it doesn't replace them.
