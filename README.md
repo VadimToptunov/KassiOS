@@ -204,6 +204,17 @@ override func setUp() {
 }
 ```
 
+## Develop
+
+The library wraps XCUITest, so it builds with Xcode rather than bare
+`swift build`. Run the (pure-logic) unit tests on the macOS destination:
+
+```sh
+xcodebuild test -scheme KassiOS -destination 'platform=macOS'
+```
+
+CI (`.github/workflows/ci.yml`) runs the same on every push and PR.
+
 ## Status
 
 v0.4 — core DSL, waits, flaky-safety, step logging, gestures + scroll-to, rich

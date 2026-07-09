@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Build & test
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show toolchain
+        run: |
+          xcodebuild -version
+          swift --version
+
+      # The library wraps XCUITest, so it's built with Xcode (not `swift build`).
+      # The unit tests are pure logic, so they run on the macOS destination —
+      # fastest and free of simulator-name drift across runner images.
+      - name: Build & test
+        run: |
+          set -o pipefail
+          xcodebuild test \
+            -scheme KassiOS \
+            -destination 'platform=macOS' \
+            | tail -50
