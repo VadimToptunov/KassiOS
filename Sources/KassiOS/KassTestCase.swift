@@ -197,6 +197,57 @@ open class KassTestCase: XCTestCase {
         }
     }
 
+    // MARK: - Parameterized (data-driven) tests
+
+    /// Runs `body` once per case, each grouped as its own activity and report
+    /// step, isolating failures so every case runs (like Swift Testing's
+    /// `@Test(arguments:)`, but for XCUITest). Because UI state persists between
+    /// cases, reset inside `body` (e.g. `relaunch()`) when cases aren't
+    /// independent.
+    ///
+    /// ```swift
+    /// parameterized(["a@b.c", "bad-email", ""]) { email in
+    ///     relaunch()
+    ///     onScreen(LoginScreen.self) { $0.email.replaceText(email); $0.submit.tap() }
+    /// }
+    /// ```
+    public func parameterized<Case>(
+        _ cases: [Case],
+        name: (Case) -> String = { "\($0)" },
+        file: StaticString = #file,
+        line: UInt = #line,
+        _ body: (Case) -> Void
+    ) {
+        startReportingIfNeeded()
+        let previousContinue = continueAfterFailure
+        continueAfterFailure = true
+        defer { continueAfterFailure = previousContinue }
+
+        for testCase in cases {
+            let label = name(testCase)
+            config.logger.log("▶︎ Case: \(label)")
+            config.reporter?.stepStarted("Case: \(label)")
+            let failuresBefore = testRun?.failureCount ?? 0
+            XCTContext.runActivity(named: "Case: \(label)") { _ in
+                body(testCase)
+            }
+            let failed = (testRun?.failureCount ?? 0) > failuresBefore
+            config.logger.log("\(failed ? "✗" : "✓") Case: \(label)")
+            config.reporter?.stepFinished(status: failed ? .failed : .passed, message: failed ? "case '\(label)' failed" : nil)
+        }
+    }
+
+    /// Terminates and relaunches the app under test — handy between
+    /// `parameterized` cases that need a clean slate.
+    @discardableResult
+    public func relaunch(
+        arguments: [String] = [],
+        environment: [String: String] = [:]
+    ) -> XCUIApplication {
+        app.terminate()
+        return launch(arguments: arguments, environment: environment)
+    }
+
     /// Taps the leading navigation-bar button (typically Back).
     public func pressBack(file: StaticString = #file, line: UInt = #line) {
         flakySafely(file: file, line: line) {

@@ -45,6 +45,32 @@ open class KassScreen {
         KassElement(description: description, config: config, resolve: resolve)
     }
 
+    /// Escape hatch for collections: wrap an arbitrary query.
+    public func customCollection(_ description: String, _ query: @escaping () -> XCUIElementQuery) -> KassElementCollection {
+        KassElementCollection(description: description, config: config, query: query)
+    }
+
+    // MARK: - Collection builders (lists, tables, grids)
+
+    public func buttons() -> KassElementCollection { all(.button) }
+    public func staticTexts() -> KassElementCollection { all(.staticText) }
+    public func cells() -> KassElementCollection { all(.cell) }
+    public func images() -> KassElementCollection { all(.image) }
+
+    /// Every element of `type` in the tree.
+    public func all(_ type: XCUIElement.ElementType) -> KassElementCollection {
+        KassElementCollection(description: "all \(Self.typeName(type))s", config: config) { [app] in
+            app.descendants(matching: type)
+        }
+    }
+
+    /// Every element of `type` sharing accessibility identifier `id`.
+    public func all(_ id: String, type: XCUIElement.ElementType) -> KassElementCollection {
+        KassElementCollection(description: "\(Self.typeName(type))s '\(id)'", config: config) { [app] in
+            app.descendants(matching: type).matching(identifier: id)
+        }
+    }
+
     // MARK: - Helpers
 
     static func typeName(_ type: XCUIElement.ElementType) -> String {

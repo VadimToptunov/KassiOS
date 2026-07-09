@@ -140,12 +140,96 @@ public extension KassElement {
         }
     }
 
+    @discardableResult
+    func assertLabelContains(_ substring: String, file: StaticString = #file, line: UInt = #line) -> KassElement {
+        perform("assertLabelContains('\(substring)')", file: file, line: line) { element in
+            guard element.exists else { throw KassError("does not exist") }
+            guard element.label.contains(substring) else {
+                throw KassError("expected label containing '\(substring)' but found '\(element.label)'")
+            }
+        }
+    }
+
+    /// Asserts the element's value (or label) matches a regular expression.
+    @discardableResult
+    func assertValueMatches(_ pattern: String, file: StaticString = #file, line: UInt = #line) -> KassElement {
+        perform("assertValueMatches('\(pattern)')", file: file, line: line) { element in
+            guard element.exists else { throw KassError("does not exist") }
+            let actual = (element.value as? String) ?? element.label
+            guard actual.range(of: pattern, options: .regularExpression) != nil else {
+                throw KassError("expected '\(actual)' to match /\(pattern)/")
+            }
+        }
+    }
+
     /// Waits until the element is gone (or already absent). Reads better than
     /// `assertNotExists` at a call site that expects a disappearance.
     @discardableResult
     func waitUntilGone(file: StaticString = #file, line: UInt = #line) -> KassElement {
         assertNotExists(file: file, line: line)
     }
+
+    /// Waits until `condition` holds for the re-resolved element, or the budget
+    /// elapses. The escape hatch for one-off states not covered by an assertion.
+    @discardableResult
+    func waitUntil(
+        _ description: String,
+        file: StaticString = #file,
+        line: UInt = #line,
+        _ condition: @escaping (XCUIElement) -> Bool
+    ) -> KassElement {
+        perform("waitUntil(\(description))", file: file, line: line) { element in
+            guard condition(element) else { throw KassError("condition '\(description)' not met") }
+        }
+    }
+
+    // MARK: - Scoped children
+
+    /// Resolves `type`/`id` *within* this element — for reaching into a specific
+    /// cell/section, e.g. `cell.staticText("title")`.
+    func descendant(_ type: XCUIElement.ElementType, _ id: String) -> KassElement {
+        KassElement(description: "\(description) › \(KassScreen.typeName(type)) '\(id)'", config: config) { [resolve] in
+            resolve().descendants(matching: type)[id].firstMatch
+        }
+    }
+
+    func button(_ id: String) -> KassElement { descendant(.button, id) }
+    func staticText(_ id: String) -> KassElement { descendant(.staticText, id) }
+    func textField(_ id: String) -> KassElement { descendant(.textField, id) }
+    func image(_ id: String) -> KassElement { descendant(.image, id) }
+    func cell(_ id: String) -> KassElement { descendant(.cell, id) }
+
+    // MARK: - Controls
+
+    /// Toggles a switch to the desired state (no-op if already there).
+    @discardableResult
+    func setSwitch(on: Bool, file: StaticString = #file, line: UInt = #line) -> KassElement {
+        perform("setSwitch(on: \(on))", file: file, line: line) { element in
+            guard element.exists else { throw KassError("does not exist") }
+            let isOn = (element.value as? String) == "1"
+            if isOn != on { element.tap() }
+        }
+    }
+
+    #if os(iOS)
+    /// Drags a slider to a normalized position in `0...1`.
+    @discardableResult
+    func adjustSlider(toNormalizedPosition position: CGFloat, file: StaticString = #file, line: UInt = #line) -> KassElement {
+        perform("adjustSlider(\(position))", file: file, line: line) { element in
+            guard element.exists else { throw KassError("does not exist") }
+            element.adjust(toNormalizedSliderPosition: position)
+        }
+    }
+
+    /// Spins a picker wheel to `value`.
+    @discardableResult
+    func adjustPicker(toValue value: String, file: StaticString = #file, line: UInt = #line) -> KassElement {
+        perform("adjustPicker('\(value)')", file: file, line: line) { element in
+            guard element.exists else { throw KassError("does not exist") }
+            element.adjust(toPickerWheelValue: value)
+        }
+    }
+    #endif
 
     @discardableResult
     func assertHittable(file: StaticString = #file, line: UInt = #line) -> KassElement {
