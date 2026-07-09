@@ -30,9 +30,13 @@ open class KassScreen {
     public func other(_ id: String) -> KassElement { element(id, type: .other) }
 
     /// Generic builder: resolves by accessibility identifier within a type.
+    ///
+    /// Uses `firstMatch` so an ambiguous identifier (e.g. a title that also
+    /// appears elsewhere in the tree) resolves to the first hit rather than
+    /// throwing "Multiple matching elements found".
     public func element(_ id: String, type: XCUIElement.ElementType) -> KassElement {
         KassElement(description: "\(Self.typeName(type)) '\(id)'", config: config) { [app] in
-            app.descendants(matching: type)[id]
+            app.descendants(matching: type)[id].firstMatch
         }
     }
 
