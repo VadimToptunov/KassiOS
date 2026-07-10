@@ -1,4 +1,5 @@
 import SwiftUI
+import WebKit
 
 /// A tiny SwiftUI app with proper accessibility identifiers, used as the host
 /// for KassiOS's own UI tests. Every interactive element carries an id, so
@@ -88,6 +89,9 @@ struct HomeView: View {
                     Button("OK", role: .cancel) { }
                 }
 
+            NavigationLink("Open Web") { WebScreenView() }
+                .accessibilityIdentifier("openWeb")
+
             Section("Items") {
                 ForEach(items.indices, id: \.self) { index in
                     Text(items[index]).accessibilityIdentifier("item-\(index)")
@@ -98,4 +102,25 @@ struct HomeView: View {
         .accessibilityIdentifier("itemsList")
         .navigationTitle("Home")
     }
+}
+
+struct WebScreenView: View {
+    var body: some View {
+        DemoWebView()
+            .navigationTitle("Web")
+    }
+}
+
+struct DemoWebView: UIViewRepresentable {
+    func makeUIView(context: Context) -> WKWebView {
+        let webView = WKWebView()
+        webView.loadHTMLString(
+            "<html><head><meta name='viewport' content='initial-scale=1'></head>"
+            + "<body><h1>Hello Web</h1><p>Web content</p></body></html>",
+            baseURL: nil
+        )
+        return webView
+    }
+
+    func updateUIView(_ uiView: WKWebView, context: Context) {}
 }
