@@ -236,7 +236,8 @@ public extension KassElement {
     /// Resolves `type`/`id` *within* this element — for reaching into a specific
     /// cell/section, e.g. `cell.staticText("title")`.
     func descendant(_ type: XCUIElement.ElementType, _ id: String) -> KassElement {
-        KassElement(description: "\(description) › \(KassScreen.typeName(type)) '\(id)'", config: config, expectedIdentifier: id) { [resolve] in
+        let label = "\(description) › \(KassScreen.typeName(type)) '\(id)'"
+        return KassElement(description: label, config: config, expectedIdentifier: id) { [resolve] in
             resolve().descendants(matching: type)[id].firstMatch
         }
     }

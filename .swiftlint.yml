@@ -1,0 +1,45 @@
+# SwiftLint configuration for KassiOS.
+included:
+  - Sources
+  - Tests
+
+excluded:
+  - IntegrationTests   # generated Xcode project + demo app sources
+
+disabled_rules:
+  - todo
+  - trailing_comma
+  - large_tuple
+  # Our DSL intentionally passes a labelled closure + a trailing closure
+  # (e.g. `parameterized(cases, name: { … }) { … }`).
+  - multiple_closures_with_trailing_closure
+
+opt_in_rules:
+  - closure_spacing
+  - overridden_super_call
+
+line_length:
+  warning: 140
+  error: 220
+  ignores_comments: true
+  ignores_urls: true
+
+function_body_length:
+  warning: 80
+  error: 140
+
+type_body_length:
+  warning: 400
+  error: 600
+
+file_length:
+  warning: 700
+  error: 900
+
+identifier_name:
+  min_length: 2
+  excluded: [id, x, y, e, f]
+
+function_parameter_count:
+  warning: 8
+  error: 10

@@ -33,8 +33,8 @@ public struct KassElementCollection {
 
     public var last: KassElement {
         KassElement(description: "\(description).last", config: config) { [query] in
-            let q = query()
-            return q.element(boundBy: max(0, q.count - 1))
+            let resolved = query()
+            return resolved.element(boundBy: max(0, resolved.count - 1))
         }
     }
 

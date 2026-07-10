@@ -349,8 +349,16 @@ cd IntegrationTests && ruby gen.rb          # needs the `xcodeproj` gem
 xcodebuild test -scheme KassDemoUITests -destination 'platform=iOS Simulator,name=iPhone 16'
 ```
 
-CI (`.github/workflows/ci.yml`) runs both jobs — unit tests on macOS and the UI
-tests on a simulator — on every push and PR.
+Lint locally with [SwiftLint](https://github.com/realm/SwiftLint):
+
+```sh
+swiftlint lint --strict
+```
+
+CI (`.github/workflows/ci.yml`) runs three jobs on every push and PR — SwiftLint,
+unit tests on macOS, and UI tests on a simulator. A separate workflow
+(`.github/workflows/docs.yml`) publishes the DocC site to GitHub Pages (enable
+Pages with the "GitHub Actions" source in repo settings).
 
 ## Status
 

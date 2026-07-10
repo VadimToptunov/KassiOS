@@ -10,11 +10,11 @@ public enum KassSeverity: String {
 public extension KassTestCase {
 
     func severity(_ severity: KassSeverity) { addLabel("severity", severity.rawValue) }
-    func epic(_ value: String)    { addLabel("epic", value) }
+    func epic(_ value: String) { addLabel("epic", value) }
     func feature(_ value: String) { addLabel("feature", value) }
-    func story(_ value: String)   { addLabel("story", value) }
-    func owner(_ value: String)   { addLabel("owner", value) }
-    func tag(_ value: String)     { addLabel("tag", value) }
+    func story(_ value: String) { addLabel("story", value) }
+    func owner(_ value: String) { addLabel("owner", value) }
+    func tag(_ value: String) { addLabel("tag", value) }
 
     /// Links this test to an issue tracker item.
     func issue(_ name: String, _ url: String) { addLink(name: name, url: url, type: "issue") }
