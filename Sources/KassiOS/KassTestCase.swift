@@ -108,6 +108,9 @@ open class KassTestCase: XCTestCase {
         }
         let elapsed = String(format: "%.2fs", Date().timeIntervalSince(start))
         config.logger.log("✓ \(name) (\(elapsed))")
+        if config.screenshotEachStep, app != nil {
+            device.screenshot("step: \(name)")
+        }
         config.reporter?.stepFinished(status: .passed, message: nil)
     }
 

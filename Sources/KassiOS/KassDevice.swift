@@ -104,6 +104,16 @@ public struct KassDevice {
         config.reporter?.attach(name: name, type: "image/png", data: shot.pngRepresentation)
     }
 
+    /// Attaches arbitrary text (a log dump, a JSON payload, …) to the report.
+    public func attachText(_ name: String, _ text: String) {
+        let data = Data(text.utf8)
+        let attachment = XCTAttachment(data: data, uniformTypeIdentifier: "public.plain-text")
+        attachment.name = name
+        attachment.lifetime = .keepAlways
+        XCTContext.runActivity(named: "📄 \(name)") { $0.add(attachment) }
+        config.reporter?.attach(name: name, type: "text/plain", data: data)
+    }
+
     // MARK: - Lifecycle
 
     #if os(iOS)

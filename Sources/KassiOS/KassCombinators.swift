@@ -1,0 +1,100 @@
+import XCTest
+
+public extension KassTestCase {
+
+    /// Waits until any of `elements` exists and returns its index (or fails).
+    /// Handy when a tap can lead to one of several screens.
+    @discardableResult
+    func waitForAny(
+        _ elements: [KassElement],
+        timeout: TimeInterval? = nil,
+        file: StaticString = #file,
+        line: UInt = #line
+    ) -> Int? {
+        do {
+            return try Waiter.retry(
+                timeout: timeout ?? config.timeout,
+                pollInterval: config.pollInterval,
+                enabled: config.flakySafetyEnabled
+            ) {
+                for (index, element) in elements.enumerated() where element.resolve().exists { return index }
+                throw KassError("none of \(elements.count) elements appeared")
+            }
+        } catch {
+            config.logger.log("❌ waitForAny failed: \(error)")
+            XCTFail("waitForAny failed: \(error)", file: file, line: line)
+            return nil
+        }
+    }
+
+    /// Waits until every element in `elements` exists (or fails).
+    func waitForAll(
+        _ elements: [KassElement],
+        timeout: TimeInterval? = nil,
+        file: StaticString = #file,
+        line: UInt = #line
+    ) {
+        do {
+            try Waiter.retry(
+                timeout: timeout ?? config.timeout,
+                pollInterval: config.pollInterval,
+                enabled: config.flakySafetyEnabled
+            ) {
+                for element in elements where !element.resolve().exists {
+                    throw KassError("\(element.description) not present yet")
+                }
+            }
+        } catch {
+            config.logger.log("❌ waitForAll failed: \(error)")
+            XCTFail("waitForAll failed: \(error)", file: file, line: line)
+        }
+    }
+
+    /// Asserts the screen's `onLoad` elements are visible, without entering a
+    /// block. Reads well as a mid-test checkpoint: `assertOnScreen(HomeScreen.self)`.
+    @discardableResult
+    func assertOnScreen<S: KassScreen>(
+        _ type: S.Type,
+        file: StaticString = #file,
+        line: UInt = #line
+    ) -> S {
+        let screen = S(app: app, config: config)
+        XCTContext.runActivity(named: "Assert on \(String(describing: type))") { _ in
+            for element in screen.onLoad {
+                element.assertVisible(file: file, line: line)
+            }
+        }
+        return screen
+    }
+
+    /// Interact with the app's frontmost alert.
+    func alert() -> KassAlert {
+        KassAlert(app: app, config: config)
+    }
+}
+
+/// A thin handle over the frontmost `UIAlertController`-style alert.
+public struct KassAlert {
+
+    let app: XCUIApplication
+    let config: KassConfig
+
+    private func button(_ title: String) -> KassElement {
+        KassElement(description: "alert button '\(title)'", config: config) { [app] in
+            app.alerts.buttons[title].firstMatch
+        }
+    }
+
+    @discardableResult
+    public func assertExists(file: StaticString = #file, line: UInt = #line) -> KassAlert {
+        KassElement(description: "alert", config: config) { [app] in app.alerts.firstMatch }
+            .assertExists(file: file, line: line)
+        return self
+    }
+
+    @discardableResult
+    public func tap(_ buttonTitle: String, file: StaticString = #file, line: UInt = #line) -> KassAlert {
+        button(buttonTitle).tap(file: file, line: line)
+        return self
+    }
+}

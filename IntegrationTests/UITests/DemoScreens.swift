@@ -15,6 +15,7 @@ final class LoginScreen: KassScreen {
 final class HomeScreen: KassScreen {
     lazy var welcome = staticText("welcome")
     lazy var notifications = switchControl("notifications")
+    lazy var showAlert = button("showAlert")
 
     override var onLoad: [KassElement] { [welcome] }
 }
