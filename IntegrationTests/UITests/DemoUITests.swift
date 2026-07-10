@@ -103,6 +103,16 @@ final class DemoUITests: KassTestCase {
         }
     }
 
+    func test_webView() {
+        launch()
+        onScreen(LoginScreen.self) { $0.email.typeText("a@b.c"); $0.signIn.tap() }
+        HomeScreen(app: app, config: config).openWeb.tap()
+        onScreen(WebScreen.self) { web in
+            // Web content can be slow to load — give it a longer budget.
+            web.heading.within(timeout: 30).assertVisible()
+        }
+    }
+
     func test_screenshotEachStep() {
         config = KassConfig(accessibilityIdentifierPolicy: .enforce, screenshotEachStep: true)
         launch()

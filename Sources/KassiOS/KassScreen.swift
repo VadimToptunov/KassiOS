@@ -27,7 +27,19 @@ open class KassScreen {
     public func image(_ id: String) -> KassElement { element(id, type: .image) }
     public func cell(_ id: String) -> KassElement { element(id, type: .cell) }
     public func switchControl(_ id: String) -> KassElement { element(id, type: .switch) }
+    public func link(_ id: String) -> KassElement { element(id, type: .link) }
     public func other(_ id: String) -> KassElement { element(id, type: .other) }
+
+    /// The frontmost web view (`WKWebView`). Its contents are reachable with the
+    /// usual builders (`staticText`, `link`, `button`, …) once loaded.
+    public func webView() -> KassElement {
+        KassElement(description: "webView", config: config) { [app] in
+            app.webViews.firstMatch
+        }
+    }
+
+    /// All web links in the tree.
+    public func links() -> KassElementCollection { all(.link) }
 
     /// Generic builder: resolves by accessibility identifier within a type.
     ///
@@ -82,6 +94,7 @@ open class KassScreen {
         case .image: return "image"
         case .cell: return "cell"
         case .switch: return "switch"
+        case .link: return "link"
         default: return "element"
         }
     }

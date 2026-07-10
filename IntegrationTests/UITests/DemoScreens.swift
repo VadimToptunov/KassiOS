@@ -16,6 +16,7 @@ final class HomeScreen: KassScreen {
     lazy var welcome = staticText("welcome")
     lazy var notifications = switchControl("notifications")
     lazy var showAlert = button("showAlert")
+    lazy var openWeb = button("openWeb")
     lazy var refreshed = staticText("refreshed")
     lazy var list = custom("home-scroll") { [app] in
         let collection = app.collectionViews.firstMatch
@@ -23,4 +24,15 @@ final class HomeScreen: KassScreen {
     }
 
     override var onLoad: [KassElement] { [welcome] }
+}
+
+final class WebScreen: KassScreen {
+    lazy var container = webView()
+    // Web (HTML) content has no accessibilityIdentifier, so resolve by label via
+    // a custom query (exempt from the strict-id policy).
+    lazy var heading = custom("web 'Hello Web'") { [app] in
+        app.webViews.staticTexts["Hello Web"].firstMatch
+    }
+
+    override var onLoad: [KassElement] { [container] }
 }

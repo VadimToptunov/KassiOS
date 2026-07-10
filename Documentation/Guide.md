@@ -9,6 +9,7 @@ waits, flaky-safety, readable reports, and zero external dependencies.
 - [Interactions](#interactions)
 - [Assertions](#assertions)
 - [Collections (lists & tables)](#collections-lists--tables)
+- [Web content](#web-content)
 - [Flow primitives](#flow-primitives)
 - [Parameterized tests](#parameterized-tests)
 - [Steps & scenarios](#steps--scenarios)
@@ -203,6 +204,25 @@ Builders on `KassScreen`: `all(_:)`, `all(_:type:)`, and the shortcuts
 `customCollection(_:_:)`.
 
 ---
+
+## Web content
+
+Reach into a `WKWebView` with `webView()` and the usual builders. HTML has no
+accessibility identifiers, so resolve web elements by label via `custom` (or
+`links()` for a collection of links):
+
+```swift
+final class ArticleScreen: KassScreen {
+    lazy var web = webView()
+    lazy var title = custom("web title") { app.webViews.staticTexts["Hello Web"].firstMatch }
+    override var onLoad: [KassElement] { [web] }
+}
+
+onScreen(ArticleScreen.self) { article in
+    article.title.within(timeout: 30).assertVisible()   // web can be slow to load
+    article.web.links().first.tap()
+}
+```
 
 ## Flow primitives
 
