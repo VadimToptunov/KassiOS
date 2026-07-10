@@ -312,9 +312,22 @@ device.waitForIdle()                         // via the configured synchronizer
 let springboard = device.springboard         // home screen / system-alert host
 ```
 
-> System-level operations that need `simctl`/adb (network, GPS, status bar,
-> granting permissions without a dialog) run *outside* the test process, in your
-> CI harness — the XCUITest process lives on the simulator and can't shell out.
+> System-level operations that need `simctl` (network, GPS, status bar, granting
+> permissions without a dialog, push) run *outside* the test process, in your CI
+> harness — the XCUITest process lives on the simulator and can't shell out.
+
+For those, KassiOS ships [`Scripts/kass-simctl.sh`](../Scripts/kass-simctl.sh) —
+run it around `xcodebuild test`:
+
+```sh
+kass-simctl boot "iPhone 16"
+kass-simctl status-bar override            # clean 9:41 bar for screenshots
+kass-simctl appearance dark
+kass-simctl permission com.acme.App grant photos
+kass-simctl location 37.7749 -122.4194
+kass-simctl push com.acme.App payload.json
+kass-simctl openurl "acme://deep/link"
+```
 
 ---
 
