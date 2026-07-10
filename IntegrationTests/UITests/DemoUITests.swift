@@ -80,4 +80,25 @@ final class DemoUITests: KassTestCase {
         }
         XCTAssertEqual(visited, ["en", "fr"])
     }
+
+    func test_combinators_and_alert() {
+        launch()
+        onScreen(LoginScreen.self) { $0.email.typeText("a@b.c"); $0.signIn.tap() }
+
+        assertOnScreen(HomeScreen.self)                       // checkpoint
+        let home = HomeScreen(app: app, config: config)
+        XCTAssertNotNil(waitForAny([home.welcome, home.notifications]))
+
+        home.showAlert.tap()
+        alert().assertExists().tap("OK")
+    }
+
+    func test_screenshotEachStep() {
+        config = KassConfig(accessibilityIdentifierPolicy: .enforce, screenshotEachStep: true)
+        launch()
+        step("Login screen visible") {
+            onScreen(LoginScreen.self) { $0.email.assertVisible() }
+        }
+        device.attachText("note", "a plain-text attachment")
+    }
 }

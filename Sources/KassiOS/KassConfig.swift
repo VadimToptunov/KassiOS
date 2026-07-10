@@ -38,6 +38,10 @@ public struct KassConfig {
     /// screen at the moment of failure to the report.
     public var captureScreenshotOnFailure: Bool
 
+    /// When `true`, every `step` attaches a screenshot of the resulting screen.
+    /// Off by default — handy for building a visual trail of a whole test.
+    public var screenshotEachStep: Bool
+
     public init(
         timeout: TimeInterval = 15,
         pollInterval: TimeInterval = 0.5,
@@ -46,7 +50,8 @@ public struct KassConfig {
         reporter: KassReporter? = nil,
         synchronizer: KassSynchronizer = NoOpSynchronizer(),
         accessibilityIdentifierPolicy: KassIdentifierPolicy = .ignore,
-        captureScreenshotOnFailure: Bool = true
+        captureScreenshotOnFailure: Bool = true,
+        screenshotEachStep: Bool = false
     ) {
         self.timeout = timeout
         self.pollInterval = pollInterval
@@ -56,6 +61,7 @@ public struct KassConfig {
         self.synchronizer = synchronizer
         self.accessibilityIdentifierPolicy = accessibilityIdentifierPolicy
         self.captureScreenshotOnFailure = captureScreenshotOnFailure
+        self.screenshotEachStep = screenshotEachStep
     }
 
     public static let `default` = KassConfig()

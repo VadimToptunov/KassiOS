@@ -224,6 +224,15 @@ compose(
 retry(times: 3) { try list.requireExists() }
 
 pressBack()   // taps the leading navigation-bar button
+
+// Wait for any / all, and mid-test screen checkpoints
+let which = waitForAny([home.welcome, login.error])   // index of the first to appear
+waitForAll([toolbar, list])
+assertOnScreen(HomeScreen.self)
+
+// App alerts
+home.showAlert.tap()
+alert().assertExists().tap("OK")
 ```
 
 `flakySafely` / `retry` return the block's value (as an optional, `nil` on
@@ -311,8 +320,12 @@ device.pressHome()                           // iOS
 device.rotate(to: .landscapeLeft)           // iOS
 device.open(url: "https://example.com")     // deep link via Safari (iOS)
 device.waitForIdle()                         // via the configured synchronizer
+device.attachText("api-log", logString)      // attach arbitrary text to the report
 let springboard = device.springboard         // home screen / system-alert host
 ```
+
+Set `config.screenshotEachStep = true` to attach a screenshot after every
+`step` — a visual trail of the whole test.
 
 > System-level operations that need `simctl` (network, GPS, status bar, granting
 > permissions without a dialog, push) run *outside* the test process, in your CI

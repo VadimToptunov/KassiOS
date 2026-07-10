@@ -64,6 +64,7 @@ struct LoginView: View {
 
 struct HomeView: View {
     @State private var notificationsOn = false
+    @State private var showAlert = false
     private let items = (0..<12).map { "Item \($0)" }
 
     var body: some View {
@@ -74,6 +75,12 @@ struct HomeView: View {
 
             Toggle("Notifications", isOn: $notificationsOn)
                 .accessibilityIdentifier("notifications")
+
+            Button("Show Alert") { showAlert = true }
+                .accessibilityIdentifier("showAlert")
+                .alert("Heads up", isPresented: $showAlert) {
+                    Button("OK", role: .cancel) { }
+                }
 
             Section("Items") {
                 ForEach(items.indices, id: \.self) { index in
