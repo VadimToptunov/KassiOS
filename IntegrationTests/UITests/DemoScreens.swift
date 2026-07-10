@@ -16,6 +16,11 @@ final class HomeScreen: KassScreen {
     lazy var welcome = staticText("welcome")
     lazy var notifications = switchControl("notifications")
     lazy var showAlert = button("showAlert")
+    lazy var refreshed = staticText("refreshed")
+    lazy var list = custom("home-scroll") { [app] in
+        let collection = app.collectionViews.firstMatch
+        return collection.exists ? collection : app.tables.firstMatch
+    }
 
     override var onLoad: [KassElement] { [welcome] }
 }

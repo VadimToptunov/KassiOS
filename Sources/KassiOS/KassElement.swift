@@ -418,6 +418,17 @@ public extension KassElement {
         }
     }
 
+    /// Pull-to-refresh: drags this scroll container down from near its top.
+    @discardableResult
+    func pullToRefresh(file: StaticString = #file, line: UInt = #line) -> KassElement {
+        perform("pullToRefresh", file: file, line: line) { element in
+            guard element.exists else { throw KassError("does not exist") }
+            let start = element.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.1))
+            let end = start.withOffset(CGVector(dx: 0, dy: 400))
+            start.press(forDuration: 0.1, thenDragTo: end)
+        }
+    }
+
     /// Press-and-drags from this element onto `target`.
     @discardableResult
     func drag(to target: KassElement, file: StaticString = #file, line: UInt = #line) -> KassElement {

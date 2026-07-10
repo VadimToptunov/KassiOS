@@ -120,6 +120,9 @@ row.scrollTo(in: list, direction: .up)
 element.tapAtNormalizedOffset(x: 0.9, y: 0.5)
 source.drag(to: destination)
 
+// Pull-to-refresh — call on an element near the top of the scrollable content
+firstRow.pullToRefresh()
+
 // A one-off timeout, longer or shorter than the global config
 slowRow.within(timeout: 30).assertVisible()
 

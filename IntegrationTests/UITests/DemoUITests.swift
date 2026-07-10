@@ -93,6 +93,16 @@ final class DemoUITests: KassTestCase {
         alert().assertExists().tap("OK")
     }
 
+    func test_pullToRefresh() {
+        launch()
+        onScreen(LoginScreen.self) { $0.email.typeText("a@b.c"); $0.signIn.tap() }
+        onScreen(HomeScreen.self) { home in
+            home.refreshed.assertNotExists()
+            home.welcome.pullToRefresh()
+            home.refreshed.assertVisible()
+        }
+    }
+
     func test_screenshotEachStep() {
         config = KassConfig(accessibilityIdentifierPolicy: .enforce, screenshotEachStep: true)
         launch()
