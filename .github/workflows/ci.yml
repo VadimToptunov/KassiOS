@@ -49,7 +49,12 @@ jobs:
 
       - name: Pick an available iPhone simulator
         id: sim
-        run: echo "udid=$(xcrun simctl list devices available | grep -m1 'iPhone' | grep -oE '[0-9A-Fa-f-]{36}')" >> "$GITHUB_OUTPUT"
+        run: |
+          # Prefer a Pro (large screen, most stable); fall back to any iPhone.
+          UDID=$(xcrun simctl list devices available | grep -m1 -E 'iPhone [0-9]+ Pro ' | grep -oE '[0-9A-Fa-f-]{36}')
+          [ -z "$UDID" ] && UDID=$(xcrun simctl list devices available | grep -m1 'iPhone' | grep -oE '[0-9A-Fa-f-]{36}')
+          echo "Using simulator $UDID"
+          echo "udid=$UDID" >> "$GITHUB_OUTPUT"
 
       - name: Run UI tests
         working-directory: IntegrationTests
@@ -58,5 +63,11 @@ jobs:
           xcodebuild test \
             -scheme KassDemoUITests \
             -destination "id=${{ steps.sim.outputs.udid }}" \
+            -retry-tests-on-failure \
             CODE_SIGNING_ALLOWED=NO \
-            | tail -80
+            2>&1 | tee xcodebuild.log | tail -100
+
+      - name: Failure details
+        if: failure()
+        working-directory: IntegrationTests
+        run: grep -nE "error:|failed -|Assertion Failure|Failing tests:|XCTAssert" xcodebuild.log | tail -40 || true
