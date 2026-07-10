@@ -30,7 +30,7 @@ retries under one shared time budget (``Waiter``), so tests survive view-hierarc
 reloads without `waitForExistence`, `sleep`, or stale references.
 
 For a full prose walkthrough see the
-[Guide](https://github.com/your-org/KassiOS/blob/main/Documentation/Guide.md).
+[Guide](https://github.com/VadimToptunov/KassiOS/blob/main/Documentation/Guide.md).
 
 ## Topics
 

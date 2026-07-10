@@ -51,7 +51,7 @@ No `waitForExistence`. No `sleep`. No stale references.
 Swift Package Manager. Add the package and link it to your **UI Test target**:
 
 ```swift
-.package(url: "https://github.com/<you>/KassiOS.git", from: "0.1.0")
+.package(url: "https://github.com/VadimToptunov/KassiOS.git", from: "0.1.0")
 ```
 
 ## Use
