@@ -1,0 +1,93 @@
+# Changelog
+
+All notable changes to KassiOS are documented here. The format is based on
+[Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
+adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [0.8.0] - 2026-07-10
+
+### Added
+- Accessibility-identifier policy `.ignore` / `.warn` / `.enforce`
+  (`KassConfig.accessibilityIdentifierPolicy`). `.warn` surfaces an Xcode message
+  without failing; `.enforce` fails when an element is matched by label instead
+  of a real `accessibilityIdentifier`.
+- Accessibility audit: `assertNoAccessibilityIssues(for:)` wrapping
+  `performAccessibilityAudit` (iOS 17+).
+- Per-call configuration `KassElement.within(timeout:pollInterval:)`.
+- Element reads and actions: `readValue`, `readLabel`, `assertPlaceholder`,
+  `tapAtNormalizedOffset(x:y:)`, `drag(to:)`.
+- Bundled `IntegrationTests/`: a SwiftUI demo app plus KassiOS-driven UI tests
+  that run on the simulator; wired into CI as a second job.
+
+### Changed
+- `KassRunBuilder.after` now runs via `addTeardownBlock`, so it executes even
+  after a hard failure.
+- Replaced `KassConfig.requireAccessibilityIdentifiers: Bool` with the
+  `accessibilityIdentifierPolicy` enum.
+
+### Fixed
+- `assertHasText` / `assertValueMatches` now fall back to `label` when `value`
+  is an empty string (e.g. SwiftUI `Text`).
+- `setSwitch` taps the inner switch control, so it toggles SwiftUI `Toggle`s.
+
+## [0.7.0] - 2026-07-09
+
+### Added
+- Strict accessibility-identifier mode and precise failure diagnostics (element
+  snapshot + screenshot at the moment of failure).
+- `KassSuite` (shared per-suite configuration) and structured
+  `before` / `after` / `run`.
+
+## [0.6.0] - 2026-07-09
+
+### Added
+- `KassElementCollection` for lists and tables, with `KassScreen` builders.
+- Scoped child elements (`descendant` and convenience wrappers).
+- Slider / switch / picker controls, `assertLabelContains`, `assertValueMatches`,
+  `waitUntil`.
+- Parameterized (data-driven) tests via `KassTestCase.parameterized`.
+
+## [0.5.0] - 2026-07-09
+
+### Added
+- Kaspresso-style flow primitives: `flakySafely`, `continuously`, `compose`,
+  `retry`, `pressBack`, plus throwing `require*` checks.
+- Multitouch gestures (`pinch`, `rotate`, `twoFingerTap`) and more device helpers
+  (`pressHome`, `springboard`, `allowSystemDialogNow`, `waitForIdle`).
+
+## [0.4.0] - 2026-07-09
+
+### Added
+- Pluggable synchronization backend (`KassSynchronizer`, `NoOpSynchronizer`) with
+  an opt-in EarlGrey adapter reference.
+
+## [0.3.0] - 2026-07-09
+
+### Added
+- Allure 2 report export (`AllureReporter`, `KassReporter`) with nested steps and
+  screenshot attachments.
+
+## [0.2.0] - 2026-07-09
+
+### Added
+- Gestures and `scrollTo`, richer assertions, `KassDevice` helpers, and reusable
+  `KassScenario` flows.
+
+### Fixed
+- Elements resolve via `firstMatch`, avoiding "multiple matching elements" crashes
+  on ambiguous identifiers.
+
+## [0.1.0] - 2026-07-09
+
+### Added
+- Initial DSL: `KassTestCase`, `KassScreen`, `KassElement`, implicit waits,
+  flaky-safety (`Waiter`), step logging, and `onScreen`.
+
+[0.8.0]: https://github.com/your-org/KassiOS/releases/tag/0.8.0
+[0.7.0]: https://github.com/your-org/KassiOS/releases/tag/0.7.0
+[0.6.0]: https://github.com/your-org/KassiOS/releases/tag/0.6.0
+[0.5.0]: https://github.com/your-org/KassiOS/releases/tag/0.5.0
+[0.4.0]: https://github.com/your-org/KassiOS/releases/tag/0.4.0
+[0.3.0]: https://github.com/your-org/KassiOS/releases/tag/0.3.0
+[0.2.0]: https://github.com/your-org/KassiOS/releases/tag/0.2.0
+[0.1.0]: https://github.com/your-org/KassiOS/releases/tag/0.1.0
