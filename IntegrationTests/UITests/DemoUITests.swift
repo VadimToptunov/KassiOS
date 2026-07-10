@@ -61,4 +61,13 @@ final class DemoUITests: KassTestCase {
             assertNoAccessibilityIssues(for: XCUIAccessibilityAuditType.all.subtracting(.contrast))
         }
     }
+
+    func test_scaffold_generation() {
+        launch()
+        let code = KassScaffold.generate(for: app, screenName: "GeneratedLoginScreen")
+        print("SCAFFOLD:\n\(code)")
+        XCTAssertTrue(code.contains("final class GeneratedLoginScreen: KassScreen"))
+        XCTAssertTrue(code.contains("textField(\"email\")"))
+        XCTAssertTrue(code.contains("button(\"signIn\")"))
+    }
 }

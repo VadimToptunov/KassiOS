@@ -17,6 +17,7 @@ waits, flaky-safety, readable reports, and zero external dependencies.
 - [Synchronization backends](#synchronization-backends)
 - [Configuration reference](#configuration-reference)
 - [Enforcing accessibility identifiers](#enforcing-accessibility-identifiers)
+- [Scaffolding screen objects](#scaffolding-screen-objects)
 - [Accessibility audit](#accessibility-audit)
 - [Failure diagnostics](#failure-diagnostics)
 - [Suites & structured runs](#suites--structured-runs)
@@ -411,6 +412,32 @@ Only elements built from an identifier (`button(_:)`, `staticText(_:)`, …,
 `descendant(_:_:)`) are checked; `custom(_:_:)` closures and collection elements
 are exempt. XCUITest reports an empty `identifier` for label-matched elements,
 which is how KassiOS tells a real identifier from a label fallback.
+
+## Scaffolding screen objects
+
+Model a screen once from the live tree instead of hand-writing it. From a
+throwaway test on the screen you want:
+
+```swift
+func test_scaffold() {
+    launch()
+    printScreenScaffold("LoginScreen")   // prints ready-to-paste Swift
+}
+```
+
+```swift
+final class LoginScreen: KassScreen {
+    lazy var signIn = button("signIn")
+    lazy var email = textField("email")
+    lazy var password = secureTextField("password")
+}
+// 3 element(s) had no accessibilityIdentifier — add ids to include them.
+```
+
+Only elements with a real identifier become properties; the trailing count tells
+you how many are still missing (pairs with strict mode).
+`KassScaffold.generate(for:screenName:)` returns the string if you'd rather write
+it to a file.
 
 ## Accessibility audit
 
