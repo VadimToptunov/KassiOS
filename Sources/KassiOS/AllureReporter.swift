@@ -18,6 +18,8 @@ public final class AllureReporter: KassReporter {
     private var stack: [StepNode] = []
     private var testName = ""
     private var testFullName = ""
+    private var extraLabels: [AllureLabel] = []
+    private var links: [AllureLink] = []
 
     public init(resultsPath: String? = nil, logger: KassLogger = ConsoleKassLogger()) {
         let path = resultsPath
@@ -33,11 +35,23 @@ public final class AllureReporter: KassReporter {
         lock.lock(); defer { lock.unlock() }
         testName = name
         testFullName = fullName
+        extraLabels = []
+        links = []
         let node = StepNode(name: name, start: Self.now())
         root = node
         stack = [node]
         try? fileManager.createDirectory(at: resultsDir, withIntermediateDirectories: true)
         logger.log("📊 Allure results → \(resultsDir.path)")
+    }
+
+    public func addLabel(_ name: String, value: String) {
+        lock.lock(); defer { lock.unlock() }
+        extraLabels.append(AllureLabel(name: name, value: value))
+    }
+
+    public func addLink(name: String, url: String, type: String) {
+        lock.lock(); defer { lock.unlock() }
+        links.append(AllureLink(name: name, url: url, type: type))
     }
 
     public func stepStarted(_ name: String) {
@@ -86,7 +100,8 @@ public final class AllureReporter: KassReporter {
                 AllureLabel(name: "framework", value: "KassiOS"),
                 AllureLabel(name: "language", value: "swift"),
                 AllureLabel(name: "suite", value: Self.suite(from: testFullName))
-            ]
+            ] + extraLabels,
+            links: links
         )
         write(result)
         self.root = nil
@@ -193,6 +208,13 @@ private struct AllureResult: Codable {
     var steps: [AllureStep]
     var attachments: [AllureAttachment]
     var labels: [AllureLabel]
+    var links: [AllureLink]
+}
+
+private struct AllureLink: Codable {
+    var name: String
+    var url: String
+    var type: String
 }
 
 private struct AllureStep: Codable {

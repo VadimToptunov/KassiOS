@@ -89,6 +89,16 @@ public protocol KassReporter: AnyObject {
     func stepFinished(status: KassStepStatus, message: String?)
     func attach(name: String, type: String, data: Data)
     func testFinished(status: KassStepStatus, message: String?)
+
+    /// Metadata for the current test (severity, feature, owner, …). Optional —
+    /// reporters that don't support it inherit no-op defaults.
+    func addLabel(_ name: String, value: String)
+    func addLink(name: String, url: String, type: String)
+}
+
+public extension KassReporter {
+    func addLabel(_ name: String, value: String) {}
+    func addLink(name: String, url: String, type: String) {}
 }
 
 /// Minimal logging surface. Swap the implementation to route into Allure,

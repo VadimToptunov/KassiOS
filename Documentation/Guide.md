@@ -351,7 +351,18 @@ Results go to `$ALLURE_RESULTS_PATH` or `<temp>/allure-results`; the path is
 logged at test start. Then `allure serve <results-dir>`. Steps left open by a hard
 failure are attributed the test's terminal status, so the tree always closes.
 
-Implement `KassReporter` to route into any other backend.
+Tag tests with metadata — it lands as Allure labels and links:
+
+```swift
+severity(.critical)
+feature("Login"); story("Sign in with email")
+owner("qa-team"); tag("smoke")
+issue("JIRA-1234", "https://tracker/JIRA-1234")
+tms("TC-42", "https://tms/TC-42")
+```
+
+Implement `KassReporter` to route into any other backend (metadata methods have
+no-op defaults).
 
 ---
 

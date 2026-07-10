@@ -78,4 +78,26 @@ final class AllureReporterTests: XCTestCase {
         XCTAssertEqual(attachments[0]["name"] as? String, "root-shot")
         XCTAssertEqual(attachments[0]["type"] as? String, "image/png")
     }
+
+    func test_labelsAndLinks() throws {
+        let dir = makeTempDir()
+        defer { try? FileManager.default.removeItem(atPath: dir) }
+
+        let reporter = AllureReporter(resultsPath: dir)
+        reporter.testStarted(name: "t", fullName: "S.t")
+        reporter.addLabel("severity", value: "critical")
+        reporter.addLabel("feature", value: "Login")
+        reporter.addLink(name: "JIRA-1", url: "https://tracker/1", type: "issue")
+        reporter.testFinished(status: .passed, message: nil)
+
+        let json = try readResult(in: dir)
+        let labels = try XCTUnwrap(json["labels"] as? [[String: Any]])
+        XCTAssertTrue(labels.contains { ($0["name"] as? String) == "severity" && ($0["value"] as? String) == "critical" })
+        XCTAssertTrue(labels.contains { ($0["name"] as? String) == "feature" && ($0["value"] as? String) == "Login" })
+
+        let links = try XCTUnwrap(json["links"] as? [[String: Any]])
+        XCTAssertEqual(links.count, 1)
+        XCTAssertEqual(links[0]["name"] as? String, "JIRA-1")
+        XCTAssertEqual(links[0]["type"] as? String, "issue")
+    }
 }

@@ -45,7 +45,7 @@ open class KassTestCase: XCTestCase {
 
     /// Opens the structured report lazily, on first use, so a `config` (and its
     /// `reporter`) assigned in a subclass's `setUp` is already in place.
-    private func startReportingIfNeeded() {
+    func startReportingIfNeeded() {
         guard !reportingStarted else { return }
         reportingStarted = true
         let (display, full) = Self.parseTestName(name)
