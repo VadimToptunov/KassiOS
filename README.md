@@ -1,5 +1,9 @@
 # KassiOS ☕️
 
+[![CI](https://github.com/VadimToptunov/KassiOS/actions/workflows/ci.yml/badge.svg)](https://github.com/VadimToptunov/KassiOS/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/VadimToptunov/KassiOS?sort=semver)](https://github.com/VadimToptunov/KassiOS/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 A tiny, batteries-included DSL on top of **XCUITest** — readable screen objects,
 automatic waits, and built-in flaky-safety. Kaspresso-style ergonomics for iOS,
 with **zero external dependencies** and one-line SPM install.
