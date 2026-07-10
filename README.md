@@ -13,7 +13,9 @@ with **zero external dependencies** and one-line SPM install.
 📖 **Full [documentation guide](Documentation/Guide.md)** — every feature, plus an
 honest [when-to-use / when-not-to](Documentation/Guide.md#when-to-use-kassios--and-when-not-to).
 API reference: build in Xcode via **Product ▸ Build Documentation** (a DocC
-catalog ships in the target). Release notes: [CHANGELOG.md](CHANGELOG.md).
+catalog ships in the target). Migrating an existing suite?
+[Migration guide](Documentation/Migration.md). Release notes:
+[CHANGELOG.md](CHANGELOG.md).
 
 ## Why
 

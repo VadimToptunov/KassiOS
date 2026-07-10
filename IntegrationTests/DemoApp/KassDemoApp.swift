@@ -65,10 +65,16 @@ struct LoginView: View {
 struct HomeView: View {
     @State private var notificationsOn = false
     @State private var showAlert = false
+    @State private var refreshed = false
     private let items = (0..<12).map { "Item \($0)" }
 
     var body: some View {
         Form {
+            if refreshed {
+                Text("Refreshed")
+                    .accessibilityIdentifier("refreshed")
+            }
+
             Text("Welcome!")
                 .font(.headline)
                 .accessibilityIdentifier("welcome")
@@ -88,6 +94,7 @@ struct HomeView: View {
                 }
             }
         }
+        .refreshable { refreshed = true }
         .accessibilityIdentifier("itemsList")
         .navigationTitle("Home")
     }
