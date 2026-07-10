@@ -70,4 +70,14 @@ final class DemoUITests: KassTestCase {
         XCTAssertTrue(code.contains("textField(\"email\")"))
         XCTAssertTrue(code.contains("button(\"signIn\")"))
     }
+
+    func test_localized_screenshots() {
+        var visited: [String] = []
+        forEachLocale(["en", "fr"]) { locale in
+            onScreen(LoginScreen.self) { $0.email.assertVisible() }
+            device.screenshot("login-\(locale)")
+            visited.append(locale)
+        }
+        XCTAssertEqual(visited, ["en", "fr"])
+    }
 }

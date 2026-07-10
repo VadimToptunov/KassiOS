@@ -14,6 +14,7 @@ waits, flaky-safety, readable reports, and zero external dependencies.
 - [Steps & scenarios](#steps--scenarios)
 - [Device helpers](#device-helpers)
 - [Reporting: screenshots & Allure](#reporting-screenshots--allure)
+- [Localized screenshots (Docloc)](#localized-screenshots-docloc)
 - [Synchronization backends](#synchronization-backends)
 - [Configuration reference](#configuration-reference)
 - [Enforcing accessibility identifiers](#enforcing-accessibility-identifiers)
@@ -353,6 +354,30 @@ failure are attributed the test's terminal status, so the tree always closes.
 Implement `KassReporter` to route into any other backend.
 
 ---
+
+## Localized screenshots (Docloc)
+
+Capture a flow across languages — for App Store screenshots or visual review.
+`forEachLocale` relaunches the app in each language and runs your flow:
+
+```swift
+func test_localized() {
+    forEachLocale(["en", "fr", "de"]) { locale in
+        onScreen(LoginScreen.self) { $0.email.assertVisible() }
+        device.screenshot("login-\(locale)")
+    }
+}
+```
+
+Appearance (light/dark) and Dynamic Type can't be switched from inside the test
+process — drive them host-side and loop locales within each:
+
+```sh
+for mode in light dark; do
+  kass-simctl appearance $mode
+  xcodebuild test -only-testing:…/test_localized …
+done
+```
 
 ## Synchronization backends
 
