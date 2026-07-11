@@ -36,6 +36,9 @@ jobs:
           xcrun docc process-archive transform-for-static-hosting "$ARCHIVE" \
             --output-path _site \
             --hosting-base-path KassiOS
+          # DocC serves content under /documentation/kassios/, not the root.
+          # Redirect the bare URL there so the site isn't blank.
+          printf '<!doctype html><meta http-equiv="refresh" content="0; url=documentation/kassios/">' > _site/index.html
 
       - uses: actions/upload-pages-artifact@v3
         with:
