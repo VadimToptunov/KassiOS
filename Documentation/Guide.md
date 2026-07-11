@@ -23,6 +23,7 @@ waits, flaky-safety, readable reports, and zero external dependencies.
 - [Accessibility audit](#accessibility-audit)
 - [Failure diagnostics](#failure-diagnostics)
 - [Suites & structured runs](#suites--structured-runs)
+- [Snapshot regression](#snapshot-regression)
 - [When to use KassiOS — and when not to](#when-to-use-kassios--and-when-not-to)
 
 ---
@@ -559,6 +560,23 @@ before { launch() }
 
 `before` runs first and `after` on normal completion; for teardown that must
 survive a hard failure, use `tearDown`.
+
+## Snapshot regression
+
+Compare the current screen (or an element) against a committed reference image —
+zero-dependency (PNG pixels via CoreGraphics/ImageIO, no external library):
+
+```swift
+assertSnapshot(named: "home")                 // whole screen
+assertSnapshot(of: home.card, named: "card")  // one element
+assertSnapshot(named: "home", tolerance: 0.01)
+```
+
+References live in a `__Snapshots__` folder beside the test file. The first run
+(or `record: true`, or the `KASS_RECORD_SNAPSHOTS` env var) records the reference
+and fails, prompting you to commit it. Comparison is pixel-based, so **pin the
+simulator device and OS** — otherwise anti-aliasing differences cause noise. A
+mismatch attaches the failing image to the report.
 
 ## When to use KassiOS — and when not to
 
