@@ -4,6 +4,30 @@ All notable changes to KassiOS are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0] - 2026-07-10
+
+### Added
+- WebView support: `KassScreen.webView()`, `link(_:)`, `links()`.
+- Wait-combinators `waitForAny` / `waitForAll` / `assertOnScreen`, and an app-alert
+  DSL `alert().assertExists().tap("OK")`.
+- `KassScaffold` — generate `KassScreen` objects from the live accessibility tree
+  (and count elements missing an identifier).
+- `forEachLocale` — localized screenshot runs (Docloc-style).
+- Allure metadata: `severity`, `epic` / `feature` / `story`, `owner`, `tag`, plus
+  issue / tms / custom links.
+- `config.screenshotEachStep` (a screenshot after every `step`) and
+  `device.attachText` for arbitrary text attachments.
+- `KassElement.pullToRefresh()`.
+- `Scripts/kass-simctl.sh` — host-side CI helpers (permissions, location, push,
+  clean status bar, appearance, deep link, reset).
+- Documentation: [migration guide](Documentation/Migration.md); README badges.
+
+### Changed
+- CI now runs three jobs — SwiftLint, unit tests (macOS), and UI tests
+  (simulator) with `-retry-tests-on-failure` and a Pro-simulator preference —
+  plus a DocC → GitHub Pages workflow. Added a `.swiftlint.yml` and fixed all
+  lint violations.
+
 ## [0.8.0] - 2026-07-10
 
 ### Added
@@ -83,6 +107,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Initial DSL: `KassTestCase`, `KassScreen`, `KassElement`, implicit waits,
   flaky-safety (`Waiter`), step logging, and `onScreen`.
 
+[0.9.0]: https://github.com/VadimToptunov/KassiOS/releases/tag/0.9.0
 [0.8.0]: https://github.com/VadimToptunov/KassiOS/releases/tag/0.8.0
 [0.7.0]: https://github.com/VadimToptunov/KassiOS/releases/tag/0.7.0
 [0.6.0]: https://github.com/VadimToptunov/KassiOS/releases/tag/0.6.0
