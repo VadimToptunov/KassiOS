@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/VadimToptunov/KassiOS/actions/workflows/ci.yml/badge.svg)](https://github.com/VadimToptunov/KassiOS/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/VadimToptunov/KassiOS?sort=semver)](https://github.com/VadimToptunov/KassiOS/releases)
+[![Docs](https://img.shields.io/badge/docs-DocC-informational)](https://vadimtoptunov.github.io/KassiOS/documentation/kassios/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 A tiny, batteries-included DSL on top of **XCUITest** — readable screen objects,
