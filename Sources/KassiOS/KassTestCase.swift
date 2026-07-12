@@ -33,6 +33,14 @@ open class KassTestCase: XCTestCase {
             attachment.lifetime = .keepAlways
             add(attachment)
             config.reporter?.attach(name: "Failure", type: "image/png", data: shot.pngRepresentation)
+
+            // Full accessibility tree — saves hours when diagnosing a red test.
+            let tree = app.debugDescription
+            let treeAttachment = XCTAttachment(string: tree)
+            treeAttachment.name = "Accessibility tree — \(name)"
+            treeAttachment.lifetime = .keepAlways
+            add(treeAttachment)
+            config.reporter?.attach(name: "Accessibility tree", type: "text/plain", data: Data(tree.utf8))
         }
         if reportingStarted {
             config.reporter?.testFinished(
@@ -86,6 +94,21 @@ open class KassTestCase: XCTestCase {
         environment: [String: String] = [:]
     ) -> XCUIApplication {
         launch(arguments: ["-deeplink", url] + arguments, environment: environment)
+    }
+
+    /// Launches with network stubs passed as launch environment
+    /// (`KASS_STUB_<name>=<value>`). The app reads these on startup and serves
+    /// local fixtures instead of hitting the network — the reliable XCUITest
+    /// pattern, since out-of-process tests can't intercept traffic in-process.
+    @discardableResult
+    public func launch(
+        stubs: [String: String],
+        arguments: [String] = [],
+        environment: [String: String] = [:]
+    ) -> XCUIApplication {
+        var merged = environment
+        for (key, value) in stubs { merged["KASS_STUB_\(key)"] = value }
+        return launch(arguments: arguments, environment: merged)
     }
 
     /// Enter a screen scope. Waits for the screen's `onLoad` elements to exist
