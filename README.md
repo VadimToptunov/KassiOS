@@ -384,19 +384,21 @@ Pages with the "GitHub Actions" source in repo settings).
 
 ## Status
 
-v0.9 — core DSL, waits, flaky-safety, step logging, gestures + scroll-to +
+v0.10 — core DSL, waits, flaky-safety, step logging, gestures + scroll-to +
 multitouch + coordinate/drag + pull-to-refresh, slider/switch/picker controls,
-rich assertions (incl. label-contains/value-regex/placeholder/`waitUntil`),
-per-call `within(timeout:)`, element collections, scoped child elements, **web
-content** (`webView`/`link`/`links`), wait-combinators + app-alert DSL,
-Kaspresso-style flow primitives, parameterized tests, `KassSuite` + structured
+rich assertions (strict `assertVisible` vs. soft `assertPresent`,
+label-contains/value-regex/placeholder/`waitUntil`), per-call `within(timeout:)`,
+element collections, scoped child elements, **web content**
+(`webView`/`link`/`links`), wait-combinators + app-alert DSL, Kaspresso-style
+flow primitives, parameterized tests, `KassSuite` + structured
 `before`/`after`/`run`, an **accessibility-identifier policy**
 (`ignore`/`warn`/`enforce`) + **accessibility audit** + **screen-object codegen**
-(`KassScaffold`), precise failure diagnostics, device/permission/deep-link
-helpers + a `kass-simctl` CI toolkit, localized screenshot runs, reusable
-scenarios, Allure export with metadata/links, and a pluggable synchronization
-backend. Real UI coverage runs on the simulator in CI (SwiftLint + unit + UI),
-with DocC auto-published to Pages. See the [full guide](Documentation/Guide.md).
+(`KassScaffold`), precise failure diagnostics (+ accessibility-tree dump),
+device/permission/deep-link/stub helpers + a `kass-simctl` CI toolkit, localized
+screenshot runs, reusable scenarios, **Allure + JUnit** reporters, zero-dep
+snapshot regression, and a synchronizer applied to every wait. Real UI coverage
+runs on the simulator in CI (SwiftLint + unit + UI), with DocC auto-published to
+Pages. See the [full guide](Documentation/Guide.md).
 
 Verified end-to-end against Apple's open-source
 [Food Truck](https://github.com/apple/sample-food-truck) app on the iOS

@@ -6,6 +6,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-07-10
+
 ### Changed
 - `assertVisible` is now strict (`exists && isHittable`), so it can't go falsely
   green on an off-screen element; the previous frame-based soft check moved to a
@@ -139,6 +141,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Initial DSL: `KassTestCase`, `KassScreen`, `KassElement`, implicit waits,
   flaky-safety (`Waiter`), step logging, and `onScreen`.
 
+[0.10.0]: https://github.com/VadimToptunov/KassiOS/releases/tag/0.10.0
 [0.9.0]: https://github.com/VadimToptunov/KassiOS/releases/tag/0.9.0
 [0.8.0]: https://github.com/VadimToptunov/KassiOS/releases/tag/0.8.0
 [0.7.0]: https://github.com/VadimToptunov/KassiOS/releases/tag/0.7.0
