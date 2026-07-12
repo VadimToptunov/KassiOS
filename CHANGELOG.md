@@ -20,6 +20,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   convention (`device.open(url:)` via Safari is now documented as a fallback).
 - Snapshot references honour `$KASS_SNAPSHOTS_PATH` (for CI) instead of only the
   `#file`-adjacent folder.
+- `JUnitReporter` — a `KassReporter` that writes JUnit XML (one file per test
+  under `$KASS_JUNIT_PATH`) for CI systems that don't speak Allure.
+- `KassTestCase.launch(stubs:)` — network-stub launch convention
+  (`KASS_STUB_<name>` env the app reads to serve fixtures).
+- A failing test now also attaches the full accessibility tree
+  (`app.debugDescription`) in `tearDown`.
 
 ### Fixed
 - `KassSuite` docstring used a non-existent `requireAccessibilityIdentifiers`

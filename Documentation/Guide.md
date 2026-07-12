@@ -400,6 +400,13 @@ issue("JIRA-1234", "https://tracker/JIRA-1234")
 tms("TC-42", "https://tms/TC-42")
 ```
 
+Prefer plain JUnit XML (every CI understands it)? Use `JUnitReporter` — same
+protocol, one `<testsuite>` file per test under `$KASS_JUNIT_PATH`:
+
+```swift
+config = KassConfig(reporter: JUnitReporter())
+```
+
 Implement `KassReporter` to route into any other backend (metadata methods have
 no-op defaults).
 
@@ -533,7 +540,23 @@ Every failed interaction appends a one-line snapshot of the offending element �
 `exists`, `hittable`, `id`, `label`, `type`, `frame` — and (unless disabled via
 `captureScreenshotOnFailure`) attaches a screenshot of the screen at the moment
 of failure to the report. The message names the exact element, so a red run
-points straight at the problem.
+points straight at the problem. A failing test also attaches the full
+accessibility tree (`app.debugDescription`) in `tearDown` — invaluable when an
+element wasn't where you expected.
+
+## Network stubs
+
+XCUITest runs out of process, so you can't intercept traffic in-process. The
+reliable pattern is a launch-time switch the app reads to serve fixtures.
+`launch(stubs:)` passes them as `KASS_STUB_<name>` environment variables:
+
+```swift
+launch(stubs: ["profile": "fixtures/profile.json", "feed": "empty"])
+// In the app:  ProcessInfo.processInfo.environment["KASS_STUB_profile"]
+```
+
+The app side (reading the vars and returning fixtures or booting a local stub
+server) is yours; KassiOS just standardises the convention.
 
 ## Suites & structured runs
 
