@@ -66,10 +66,11 @@ public extension KassTestCase {
 
     /// Asserts the current screen (or `element`) matches a stored reference image.
     ///
-    /// References live in a `__Snapshots__` folder beside the calling test file.
-    /// The first run (or `record: true`, or the `KASS_RECORD_SNAPSHOTS` env var)
-    /// writes the reference and fails, prompting you to commit it and re-run.
-    /// Comparison is pixel-based, so pin the simulator device and OS.
+    /// References go in `$KASS_SNAPSHOTS_PATH` when set (recommended on CI, where
+    /// the source path may be read-only or different), otherwise a `__Snapshots__`
+    /// folder beside the calling test file. The first run (or `record: true`, or
+    /// the `KASS_RECORD_SNAPSHOTS` env var) writes the reference and fails,
+    /// prompting you to commit it. Comparison is pixel-based — pin device and OS.
     func assertSnapshot(
         of element: KassElement? = nil,
         named name: String,
@@ -81,7 +82,8 @@ public extension KassTestCase {
         let screenshot = element.map { $0.resolve().screenshot() } ?? app.screenshot()
         let png = screenshot.pngRepresentation
 
-        let directory = ("\(file)" as NSString).deletingLastPathComponent + "/__Snapshots__"
+        let directory = ProcessInfo.processInfo.environment["KASS_SNAPSHOTS_PATH"]
+            ?? (("\(file)" as NSString).deletingLastPathComponent + "/__Snapshots__")
         try? FileManager.default.createDirectory(atPath: directory, withIntermediateDirectories: true)
         let reference = (directory as NSString).appendingPathComponent("\(name).png")
 

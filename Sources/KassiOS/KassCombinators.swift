@@ -17,6 +17,7 @@ public extension KassTestCase {
                 pollInterval: config.pollInterval,
                 enabled: config.flakySafetyEnabled
             ) {
+                config.synchronizer.waitForIdle(timeout: config.timeout)
                 for (index, element) in elements.enumerated() where element.resolve().exists { return index }
                 throw KassError("none of \(elements.count) elements appeared")
             }
@@ -40,6 +41,7 @@ public extension KassTestCase {
                 pollInterval: config.pollInterval,
                 enabled: config.flakySafetyEnabled
             ) {
+                config.synchronizer.waitForIdle(timeout: config.timeout)
                 for element in elements where !element.resolve().exists {
                     throw KassError("\(element.description) not present yet")
                 }
@@ -61,7 +63,7 @@ public extension KassTestCase {
         let screen = S(app: app, config: config)
         XCTContext.runActivity(named: "Assert on \(String(describing: type))") { _ in
             for element in screen.onLoad {
-                element.assertVisible(file: file, line: line)
+                element.assertExists(file: file, line: line)
             }
         }
         return screen

@@ -8,7 +8,7 @@ import XCTest
 /// ```swift
 /// class CheckoutSuite: KassSuite {
 ///     override func configure() -> KassConfig {
-///         KassConfig(timeout: 20, reporter: AllureReporter(), requireAccessibilityIdentifiers: true)
+///         KassConfig(timeout: 20, reporter: AllureReporter(), accessibilityIdentifierPolicy: .enforce)
 ///     }
 /// }
 ///

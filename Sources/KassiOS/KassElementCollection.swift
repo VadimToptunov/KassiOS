@@ -82,6 +82,7 @@ public struct KassElementCollection {
     public func assertCount(_ expected: Int, file: StaticString = #file, line: UInt = #line) -> KassElementCollection {
         do {
             try Waiter.retry(timeout: config.timeout, pollInterval: config.pollInterval, enabled: config.flakySafetyEnabled) {
+                config.synchronizer.waitForIdle(timeout: config.timeout)
                 let actual = query().count
                 guard actual == expected else { throw KassError("expected \(expected) but found \(actual)") }
             }
@@ -97,6 +98,7 @@ public struct KassElementCollection {
     public func assertNotEmpty(file: StaticString = #file, line: UInt = #line) -> KassElementCollection {
         do {
             try Waiter.retry(timeout: config.timeout, pollInterval: config.pollInterval, enabled: config.flakySafetyEnabled) {
+                config.synchronizer.waitForIdle(timeout: config.timeout)
                 guard query().count > 0 else { throw KassError("collection is empty") }
             }
         } catch {

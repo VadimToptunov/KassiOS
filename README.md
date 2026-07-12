@@ -120,7 +120,8 @@ element.swipeUp()   // .swipeDown() / .swipeLeft() / .swipeRight()
 row.scrollTo(in: list, direction: .up)
 
 // Assertions
-element.assertVisible()
+element.assertVisible()          // strict: exists + hittable (on screen)
+element.assertPresent()          // softer: exists + non-empty frame
 element.assertExists()
 element.assertNotExists()        // or .waitUntilGone()
 element.assertEnabled()          // .assertDisabled()

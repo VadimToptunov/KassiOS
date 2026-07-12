@@ -147,7 +147,8 @@ element.perform("custom") { xcuiElement in
 ## Assertions
 
 ```swift
-element.assertVisible()                 // exists + (hittable or rendered)
+element.assertVisible()                 // strict: exists + hittable (on screen)
+element.assertPresent()                 // softer: exists + non-empty frame (may be off screen)
 element.assertExists()
 element.assertNotExists()               // or .waitUntilGone()
 element.assertEnabled()                 // .assertDisabled()
@@ -342,7 +343,8 @@ device.screenshot("after login")            // attached to the report
 device.sendToBackground(for: 2)              // then reactivates
 device.pressHome()                           // iOS
 device.rotate(to: .landscapeLeft)           // iOS
-device.open(url: "https://example.com")     // deep link via Safari (iOS)
+launch(deeplink: "acme://item/42")           // preferred: app reads -deeplink and routes
+device.open(url: "https://example.com")     // fallback: deep link via Safari (iOS)
 device.waitForIdle()                         // via the configured synchronizer
 device.attachText("api-log", logString)      // attach arbitrary text to the report
 let springboard = device.springboard         // home screen / system-alert host
@@ -572,11 +574,13 @@ assertSnapshot(of: home.card, named: "card")  // one element
 assertSnapshot(named: "home", tolerance: 0.01)
 ```
 
-References live in a `__Snapshots__` folder beside the test file. The first run
-(or `record: true`, or the `KASS_RECORD_SNAPSHOTS` env var) records the reference
-and fails, prompting you to commit it. Comparison is pixel-based, so **pin the
-simulator device and OS** — otherwise anti-aliasing differences cause noise. A
-mismatch attaches the failing image to the report.
+References go in `$KASS_SNAPSHOTS_PATH` when set (recommended on CI, where the
+source path may be read-only or different), otherwise a `__Snapshots__` folder
+beside the test file. The first run (or `record: true`, or the
+`KASS_RECORD_SNAPSHOTS` env var) records the reference and fails, prompting you
+to commit it. Comparison is pixel-based, so **pin the simulator device and OS** —
+otherwise anti-aliasing differences cause noise. A mismatch attaches the failing
+image to the report.
 
 ## When to use KassiOS — and when not to
 

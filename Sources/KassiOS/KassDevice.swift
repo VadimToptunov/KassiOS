@@ -148,8 +148,10 @@ public struct KassDevice {
 
     // MARK: - Deep links
 
-    /// Opens `url` via Safari. Best-effort: Safari's address-bar element differs
-    /// across iOS versions, so treat this as a convenience, not a contract.
+    /// Opens `url` via Safari. Best-effort **fallback**: Safari's address-bar
+    /// element differs across iOS versions. Prefer the launch-argument
+    /// convention — `KassTestCase.launch(deeplink:)` — which the app routes
+    /// in-process and is reliable.
     #if os(iOS)
     public func open(url: String) {
         let safari = XCUIApplication(bundleIdentifier: "com.apple.mobilesafari")

@@ -75,8 +75,23 @@ open class KassTestCase: XCTestCase {
         return app
     }
 
-    /// Enter a screen scope. Waits for the screen's `onLoad` elements to be
-    /// visible (fails fast if they aren't), then runs `block` against it.
+    /// Launches the app with a deep link passed as a launch argument
+    /// (`-deeplink <url>`) for the app to read and route on startup. This is the
+    /// reliable, in-process convention — prefer it over `device.open(url:)`,
+    /// which drives Safari and is best-effort.
+    @discardableResult
+    public func launch(
+        deeplink url: String,
+        arguments: [String] = [],
+        environment: [String: String] = [:]
+    ) -> XCUIApplication {
+        launch(arguments: ["-deeplink", url] + arguments, environment: environment)
+    }
+
+    /// Enter a screen scope. Waits for the screen's `onLoad` elements to exist
+    /// (proof the screen loaded — fails fast if they don't), then runs `block`.
+    /// Existence (not strict visibility) is used so non-hittable proof elements
+    /// like labels don't cause false negatives.
     @discardableResult
     public func onScreen<S: KassScreen>(
         _ type: S.Type,
@@ -88,7 +103,7 @@ open class KassTestCase: XCTestCase {
         let screen = S(app: app, config: config)
         XCTContext.runActivity(named: "On \(String(describing: type))") { _ in
             for element in screen.onLoad {
-                element.assertVisible(file: file, line: line)
+                element.assertExists(file: file, line: line)
             }
             block(screen)
         }
