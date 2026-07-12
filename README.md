@@ -101,6 +101,26 @@ final class LoginFlowUITests: KassTestCase {
 - **Readable reports.** `onScreen` and `step` wrap `XCTContext.runActivity`,
   so Xcode's test report and `.xcresult` group actions the way you wrote them.
 
+## How it compares
+
+| | Raw XCUITest | EarlGrey | **KassiOS** |
+| --- | --- | --- | --- |
+| Implicit waits / flaky-safety | manual `waitForExistence` | idling resources | **built-in, one shared budget** |
+| Stale-safe (re-resolve each attempt) | no | n/a | **yes** |
+| Screen-object DSL | roll your own | none | **`KassScreen`** |
+| Flow primitives (`compose`/`continuously`) | no | partial | **yes** |
+| Parameterized (data-driven) tests | no | no | **yes** |
+| Reporting | `.xcresult` only | none | **Allure + JUnit** |
+| Accessibility-id enforcement + audit | no | no | **yes** |
+| Snapshot regression | external lib | no | **built-in, zero-dep** |
+| Idle synchronization | — | **core strength (in-process)** | pluggable (EarlGrey adapter) |
+| Dependencies | — | heavy | **zero** |
+| Setup | none | non-trivial | **one-line SPM** |
+
+EarlGrey's edge is in-process idle synchronization; KassiOS stays out-of-process
+(pure XCUITest) but exposes a synchronizer seam to plug EarlGrey in. See the
+honest [when-to-use / when-not-to](Documentation/Guide.md#when-to-use-kassios--and-when-not-to).
+
 ## Interactions & assertions
 
 Every method below is chainable, self-waiting and flaky-safe:

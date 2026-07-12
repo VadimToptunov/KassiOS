@@ -1,0 +1,22 @@
+name: Feature request
+description: Suggest an addition or improvement to KassiOS.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What's the problem?
+      description: The testing pain this would solve. What do you write today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed API
+      description: How it would read at the call site.
+      render: swift
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives / prior art
+      description: How Kaspresso, EarlGrey, or raw XCUITest handle this.
