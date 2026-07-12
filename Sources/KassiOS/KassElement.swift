@@ -52,6 +52,11 @@ public extension KassElement {
         }
     }
 
+    /// Clears the field by sending one delete per character of the current
+    /// `value`. Known limitation: for secure fields and formatted inputs (phone,
+    /// card, currency) the `value` length may not equal the number of deletes
+    /// needed, so clearing can be incomplete — verify with `assertHasValue("")`
+    /// or clear it in the app for those.
     @discardableResult
     func clearText(file: StaticString = #file, line: UInt = #line) -> KassElement {
         perform("clearText", file: file, line: line) { element in
@@ -63,16 +68,26 @@ public extension KassElement {
         }
     }
 
+    /// Strict visibility: the element exists and is hittable (on screen and
+    /// interactable). An element scrolled off screen is *not* hittable, so this
+    /// cannot go falsely green on it. For non-interactive elements (e.g. some
+    /// `staticText` labels) that render but aren't hittable, use `assertPresent`.
     @discardableResult
     func assertVisible(file: StaticString = #file, line: UInt = #line) -> KassElement {
         perform("assertVisible", file: file, line: line) { element in
             guard element.exists else { throw KassError("does not exist") }
-            // Non-interactive elements (e.g. staticText labels) are frequently on
-            // screen yet report `isHittable == false`. Treat a rendered, non-empty
-            // frame as visible too, so assertions on labels don't flake.
-            guard element.isHittable || !element.frame.isEmpty else {
-                throw KassError("exists but is not visible")
-            }
+            guard element.isHittable else { throw KassError("exists but is not hittable/on-screen") }
+        }
+    }
+
+    /// Softer than `assertVisible`: the element exists in the hierarchy and has a
+    /// non-empty frame. It does **not** guarantee the element is on screen — use
+    /// it for rendered-but-not-hittable labels; prefer `assertVisible` otherwise.
+    @discardableResult
+    func assertPresent(file: StaticString = #file, line: UInt = #line) -> KassElement {
+        perform("assertPresent", file: file, line: line) { element in
+            guard element.exists else { throw KassError("does not exist") }
+            guard !element.frame.isEmpty else { throw KassError("exists but has an empty frame") }
         }
     }
 
@@ -315,9 +330,14 @@ public extension KassElement {
     func requireVisible() throws {
         let element = resolve()
         guard element.exists else { throw KassError("\(description) does not exist") }
-        guard element.isHittable || !element.frame.isEmpty else {
-            throw KassError("\(description) exists but is not visible")
-        }
+        guard element.isHittable else { throw KassError("\(description) is not hittable/on-screen") }
+        try enforceIdentifierIfNeeded(element)
+    }
+
+    func requirePresent() throws {
+        let element = resolve()
+        guard element.exists else { throw KassError("\(description) does not exist") }
+        guard !element.frame.isEmpty else { throw KassError("\(description) has an empty frame") }
         try enforceIdentifierIfNeeded(element)
     }
 
@@ -330,7 +350,8 @@ public extension KassElement {
 
     // MARK: - Gestures
 
-    /// Clears any existing text, then types `text`.
+    /// Clears any existing text, then types `text`. Shares `clearText`'s
+    /// delete-by-length limitation on secure/formatted fields.
     @discardableResult
     func replaceText(_ text: String, file: StaticString = #file, line: UInt = #line) -> KassElement {
         perform("replaceText('\(text)')", file: file, line: line) { element in

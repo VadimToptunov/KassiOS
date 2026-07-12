@@ -4,6 +4,29 @@ All notable changes to KassiOS are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+- `assertVisible` is now strict (`exists && isHittable`), so it can't go falsely
+  green on an off-screen element; the previous frame-based soft check moved to a
+  new `assertPresent` (and `requirePresent`). `onScreen`/`assertOnScreen` now
+  check `onLoad` elements for existence rather than visibility.
+- The synchronizer's `waitForIdle` now runs in collection assertions
+  (`assertCount`/`assertNotEmpty`) and `waitForAny`/`waitForAll`, not just
+  interactions — so a real backend (EarlGrey) applies everywhere.
+
+### Added
+- `KassTestCase.launch(deeplink:)` — the reliable launch-argument deep-link
+  convention (`device.open(url:)` via Safari is now documented as a fallback).
+- Snapshot references honour `$KASS_SNAPSHOTS_PATH` (for CI) instead of only the
+  `#file`-adjacent folder.
+
+### Fixed
+- `KassSuite` docstring used a non-existent `requireAccessibilityIdentifiers`
+  parameter; corrected to `accessibilityIdentifierPolicy: .enforce`.
+- Documented `clearText`/`replaceText`'s delete-by-length limitation on
+  secure/formatted fields.
+
 ## [0.9.0] - 2026-07-10
 
 ### Added
