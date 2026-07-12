@@ -6,7 +6,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-## [0.10.0] - 2026-07-10
+## [0.10.0] - 2026-07-12
 
 ### Changed
 - `assertVisible` is now strict (`exists && isHittable`), so it can't go falsely
@@ -141,13 +141,14 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Initial DSL: `KassTestCase`, `KassScreen`, `KassElement`, implicit waits,
   flaky-safety (`Waiter`), step logging, and `onScreen`.
 
-[0.10.0]: https://github.com/VadimToptunov/KassiOS/releases/tag/0.10.0
-[0.9.0]: https://github.com/VadimToptunov/KassiOS/releases/tag/0.9.0
-[0.8.0]: https://github.com/VadimToptunov/KassiOS/releases/tag/0.8.0
-[0.7.0]: https://github.com/VadimToptunov/KassiOS/releases/tag/0.7.0
-[0.6.0]: https://github.com/VadimToptunov/KassiOS/releases/tag/0.6.0
-[0.5.0]: https://github.com/VadimToptunov/KassiOS/releases/tag/0.5.0
-[0.4.0]: https://github.com/VadimToptunov/KassiOS/releases/tag/0.4.0
-[0.3.0]: https://github.com/VadimToptunov/KassiOS/releases/tag/0.3.0
-[0.2.0]: https://github.com/VadimToptunov/KassiOS/releases/tag/0.2.0
+[Unreleased]: https://github.com/VadimToptunov/KassiOS/compare/0.10.0...HEAD
+[0.10.0]: https://github.com/VadimToptunov/KassiOS/compare/0.9.0...0.10.0
+[0.9.0]: https://github.com/VadimToptunov/KassiOS/compare/0.8.0...0.9.0
+[0.8.0]: https://github.com/VadimToptunov/KassiOS/compare/0.7.0...0.8.0
+[0.7.0]: https://github.com/VadimToptunov/KassiOS/compare/0.6.0...0.7.0
+[0.6.0]: https://github.com/VadimToptunov/KassiOS/compare/0.5.0...0.6.0
+[0.5.0]: https://github.com/VadimToptunov/KassiOS/compare/0.4.0...0.5.0
+[0.4.0]: https://github.com/VadimToptunov/KassiOS/compare/0.3.0...0.4.0
+[0.3.0]: https://github.com/VadimToptunov/KassiOS/compare/0.2.0...0.3.0
+[0.2.0]: https://github.com/VadimToptunov/KassiOS/compare/0.1.0...0.2.0
 [0.1.0]: https://github.com/VadimToptunov/KassiOS/releases/tag/0.1.0

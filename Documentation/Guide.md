@@ -33,7 +33,7 @@ waits, flaky-safety, readable reports, and zero external dependencies.
 Swift Package Manager, linked to your **UI Test target**:
 
 ```swift
-.package(url: "https://github.com/VadimToptunov/KassiOS.git", from: "0.1.0")
+.package(url: "https://github.com/VadimToptunov/KassiOS.git", from: "0.10.0")
 ```
 
 The library wraps XCUITest, so it builds with Xcode (not bare `swift build`).
