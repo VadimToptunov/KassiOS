@@ -1,0 +1,39 @@
+name: Bug report
+description: Something in KassiOS behaves incorrectly.
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you expected vs. what actually happened.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal reproduction
+      description: The smallest KassiOS test (screen object + steps) that shows it.
+      render: swift
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: KassiOS version
+      placeholder: "0.10.0"
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: Xcode / iOS / device
+      placeholder: "Xcode 16.2, iOS 18.2, iPhone 16 Pro simulator"
+    validations:
+      required: true
+  - type: textarea
+    id: tree
+    attributes:
+      label: Accessibility tree (on failure)
+      description: KassiOS attaches `app.debugDescription` to a failing test — paste the relevant part. Visibility/snapshot behaviour is device-specific.
+      render: text

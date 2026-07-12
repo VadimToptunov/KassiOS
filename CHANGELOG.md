@@ -26,6 +26,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   (`KASS_STUB_<name>` env the app reads to serve fixtures).
 - A failing test now also attaches the full accessibility tree
   (`app.debugDescription`) in `tearDown`.
+- Community & discovery: `.spi.yml` (Swift Package Index build/docs),
+  `CONTRIBUTING.md`, issue/PR templates, and a "How it compares" table in the
+  README (KassiOS vs raw XCUITest vs EarlGrey).
 
 ### Fixed
 - `KassSuite` docstring used a non-existent `requireAccessibilityIdentifiers`

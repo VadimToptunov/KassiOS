@@ -1,0 +1,10 @@
+# Swift Package Index build & documentation config.
+# https://swiftpackageindex.com/SwiftPackageIndex/SwiftPackageIndex/documentation/spimanifest
+version: 1
+builder:
+  configs:
+    # Host the DocC docs on SPI and drive the compatibility matrix from iOS,
+    # where the XCTest-wrapping library builds.
+    - platform: ios
+      documentation_targets:
+        - KassiOS
