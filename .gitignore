@@ -7,3 +7,4 @@ DerivedData/
 
 # Local Claude Code tooling (subagents, commands) — not committed
 .claude/
+CLAUDE.md

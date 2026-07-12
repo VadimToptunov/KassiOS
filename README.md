@@ -16,8 +16,7 @@ honest [when-to-use / when-not-to](Documentation/Guide.md#when-to-use-kassios--a
 API reference: build in Xcode via **Product ▸ Build Documentation** (a DocC
 catalog ships in the target). Migrating an existing suite?
 [Migration guide](Documentation/Migration.md). Release notes:
-[CHANGELOG.md](CHANGELOG.md). Contributing with Claude Code agents:
-[Automation](Documentation/Automation.md).
+[CHANGELOG.md](CHANGELOG.md).
 
 ## Why
 

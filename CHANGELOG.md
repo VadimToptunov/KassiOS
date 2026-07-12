@@ -20,10 +20,6 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   convention (`device.open(url:)` via Safari is now documented as a fallback).
 - Snapshot references honour `$KASS_SNAPSHOTS_PATH` (for CI) instead of only the
   `#file`-adjacent folder.
-- Automation: a `CLAUDE.md` project guide, three Claude Code subagents
-  (`swift-builder`, read-only `kass-reviewer`, `test-runner`), a `/ship` command
-  that chains them, and opt-in `claude-code-action` workflows for PR review and
-  `@claude` — see [Documentation/Automation.md](Documentation/Automation.md).
 
 ### Fixed
 - `KassSuite` docstring used a non-existent `requireAccessibilityIdentifiers`
