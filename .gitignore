@@ -4,3 +4,7 @@ xcuserdata/
 *.xcodeproj/project.xcworkspace/xcuserdata/
 DerivedData/
 .DS_Store
+
+# Local Claude Code tooling (subagents, commands) — not committed
+.claude/
+CLAUDE.md
