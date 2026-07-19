@@ -36,6 +36,10 @@ For a full prose walkthrough see the
 
 ## Topics
 
+### Guides
+
+- <doc:ComingFromKaspresso>
+
 ### Writing tests
 
 - ``KassTestCase``
