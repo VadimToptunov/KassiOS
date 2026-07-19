@@ -6,6 +6,27 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+- Adopted the Swift 6 language mode (`swift-tools-version:6.0`,
+  `swiftLanguageMode(.v6)` on both targets) and drove
+  `-strict-concurrency=complete` from 442 warnings to zero. The DSL is
+  annotated `@MainActor` throughout: `KassTestCase` is `@MainActor` at the class
+  level, so **your test subclasses inherit the isolation with no annotation of
+  your own** (`setUp()`/`tearDown()` stay `nonisolated` to match XCTestCase;
+  `config` is `nonisolated(unsafe)` so it's still assignable in `setUp`). Also
+  `KassElement`, `KassElementCollection`, `KassScreen`, `KassDevice`, `KassAlert`,
+  `KassRunBuilder`, `KassSuite`, `KassScaffold`; `Waiter.retry` and `KassFlow`'s
+  static functions now take `@MainActor` action closures. No behavior change —
+  same runtime semantics, only concurrency annotations and the `Package.swift`
+  bump. Removed the stale "placeholder name" comment from `Package.swift`.
+- `KassLogger`, `KassReporter`, `KassSynchronizer`/`NoOpSynchronizer`, and
+  `KassConfig` are now `Sendable`. `AllureReporter`/`JUnitReporter` are
+  `@unchecked Sendable` (justified: all mutable state is guarded by an
+  `NSLock`). New internal `MainActorBox` bridges a handful of `@MainActor`
+  closures/`self` references across Sendable-requiring boundaries
+  (`XCTestCase.addTeardownBlock`, and `setUp`/`tearDown` overriding
+  XCTestCase's nonisolated Objective-C lifecycle hooks).
+
 ## [0.10.0] - 2026-07-12
 
 ### Changed

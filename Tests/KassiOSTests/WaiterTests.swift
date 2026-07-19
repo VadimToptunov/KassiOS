@@ -1,6 +1,7 @@
 import XCTest
 @testable import KassiOS
 
+@MainActor
 final class WaiterTests: XCTestCase {
 
     func test_succeedsOnFirstTry() throws {

@@ -3,6 +3,7 @@ import XCTest
 /// A lazy, self-waiting wrapper around `XCUIElementQuery` — the list/table
 /// counterpart of `KassElement`. Like `KassElement`, the underlying query is
 /// re-evaluated on each access, so it survives view-hierarchy reloads.
+@MainActor
 public struct KassElementCollection {
 
     let query: () -> XCUIElementQuery
@@ -79,7 +80,7 @@ public struct KassElementCollection {
     // MARK: - Assertions
 
     @discardableResult
-    public func assertCount(_ expected: Int, file: StaticString = #file, line: UInt = #line) -> KassElementCollection {
+    public func assertCount(_ expected: Int, file: StaticString = #filePath, line: UInt = #line) -> KassElementCollection {
         do {
             try Waiter.retry(timeout: config.timeout, pollInterval: config.pollInterval, enabled: config.flakySafetyEnabled) {
                 config.synchronizer.waitForIdle(timeout: config.timeout)
@@ -95,7 +96,7 @@ public struct KassElementCollection {
     }
 
     @discardableResult
-    public func assertNotEmpty(file: StaticString = #file, line: UInt = #line) -> KassElementCollection {
+    public func assertNotEmpty(file: StaticString = #filePath, line: UInt = #line) -> KassElementCollection {
         do {
             try Waiter.retry(timeout: config.timeout, pollInterval: config.pollInterval, enabled: config.flakySafetyEnabled) {
                 config.synchronizer.waitForIdle(timeout: config.timeout)

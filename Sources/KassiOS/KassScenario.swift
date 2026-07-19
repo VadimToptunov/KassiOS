@@ -11,6 +11,7 @@ public protocol KassScenario {
     var name: String { get }
 
     /// The steps to perform, given the test case they run in.
+    @MainActor
     func run(in test: KassTestCase)
 }
 

@@ -4,7 +4,7 @@ import Foundation
 ///
 /// Passed down from the test case into every screen and every element, so a
 /// single place controls behaviour for the whole suite.
-public struct KassConfig {
+public struct KassConfig: Sendable {
 
     /// Total time budget for a single interaction to succeed, *including* retries.
     /// Retries share this budget — they do not each get their own timeout.
@@ -69,7 +69,7 @@ public struct KassConfig {
 
 /// What KassiOS does when an element is used without a real accessibility
 /// identifier (it was matched by label instead).
-public enum KassIdentifierPolicy {
+public enum KassIdentifierPolicy: Sendable {
     /// Say nothing.
     case ignore
     /// Log a message and add an Xcode activity, but let the test pass.
@@ -89,7 +89,7 @@ public enum KassStepStatus {
 /// Steps nest: every `stepStarted` opens a child of the currently-open step and
 /// the matching `stepFinished` closes it. Implementations should tolerate steps
 /// left open at `testFinished` (a hard failure can unwind past `stepFinished`).
-public protocol KassReporter: AnyObject {
+public protocol KassReporter: AnyObject, Sendable {
     func testStarted(name: String, fullName: String)
     func stepStarted(_ name: String)
     func stepFinished(status: KassStepStatus, message: String?)
@@ -109,7 +109,7 @@ public extension KassReporter {
 
 /// Minimal logging surface. Swap the implementation to route into Allure,
 /// os_log, a file, etc.
-public protocol KassLogger {
+public protocol KassLogger: Sendable {
     func log(_ message: String)
 }
 

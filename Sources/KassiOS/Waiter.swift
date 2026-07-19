@@ -15,11 +15,12 @@ public struct KassError: Error, CustomStringConvertible {
 enum Waiter {
 
     @discardableResult
+    @MainActor
     static func retry<T>(
         timeout: TimeInterval,
         pollInterval: TimeInterval,
         enabled: Bool,
-        action: () throws -> T
+        action: @MainActor () throws -> T
     ) throws -> T {
         let deadline = Date().addingTimeInterval(timeout)
         var lastError: Error?

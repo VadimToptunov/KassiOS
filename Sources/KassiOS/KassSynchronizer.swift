@@ -10,7 +10,7 @@ import Foundation
 /// The core ships `NoOpSynchronizer` (pure polling) so it stays
 /// dependency-free. Plug in a real backend via `KassConfig(synchronizer:)`; see
 /// `Examples/EarlGreySynchronizer.swift` for an EarlGrey-backed adapter.
-public protocol KassSynchronizer {
+public protocol KassSynchronizer: Sendable {
 
     /// Block until the app under test is idle, treating `timeout` as the upper
     /// bound for a single settle. May return early; must not exceed `timeout`.

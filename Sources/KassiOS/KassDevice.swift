@@ -6,6 +6,7 @@ import UIKit
 /// Device- and system-level helpers that sit outside the app's own view tree:
 /// permission dialogs, the keyboard, screenshots, backgrounding, orientation
 /// and deep links. Reached through `KassTestCase.device`.
+@MainActor
 public struct KassDevice {
 
     public let app: XCUIApplication

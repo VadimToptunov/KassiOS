@@ -6,6 +6,7 @@ import XCTest
 /// printed class into your suite. Only elements that carry a real
 /// `accessibilityIdentifier` become properties — the rest are counted, nudging
 /// the app team to add identifiers (see the strict-id policy).
+@MainActor
 public enum KassScaffold {
 
     private static let kinds: [(type: XCUIElement.ElementType, builder: String)] = [
@@ -45,7 +46,9 @@ public enum KassScaffold {
     }
 
     /// Converts an accessibility identifier into a valid lowerCamelCase Swift name.
-    static func camelCase(_ id: String) -> String {
+    /// Pure string logic — `nonisolated` so it can be called (and unit-tested)
+    /// off the main actor without an artificial isolation hop.
+    nonisolated static func camelCase(_ id: String) -> String {
         let parts = id.split(whereSeparator: { !$0.isLetter && !$0.isNumber }).map(String.init)
         guard let first = parts.first else { return "element" }
         let head = first.prefix(1).lowercased() + first.dropFirst()   // keep existing humps
@@ -56,6 +59,7 @@ public enum KassScaffold {
     }
 }
 
+@MainActor
 public extension KassTestCase {
     /// Prints a `KassScreen` scaffold for the current screen to the console.
     func printScreenScaffold(_ screenName: String) {

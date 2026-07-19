@@ -1,8 +1,6 @@
-// swift-tools-version:5.9
+// swift-tools-version:6.0
 import PackageDescription
 
-// NOTE: "KassiOS" is a placeholder name — rename here and in the Sources/KassiOS folder
-// to whatever you settle on. This is the only place the module name is defined.
 let package = Package(
     name: "KassiOS",
     platforms: [
@@ -18,12 +16,14 @@ let package = Package(
         // *UI Test* target, where XCTest/XCUITest are available.
         .target(
             name: "KassiOS",
-            path: "Sources/KassiOS"
+            path: "Sources/KassiOS",
+            swiftSettings: [.swiftLanguageMode(.v6)]
         ),
         .testTarget(
             name: "KassiOSTests",
             dependencies: ["KassiOS"],
-            path: "Tests/KassiOSTests"
+            path: "Tests/KassiOSTests",
+            swiftSettings: [.swiftLanguageMode(.v6)]
         )
     ]
 )

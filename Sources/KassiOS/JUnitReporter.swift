@@ -7,7 +7,11 @@ import Foundation
 /// The directory comes from `$KASS_JUNIT_PATH`, else a `<temp>/junit-results`
 /// folder. Each file holds one `<testsuite>` with one `<testcase>`; point your
 /// CI's JUnit collector at the folder to merge them.
-public final class JUnitReporter: KassReporter {
+///
+/// `@unchecked Sendable`: `KassReporter` requires `Sendable`, and every mutable
+/// stored property below is only ever touched while holding `lock` (an
+/// `NSLock`), so concurrent access is serialized by the lock, not the compiler.
+public final class JUnitReporter: KassReporter, @unchecked Sendable {
 
     private let resultsDir: URL
     private let logger: KassLogger
