@@ -39,6 +39,9 @@ For a full prose walkthrough see the
 ### Guides
 
 - <doc:ComingFromKaspresso>
+- <doc:WhyXCUITestFlakes>
+- <doc:ParameterizedUITests>
+- <doc:CIRecipe>
 
 ### Writing tests
 

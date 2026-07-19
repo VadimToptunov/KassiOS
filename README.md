@@ -22,8 +22,9 @@ snapshot regression. **Zero external dependencies**, one-line SPM install,
 
 📖 **Full [documentation guide](Documentation/Guide.md)** — every feature, plus an
 honest [when-to-use / when-not-to](Documentation/Guide.md#when-to-use-kassios--and-when-not-to).
-API reference: build in Xcode via **Product ▸ Build Documentation** (a DocC
-catalog ships in the target). Migrating an existing suite?
+Guides in the [DocC reference](https://vadimtoptunov.github.io/KassiOS/documentation/kassios/):
+**Coming from Kaspresso**, **Why your XCUITest suite flakes**, **Parameterized UI
+tests**, and a **CI recipe**. Migrating an existing suite?
 [Migration guide](Documentation/Migration.md). Release notes:
 [CHANGELOG.md](CHANGELOG.md).
 
