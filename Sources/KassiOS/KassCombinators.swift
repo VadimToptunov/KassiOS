@@ -1,5 +1,6 @@
 import XCTest
 
+@MainActor
 public extension KassTestCase {
 
     /// Waits until any of `elements` exists and returns its index (or fails).
@@ -8,7 +9,7 @@ public extension KassTestCase {
     func waitForAny(
         _ elements: [KassElement],
         timeout: TimeInterval? = nil,
-        file: StaticString = #file,
+        file: StaticString = #filePath,
         line: UInt = #line
     ) -> Int? {
         do {
@@ -32,7 +33,7 @@ public extension KassTestCase {
     func waitForAll(
         _ elements: [KassElement],
         timeout: TimeInterval? = nil,
-        file: StaticString = #file,
+        file: StaticString = #filePath,
         line: UInt = #line
     ) {
         do {
@@ -57,7 +58,7 @@ public extension KassTestCase {
     @discardableResult
     func assertOnScreen<S: KassScreen>(
         _ type: S.Type,
-        file: StaticString = #file,
+        file: StaticString = #filePath,
         line: UInt = #line
     ) -> S {
         let screen = S(app: app, config: config)
@@ -76,6 +77,7 @@ public extension KassTestCase {
 }
 
 /// A thin handle over the frontmost `UIAlertController`-style alert.
+@MainActor
 public struct KassAlert {
 
     let app: XCUIApplication
@@ -88,14 +90,14 @@ public struct KassAlert {
     }
 
     @discardableResult
-    public func assertExists(file: StaticString = #file, line: UInt = #line) -> KassAlert {
+    public func assertExists(file: StaticString = #filePath, line: UInt = #line) -> KassAlert {
         KassElement(description: "alert", config: config) { [app] in app.alerts.firstMatch }
             .assertExists(file: file, line: line)
         return self
     }
 
     @discardableResult
-    public func tap(_ buttonTitle: String, file: StaticString = #file, line: UInt = #line) -> KassAlert {
+    public func tap(_ buttonTitle: String, file: StaticString = #filePath, line: UInt = #line) -> KassAlert {
         button(buttonTitle).tap(file: file, line: line)
         return self
     }

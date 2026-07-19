@@ -62,6 +62,7 @@ enum KassSnapshotEngine {
     }
 }
 
+@MainActor
 public extension KassTestCase {
 
     /// Asserts the current screen (or `element`) matches a stored reference image.
@@ -76,7 +77,7 @@ public extension KassTestCase {
         named name: String,
         record: Bool = false,
         tolerance: Double = 0.02,
-        file: StaticString = #file,
+        file: StaticString = #filePath,
         line: UInt = #line
     ) {
         let screenshot = element.map { $0.resolve().screenshot() } ?? app.screenshot()

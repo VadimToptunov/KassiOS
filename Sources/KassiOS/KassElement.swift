@@ -6,6 +6,7 @@ import XCTest
 /// not cached. That is deliberate: after the view hierarchy reloads, a cached
 /// `XCUIElement` goes stale and interactions fail spuriously. Re-resolving is
 /// what lets flaky-safety actually recover.
+@MainActor
 public struct KassElement {
 
     let resolve: () -> XCUIElement
@@ -34,7 +35,7 @@ public struct KassElement {
 public extension KassElement {
 
     @discardableResult
-    func tap(file: StaticString = #file, line: UInt = #line) -> KassElement {
+    func tap(file: StaticString = #filePath, line: UInt = #line) -> KassElement {
         perform("tap", file: file, line: line) { element in
             guard element.exists else { throw KassError("does not exist") }
             guard element.isHittable else { throw KassError("exists but is not hittable") }
@@ -43,7 +44,7 @@ public extension KassElement {
     }
 
     @discardableResult
-    func typeText(_ text: String, file: StaticString = #file, line: UInt = #line) -> KassElement {
+    func typeText(_ text: String, file: StaticString = #filePath, line: UInt = #line) -> KassElement {
         perform("typeText('\(text)')", file: file, line: line) { element in
             guard element.exists else { throw KassError("does not exist") }
             guard element.isHittable else { throw KassError("exists but is not hittable") }
@@ -58,7 +59,7 @@ public extension KassElement {
     /// needed, so clearing can be incomplete — verify with `assertHasValue("")`
     /// or clear it in the app for those.
     @discardableResult
-    func clearText(file: StaticString = #file, line: UInt = #line) -> KassElement {
+    func clearText(file: StaticString = #filePath, line: UInt = #line) -> KassElement {
         perform("clearText", file: file, line: line) { element in
             guard element.exists else { throw KassError("does not exist") }
             guard let value = element.value as? String else { throw KassError("has no text value to clear") }
@@ -73,7 +74,7 @@ public extension KassElement {
     /// cannot go falsely green on it. For non-interactive elements (e.g. some
     /// `staticText` labels) that render but aren't hittable, use `assertPresent`.
     @discardableResult
-    func assertVisible(file: StaticString = #file, line: UInt = #line) -> KassElement {
+    func assertVisible(file: StaticString = #filePath, line: UInt = #line) -> KassElement {
         perform("assertVisible", file: file, line: line) { element in
             guard element.exists else { throw KassError("does not exist") }
             guard element.isHittable else { throw KassError("exists but is not hittable/on-screen") }
@@ -84,7 +85,7 @@ public extension KassElement {
     /// non-empty frame. It does **not** guarantee the element is on screen — use
     /// it for rendered-but-not-hittable labels; prefer `assertVisible` otherwise.
     @discardableResult
-    func assertPresent(file: StaticString = #file, line: UInt = #line) -> KassElement {
+    func assertPresent(file: StaticString = #filePath, line: UInt = #line) -> KassElement {
         perform("assertPresent", file: file, line: line) { element in
             guard element.exists else { throw KassError("does not exist") }
             guard !element.frame.isEmpty else { throw KassError("exists but has an empty frame") }
@@ -92,21 +93,21 @@ public extension KassElement {
     }
 
     @discardableResult
-    func assertExists(file: StaticString = #file, line: UInt = #line) -> KassElement {
+    func assertExists(file: StaticString = #filePath, line: UInt = #line) -> KassElement {
         perform("assertExists", file: file, line: line) { element in
             guard element.exists else { throw KassError("does not exist") }
         }
     }
 
     @discardableResult
-    func assertNotExists(file: StaticString = #file, line: UInt = #line) -> KassElement {
+    func assertNotExists(file: StaticString = #filePath, line: UInt = #line) -> KassElement {
         perform("assertNotExists", file: file, line: line) { element in
             guard !element.exists else { throw KassError("still exists") }
         }
     }
 
     @discardableResult
-    func assertHasText(_ expected: String, file: StaticString = #file, line: UInt = #line) -> KassElement {
+    func assertHasText(_ expected: String, file: StaticString = #filePath, line: UInt = #line) -> KassElement {
         perform("assertHasText('\(expected)')", file: file, line: line) { element in
             guard element.exists else { throw KassError("does not exist") }
             let actual = Self.textOf(element)
@@ -125,7 +126,7 @@ public extension KassElement {
     }
 
     @discardableResult
-    func assertEnabled(file: StaticString = #file, line: UInt = #line) -> KassElement {
+    func assertEnabled(file: StaticString = #filePath, line: UInt = #line) -> KassElement {
         perform("assertEnabled", file: file, line: line) { element in
             guard element.exists else { throw KassError("does not exist") }
             guard element.isEnabled else { throw KassError("exists but is disabled") }
@@ -133,7 +134,7 @@ public extension KassElement {
     }
 
     @discardableResult
-    func assertDisabled(file: StaticString = #file, line: UInt = #line) -> KassElement {
+    func assertDisabled(file: StaticString = #filePath, line: UInt = #line) -> KassElement {
         perform("assertDisabled", file: file, line: line) { element in
             guard element.exists else { throw KassError("does not exist") }
             guard !element.isEnabled else { throw KassError("exists but is enabled") }
@@ -141,7 +142,7 @@ public extension KassElement {
     }
 
     @discardableResult
-    func assertSelected(_ expected: Bool = true, file: StaticString = #file, line: UInt = #line) -> KassElement {
+    func assertSelected(_ expected: Bool = true, file: StaticString = #filePath, line: UInt = #line) -> KassElement {
         perform("assertSelected(\(expected))", file: file, line: line) { element in
             guard element.exists else { throw KassError("does not exist") }
             guard element.isSelected == expected else {
@@ -153,7 +154,7 @@ public extension KassElement {
     /// Exact-match on the element's `value` (unlike `assertHasText`, which is a
     /// substring match against value-or-label). Useful for toggles/sliders/fields.
     @discardableResult
-    func assertHasValue(_ expected: String, file: StaticString = #file, line: UInt = #line) -> KassElement {
+    func assertHasValue(_ expected: String, file: StaticString = #filePath, line: UInt = #line) -> KassElement {
         perform("assertHasValue('\(expected)')", file: file, line: line) { element in
             guard element.exists else { throw KassError("does not exist") }
             let actual = element.value as? String
@@ -164,7 +165,7 @@ public extension KassElement {
     }
 
     @discardableResult
-    func assertLabel(_ expected: String, file: StaticString = #file, line: UInt = #line) -> KassElement {
+    func assertLabel(_ expected: String, file: StaticString = #filePath, line: UInt = #line) -> KassElement {
         perform("assertLabel('\(expected)')", file: file, line: line) { element in
             guard element.exists else { throw KassError("does not exist") }
             guard element.label == expected else {
@@ -174,7 +175,7 @@ public extension KassElement {
     }
 
     @discardableResult
-    func assertLabelContains(_ substring: String, file: StaticString = #file, line: UInt = #line) -> KassElement {
+    func assertLabelContains(_ substring: String, file: StaticString = #filePath, line: UInt = #line) -> KassElement {
         perform("assertLabelContains('\(substring)')", file: file, line: line) { element in
             guard element.exists else { throw KassError("does not exist") }
             guard element.label.contains(substring) else {
@@ -185,7 +186,7 @@ public extension KassElement {
 
     /// Asserts the element's value (or label) matches a regular expression.
     @discardableResult
-    func assertValueMatches(_ pattern: String, file: StaticString = #file, line: UInt = #line) -> KassElement {
+    func assertValueMatches(_ pattern: String, file: StaticString = #filePath, line: UInt = #line) -> KassElement {
         perform("assertValueMatches('\(pattern)')", file: file, line: line) { element in
             guard element.exists else { throw KassError("does not exist") }
             let actual = Self.textOf(element)
@@ -198,7 +199,7 @@ public extension KassElement {
     /// Waits until the element is gone (or already absent). Reads better than
     /// `assertNotExists` at a call site that expects a disappearance.
     @discardableResult
-    func waitUntilGone(file: StaticString = #file, line: UInt = #line) -> KassElement {
+    func waitUntilGone(file: StaticString = #filePath, line: UInt = #line) -> KassElement {
         assertNotExists(file: file, line: line)
     }
 
@@ -207,7 +208,7 @@ public extension KassElement {
     @discardableResult
     func waitUntil(
         _ description: String,
-        file: StaticString = #file,
+        file: StaticString = #filePath,
         line: UInt = #line,
         _ condition: @escaping (XCUIElement) -> Bool
     ) -> KassElement {
@@ -225,7 +226,7 @@ public extension KassElement {
     func readLabel() -> String { resolve().label }
 
     @discardableResult
-    func assertPlaceholder(_ expected: String, file: StaticString = #file, line: UInt = #line) -> KassElement {
+    func assertPlaceholder(_ expected: String, file: StaticString = #filePath, line: UInt = #line) -> KassElement {
         perform("assertPlaceholder('\(expected)')", file: file, line: line) { element in
             guard element.exists else { throw KassError("does not exist") }
             guard element.placeholderValue == expected else {
@@ -271,7 +272,7 @@ public extension KassElement {
     /// switch control is tapped (not the row), so we tap the descendant switch
     /// when present and fall back to the element itself (UIKit `UISwitch`).
     @discardableResult
-    func setSwitch(on: Bool, file: StaticString = #file, line: UInt = #line) -> KassElement {
+    func setSwitch(on: Bool, file: StaticString = #filePath, line: UInt = #line) -> KassElement {
         perform("setSwitch(on: \(on))", file: file, line: line) { element in
             guard element.exists else { throw KassError("does not exist") }
             guard (element.value as? String) != (on ? "1" : "0") else { return }
@@ -283,7 +284,7 @@ public extension KassElement {
     #if os(iOS)
     /// Drags a slider to a normalized position in `0...1`.
     @discardableResult
-    func adjustSlider(toNormalizedPosition position: CGFloat, file: StaticString = #file, line: UInt = #line) -> KassElement {
+    func adjustSlider(toNormalizedPosition position: CGFloat, file: StaticString = #filePath, line: UInt = #line) -> KassElement {
         perform("adjustSlider(\(position))", file: file, line: line) { element in
             guard element.exists else { throw KassError("does not exist") }
             element.adjust(toNormalizedSliderPosition: position)
@@ -292,7 +293,7 @@ public extension KassElement {
 
     /// Spins a picker wheel to `value`.
     @discardableResult
-    func adjustPicker(toValue value: String, file: StaticString = #file, line: UInt = #line) -> KassElement {
+    func adjustPicker(toValue value: String, file: StaticString = #filePath, line: UInt = #line) -> KassElement {
         perform("adjustPicker('\(value)')", file: file, line: line) { element in
             guard element.exists else { throw KassError("does not exist") }
             element.adjust(toPickerWheelValue: value)
@@ -301,7 +302,7 @@ public extension KassElement {
     #endif
 
     @discardableResult
-    func assertHittable(file: StaticString = #file, line: UInt = #line) -> KassElement {
+    func assertHittable(file: StaticString = #filePath, line: UInt = #line) -> KassElement {
         perform("assertHittable", file: file, line: line) { element in
             guard element.exists else { throw KassError("does not exist") }
             guard element.isHittable else { throw KassError("exists but is not hittable") }
@@ -309,7 +310,7 @@ public extension KassElement {
     }
 
     @discardableResult
-    func assertNotHittable(file: StaticString = #file, line: UInt = #line) -> KassElement {
+    func assertNotHittable(file: StaticString = #filePath, line: UInt = #line) -> KassElement {
         perform("assertNotHittable", file: file, line: line) { element in
             guard !element.isHittable else { throw KassError("is hittable") }
         }
@@ -353,7 +354,7 @@ public extension KassElement {
     /// Clears any existing text, then types `text`. Shares `clearText`'s
     /// delete-by-length limitation on secure/formatted fields.
     @discardableResult
-    func replaceText(_ text: String, file: StaticString = #file, line: UInt = #line) -> KassElement {
+    func replaceText(_ text: String, file: StaticString = #filePath, line: UInt = #line) -> KassElement {
         perform("replaceText('\(text)')", file: file, line: line) { element in
             guard element.exists else { throw KassError("does not exist") }
             guard element.isHittable else { throw KassError("exists but is not hittable") }
@@ -366,7 +367,7 @@ public extension KassElement {
     }
 
     @discardableResult
-    func doubleTap(file: StaticString = #file, line: UInt = #line) -> KassElement {
+    func doubleTap(file: StaticString = #filePath, line: UInt = #line) -> KassElement {
         perform("doubleTap", file: file, line: line) { element in
             guard element.exists else { throw KassError("does not exist") }
             guard element.isHittable else { throw KassError("exists but is not hittable") }
@@ -375,7 +376,7 @@ public extension KassElement {
     }
 
     @discardableResult
-    func longPress(forDuration duration: TimeInterval = 1.0, file: StaticString = #file, line: UInt = #line) -> KassElement {
+    func longPress(forDuration duration: TimeInterval = 1.0, file: StaticString = #filePath, line: UInt = #line) -> KassElement {
         perform("longPress(\(duration)s)", file: file, line: line) { element in
             guard element.exists else { throw KassError("does not exist") }
             guard element.isHittable else { throw KassError("exists but is not hittable") }
@@ -384,13 +385,13 @@ public extension KassElement {
     }
 
     @discardableResult
-    func swipeUp(file: StaticString = #file, line: UInt = #line) -> KassElement { swipe(.up, file: file, line: line) }
+    func swipeUp(file: StaticString = #filePath, line: UInt = #line) -> KassElement { swipe(.up, file: file, line: line) }
     @discardableResult
-    func swipeDown(file: StaticString = #file, line: UInt = #line) -> KassElement { swipe(.down, file: file, line: line) }
+    func swipeDown(file: StaticString = #filePath, line: UInt = #line) -> KassElement { swipe(.down, file: file, line: line) }
     @discardableResult
-    func swipeLeft(file: StaticString = #file, line: UInt = #line) -> KassElement { swipe(.left, file: file, line: line) }
+    func swipeLeft(file: StaticString = #filePath, line: UInt = #line) -> KassElement { swipe(.left, file: file, line: line) }
     @discardableResult
-    func swipeRight(file: StaticString = #file, line: UInt = #line) -> KassElement { swipe(.right, file: file, line: line) }
+    func swipeRight(file: StaticString = #filePath, line: UInt = #line) -> KassElement { swipe(.right, file: file, line: line) }
 
     private func swipe(_ direction: KassScrollDirection, file: StaticString, line: UInt) -> KassElement {
         perform("swipe(\(direction))", file: file, line: line) { element in
@@ -406,7 +407,7 @@ public extension KassElement {
 
     #if os(iOS)
     @discardableResult
-    func pinch(scale: CGFloat, velocity: CGFloat, file: StaticString = #file, line: UInt = #line) -> KassElement {
+    func pinch(scale: CGFloat, velocity: CGFloat, file: StaticString = #filePath, line: UInt = #line) -> KassElement {
         perform("pinch(scale: \(scale))", file: file, line: line) { element in
             guard element.exists else { throw KassError("does not exist") }
             element.pinch(withScale: scale, velocity: velocity)
@@ -414,7 +415,7 @@ public extension KassElement {
     }
 
     @discardableResult
-    func rotate(_ rotation: CGFloat, velocity: CGFloat, file: StaticString = #file, line: UInt = #line) -> KassElement {
+    func rotate(_ rotation: CGFloat, velocity: CGFloat, file: StaticString = #filePath, line: UInt = #line) -> KassElement {
         perform("rotate(\(rotation))", file: file, line: line) { element in
             guard element.exists else { throw KassError("does not exist") }
             element.rotate(rotation, withVelocity: velocity)
@@ -422,7 +423,7 @@ public extension KassElement {
     }
 
     @discardableResult
-    func twoFingerTap(file: StaticString = #file, line: UInt = #line) -> KassElement {
+    func twoFingerTap(file: StaticString = #filePath, line: UInt = #line) -> KassElement {
         perform("twoFingerTap", file: file, line: line) { element in
             guard element.exists else { throw KassError("does not exist") }
             guard element.isHittable else { throw KassError("exists but is not hittable") }
@@ -433,7 +434,7 @@ public extension KassElement {
 
     /// Taps at a point inside the element, given as a fraction of its size.
     @discardableResult
-    func tapAtNormalizedOffset(x: CGFloat, y: CGFloat, file: StaticString = #file, line: UInt = #line) -> KassElement {
+    func tapAtNormalizedOffset(x: CGFloat, y: CGFloat, file: StaticString = #filePath, line: UInt = #line) -> KassElement {
         perform("tapAtNormalizedOffset(\(x), \(y))", file: file, line: line) { element in
             guard element.exists else { throw KassError("does not exist") }
             element.coordinate(withNormalizedOffset: CGVector(dx: x, dy: y)).tap()
@@ -442,7 +443,7 @@ public extension KassElement {
 
     /// Pull-to-refresh: drags this scroll container down from near its top.
     @discardableResult
-    func pullToRefresh(file: StaticString = #file, line: UInt = #line) -> KassElement {
+    func pullToRefresh(file: StaticString = #filePath, line: UInt = #line) -> KassElement {
         perform("pullToRefresh", file: file, line: line) { element in
             guard element.exists else { throw KassError("does not exist") }
             let start = element.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.1))
@@ -453,7 +454,7 @@ public extension KassElement {
 
     /// Press-and-drags from this element onto `target`.
     @discardableResult
-    func drag(to target: KassElement, file: StaticString = #file, line: UInt = #line) -> KassElement {
+    func drag(to target: KassElement, file: StaticString = #filePath, line: UInt = #line) -> KassElement {
         perform("drag(to: \(target.description))", file: file, line: line) { element in
             guard element.exists else { throw KassError("does not exist") }
             let destination = target.resolve()
@@ -469,7 +470,7 @@ public extension KassElement {
     func scrollTo(
         in container: KassElement,
         direction: KassScrollDirection = .up,
-        file: StaticString = #file,
+        file: StaticString = #filePath,
         line: UInt = #line
     ) -> KassElement {
         config.reporter?.stepStarted("scrollTo \(description)")
@@ -509,7 +510,7 @@ public extension KassElement {
     @discardableResult
     func perform(
         _ name: String,
-        file: StaticString = #file,
+        file: StaticString = #filePath,
         line: UInt = #line,
         _ body: @escaping (XCUIElement) throws -> Void
     ) -> KassElement {

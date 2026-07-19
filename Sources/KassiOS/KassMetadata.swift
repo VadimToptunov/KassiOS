@@ -7,6 +7,7 @@ public enum KassSeverity: String {
 
 /// Test metadata for the structured report (Allure labels & links). No-ops when
 /// no reporter is configured.
+@MainActor
 public extension KassTestCase {
 
     func severity(_ severity: KassSeverity) { addLabel("severity", severity.rawValue) }

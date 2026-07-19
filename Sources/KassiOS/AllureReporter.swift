@@ -7,7 +7,11 @@ import Foundation
 /// The directory is taken from `ALLURE_RESULTS_PATH` (set it in the UI test
 /// target's scheme) or falls back to `<temp>/allure-results`. The absolute path
 /// is logged at `testStarted` so it can be found and copied off the simulator.
-public final class AllureReporter: KassReporter {
+///
+/// `@unchecked Sendable`: `KassReporter` requires `Sendable`, and every mutable
+/// stored property below is only ever touched while holding `lock` (an
+/// `NSLock`), so concurrent access is serialized by the lock, not the compiler.
+public final class AllureReporter: KassReporter, @unchecked Sendable {
 
     private let resultsDir: URL
     private let logger: KassLogger

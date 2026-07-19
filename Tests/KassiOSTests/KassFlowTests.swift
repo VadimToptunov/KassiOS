@@ -1,6 +1,7 @@
 import XCTest
 @testable import KassiOS
 
+@MainActor
 final class KassFlowTests: XCTestCase {
 
     // MARK: continuously

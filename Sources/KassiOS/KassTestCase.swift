@@ -4,55 +4,80 @@ import XCTest
 ///
 /// Gives you `launch()`, the `onScreen(_:)` scope, and `step(_:)` — the pieces
 /// that make a test read like a script instead of a pile of queries.
+///
+/// The class is `@MainActor` (UI tests run on the main thread), so subclasses and
+/// their test methods inherit that isolation automatically — you don't annotate
+/// your own tests. The `setUp()`/`tearDown()` overrides stay `nonisolated` to
+/// match XCTestCase's Objective-C hooks.
+@MainActor
 open class KassTestCase: XCTestCase {
 
     public private(set) var app: XCUIApplication!
-    public var config: KassConfig = .default
+
+    /// `nonisolated(unsafe)` because it is assigned in the `nonisolated` `setUp()`
+    /// (before any test body runs) and read on the main actor thereafter — a
+    /// single-threaded lifecycle the compiler can't see. `KassConfig` is `Sendable`.
+    public nonisolated(unsafe) var config: KassConfig = .default
 
     /// Device- and system-level helpers (permissions, keyboard, screenshots,
     /// backgrounding, orientation, deep links).
+    @MainActor
     public lazy var device = KassDevice(app: app, config: config)
 
     private var reportingStarted = false
 
-    open override func setUp() {
+    /// `XCTestCase.setUp()` is a nonisolated override point (it's declared in
+    /// Objective-C with no actor annotation), so this override stays
+    /// `nonisolated` to match it. XCUITest only ever calls it on the main
+    /// thread, though, so `MainActor.assumeIsolated` safely hops in to touch
+    /// `app`/`config` without changing when or where this runs. `self` is
+    /// boxed first — see `MainActorBox` for why.
+    nonisolated open override func setUp() {
         super.setUp()
-        continueAfterFailure = false
-        app = XCUIApplication()
+        let this = MainActorBox(self)
+        MainActor.assumeIsolated {
+            this.value.continueAfterFailure = false
+            this.value.app = XCUIApplication()
+        }
     }
 
     /// Attaches a screenshot of the final state whenever the test failed, so a
     /// red run in the `.xcresult` always carries visual evidence, and closes the
-    /// structured report (if any).
-    open override func tearDown() {
-        let failed = (testRun?.failureCount ?? 0) > 0
-        if failed, app != nil {
-            let shot = app.screenshot()
-            let attachment = XCTAttachment(screenshot: shot)
-            attachment.name = "Failure — \(name)"
-            attachment.lifetime = .keepAlways
-            add(attachment)
-            config.reporter?.attach(name: "Failure", type: "image/png", data: shot.pngRepresentation)
+    /// structured report (if any). See `setUp()` for why `assumeIsolated`
+    /// (and boxing `self`) is safe here.
+    nonisolated open override func tearDown() {
+        let this = MainActorBox(self)
+        MainActor.assumeIsolated {
+            let failed = (this.value.testRun?.failureCount ?? 0) > 0
+            if failed, this.value.app != nil {
+                let shot = this.value.app.screenshot()
+                let attachment = XCTAttachment(screenshot: shot)
+                attachment.name = "Failure — \(this.value.name)"
+                attachment.lifetime = .keepAlways
+                this.value.add(attachment)
+                this.value.config.reporter?.attach(name: "Failure", type: "image/png", data: shot.pngRepresentation)
 
-            // Full accessibility tree — saves hours when diagnosing a red test.
-            let tree = app.debugDescription
-            let treeAttachment = XCTAttachment(string: tree)
-            treeAttachment.name = "Accessibility tree — \(name)"
-            treeAttachment.lifetime = .keepAlways
-            add(treeAttachment)
-            config.reporter?.attach(name: "Accessibility tree", type: "text/plain", data: Data(tree.utf8))
-        }
-        if reportingStarted {
-            config.reporter?.testFinished(
-                status: failed ? .failed : .passed,
-                message: failed ? "Test failed — see attached screenshot" : nil
-            )
+                // Full accessibility tree — saves hours when diagnosing a red test.
+                let tree = this.value.app.debugDescription
+                let treeAttachment = XCTAttachment(string: tree)
+                treeAttachment.name = "Accessibility tree — \(this.value.name)"
+                treeAttachment.lifetime = .keepAlways
+                this.value.add(treeAttachment)
+                this.value.config.reporter?.attach(name: "Accessibility tree", type: "text/plain", data: Data(tree.utf8))
+            }
+            if this.value.reportingStarted {
+                this.value.config.reporter?.testFinished(
+                    status: failed ? .failed : .passed,
+                    message: failed ? "Test failed — see attached screenshot" : nil
+                )
+            }
         }
         super.tearDown()
     }
 
     /// Opens the structured report lazily, on first use, so a `config` (and its
     /// `reporter`) assigned in a subclass's `setUp` is already in place.
+    @MainActor
     func startReportingIfNeeded() {
         guard !reportingStarted else { return }
         reportingStarted = true
@@ -61,7 +86,9 @@ open class KassTestCase: XCTestCase {
     }
 
     /// Splits XCTest's `-[Class method]` name into (method, "Class.method").
-    static func parseTestName(_ raw: String) -> (name: String, fullName: String) {
+    /// Pure string logic — `nonisolated` so it can be called (and unit-tested)
+    /// off the main actor without an artificial isolation hop.
+    nonisolated static func parseTestName(_ raw: String) -> (name: String, fullName: String) {
         let trimmed = raw.trimmingCharacters(in: CharacterSet(charactersIn: "-[]"))
         let parts = trimmed.split(separator: " ")
         guard parts.count == 2 else { return (trimmed, trimmed) }
@@ -72,6 +99,7 @@ open class KassTestCase: XCTestCase {
 
     /// Launches the app under test.
     @discardableResult
+    @MainActor
     public func launch(
         arguments: [String] = [],
         environment: [String: String] = [:]
@@ -88,6 +116,7 @@ open class KassTestCase: XCTestCase {
     /// reliable, in-process convention — prefer it over `device.open(url:)`,
     /// which drives Safari and is best-effort.
     @discardableResult
+    @MainActor
     public func launch(
         deeplink url: String,
         arguments: [String] = [],
@@ -101,6 +130,7 @@ open class KassTestCase: XCTestCase {
     /// local fixtures instead of hitting the network — the reliable XCUITest
     /// pattern, since out-of-process tests can't intercept traffic in-process.
     @discardableResult
+    @MainActor
     public func launch(
         stubs: [String: String],
         arguments: [String] = [],
@@ -116,11 +146,12 @@ open class KassTestCase: XCTestCase {
     /// Existence (not strict visibility) is used so non-hittable proof elements
     /// like labels don't cause false negatives.
     @discardableResult
+    @MainActor
     public func onScreen<S: KassScreen>(
         _ type: S.Type,
-        file: StaticString = #file,
+        file: StaticString = #filePath,
         line: UInt = #line,
-        _ block: (S) -> Void
+        _ block: @MainActor (S) -> Void
     ) -> S {
         startReportingIfNeeded()
         let screen = S(app: app, config: config)
@@ -136,7 +167,8 @@ open class KassTestCase: XCTestCase {
     /// A labelled, timed step. Groups its actions in Xcode's test report
     /// (via `XCTContext`), records it in the structured report, and logs
     /// start/finish to the console.
-    public func step(_ name: String, _ block: () -> Void) {
+    @MainActor
+    public func step(_ name: String, _ block: @MainActor () -> Void) {
         startReportingIfNeeded()
         config.logger.log("▶︎ \(name)")
         config.reporter?.stepStarted(name)
@@ -154,6 +186,7 @@ open class KassTestCase: XCTestCase {
 
     /// Runs a reusable `KassScenario` against this test case, grouped in the
     /// report under the scenario's name.
+    @MainActor
     public func scenario(_ scenario: KassScenario) {
         config.logger.log("▶︎ Scenario: \(scenario.name)")
         XCTContext.runActivity(named: "Scenario: \(scenario.name)") { _ in
@@ -167,12 +200,13 @@ open class KassTestCase: XCTestCase {
     /// `XCTFail`s. Use for custom multi-step conditions; single interactions are
     /// already flaky-safe on their own.
     @discardableResult
+    @MainActor
     public func flakySafely<T>(
         timeout: TimeInterval? = nil,
         pollInterval: TimeInterval? = nil,
-        file: StaticString = #file,
+        file: StaticString = #filePath,
         line: UInt = #line,
-        _ block: () throws -> T
+        _ block: @MainActor () throws -> T
     ) -> T? {
         do {
             return try Waiter.retry(
@@ -190,12 +224,13 @@ open class KassTestCase: XCTestCase {
 
     /// Asserts `block` keeps succeeding for the whole `duration` — fails the
     /// instant it throws. The inverse of `flakySafely`.
+    @MainActor
     public func continuously(
         during duration: TimeInterval,
         pollInterval: TimeInterval? = nil,
-        file: StaticString = #file,
+        file: StaticString = #filePath,
         line: UInt = #line,
-        _ block: () throws -> Void
+        _ block: @MainActor () throws -> Void
     ) {
         do {
             try KassFlow.continuously(during: duration, pollInterval: pollInterval ?? config.pollInterval, action: block)
@@ -207,8 +242,9 @@ open class KassTestCase: XCTestCase {
 
     /// Passes if at least one branch succeeds; fails only if all do not. Use
     /// when the UI may legitimately be in one of several states.
+    @MainActor
     public func compose(
-        file: StaticString = #file,
+        file: StaticString = #filePath,
         line: UInt = #line,
         _ branches: KassBranch...
     ) {
@@ -222,12 +258,13 @@ open class KassTestCase: XCTestCase {
 
     /// Attempts `block` up to `times`, pausing between tries, then `XCTFail`s.
     @discardableResult
+    @MainActor
     public func retry<T>(
         times: Int,
         pollInterval: TimeInterval? = nil,
-        file: StaticString = #file,
+        file: StaticString = #filePath,
         line: UInt = #line,
-        _ block: () throws -> T
+        _ block: @MainActor () throws -> T
     ) -> T? {
         do {
             return try KassFlow.retry(times: times, pollInterval: pollInterval ?? config.pollInterval, action: block)
@@ -252,12 +289,13 @@ open class KassTestCase: XCTestCase {
     ///     onScreen(LoginScreen.self) { $0.email.replaceText(email); $0.submit.tap() }
     /// }
     /// ```
+    @MainActor
     public func parameterized<Case>(
         _ cases: [Case],
-        name: (Case) -> String = { "\($0)" },
-        file: StaticString = #file,
+        name: @MainActor (Case) -> String = { "\($0)" },
+        file: StaticString = #filePath,
         line: UInt = #line,
-        _ body: (Case) -> Void
+        _ body: @MainActor (Case) -> Void
     ) {
         startReportingIfNeeded()
         let previousContinue = continueAfterFailure
@@ -281,6 +319,7 @@ open class KassTestCase: XCTestCase {
     /// Terminates and relaunches the app under test — handy between
     /// `parameterized` cases that need a clean slate.
     @discardableResult
+    @MainActor
     public func relaunch(
         arguments: [String] = [],
         environment: [String: String] = [:]
@@ -290,7 +329,8 @@ open class KassTestCase: XCTestCase {
     }
 
     /// Taps the leading navigation-bar button (typically Back).
-    public func pressBack(file: StaticString = #file, line: UInt = #line) {
+    @MainActor
+    public func pressBack(file: StaticString = #filePath, line: UInt = #line) {
         flakySafely(file: file, line: line) {
             let back = self.app.navigationBars.buttons.element(boundBy: 0)
             guard back.exists, back.isHittable else { throw KassError("no back button available") }
@@ -306,9 +346,10 @@ open class KassTestCase: XCTestCase {
     /// `auditTypes` to narrow the checks (e.g. exclude the sometimes-borderline
     /// `.contrast` heuristic).
     @available(iOS 17.0, macOS 14.0, tvOS 17.0, *)
+    @MainActor
     public func assertNoAccessibilityIssues(
         for auditTypes: XCUIAccessibilityAuditType = .all,
-        file: StaticString = #file,
+        file: StaticString = #filePath,
         line: UInt = #line
     ) {
         startReportingIfNeeded()
@@ -327,8 +368,8 @@ open class KassTestCase: XCTestCase {
 /// A named branch for `KassTestCase.compose`.
 public struct KassBranch {
     let name: String
-    let action: () throws -> Void
-    public init(_ name: String, _ action: @escaping () throws -> Void) {
+    let action: @MainActor () throws -> Void
+    public init(_ name: String, _ action: @escaping @MainActor () throws -> Void) {
         self.name = name
         self.action = action
     }

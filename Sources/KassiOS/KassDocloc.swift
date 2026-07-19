@@ -1,5 +1,6 @@
 import XCTest
 
+@MainActor
 public extension KassTestCase {
 
     /// Runs `flow` once per locale, relaunching the app in that language first —

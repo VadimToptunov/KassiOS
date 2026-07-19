@@ -17,10 +17,14 @@ import XCTest
 open class KassSuite: KassTestCase {
 
     /// The shared configuration for every test in this suite. Override to
-    /// customize; defaults to `.default`.
-    open func configure() -> KassConfig { .default }
+    /// customize; defaults to `.default`. `nonisolated` so it can be called from
+    /// the `nonisolated` `setUp()` — it only builds a `Sendable` `KassConfig`.
+    nonisolated open func configure() -> KassConfig { .default }
 
-    open override func setUp() {
+    /// `nonisolated` to match `KassTestCase.setUp()`. Unlike that override,
+    /// this one only touches plain (non-main-actor) state, so no isolation hop
+    /// is needed.
+    nonisolated open override func setUp() {
         super.setUp()
         config = configure()
     }
@@ -39,22 +43,23 @@ open class KassSuite: KassTestCase {
 ///         step("Checkout") { … }
 ///     }
 /// ```
+@MainActor
 public final class KassRunBuilder {
 
     private let test: KassTestCase
-    private var beforeBlock: (() -> Void)?
-    private var afterBlock: (() -> Void)?
+    private var beforeBlock: (@MainActor () -> Void)?
+    private var afterBlock: (@MainActor () -> Void)?
 
     init(test: KassTestCase) { self.test = test }
 
     @discardableResult
-    public func before(_ block: @escaping () -> Void) -> KassRunBuilder {
+    public func before(_ block: @escaping @MainActor () -> Void) -> KassRunBuilder {
         beforeBlock = block
         return self
     }
 
     @discardableResult
-    public func after(_ block: @escaping () -> Void) -> KassRunBuilder {
+    public func after(_ block: @escaping @MainActor () -> Void) -> KassRunBuilder {
         afterBlock = block
         return self
     }
@@ -62,22 +67,28 @@ public final class KassRunBuilder {
     public func run(_ steps: () -> Void) {
         test.config.logger.log("▶︎ run")
         if let afterBlock = afterBlock {
-            test.addTeardownBlock(afterBlock)   // runs even if a step fails hard
+            // `addTeardownBlock` requires a `@Sendable` closure because teardown
+            // blocks are a general-purpose XCTest API. `MainActorBox` vouches for
+            // `afterBlock` instead: XCTest always runs teardown blocks on the main
+            // thread, so a same-actor, synchronous call here can never race.
+            let box = MainActorBox(afterBlock)
+            test.addTeardownBlock { @MainActor in box.value() }   // runs even if a step fails hard
         }
         beforeBlock?()
         steps()
     }
 }
 
+@MainActor
 public extension KassTestCase {
 
     /// Starts a structured run with a `before` section.
-    func before(_ block: @escaping () -> Void) -> KassRunBuilder {
+    func before(_ block: @escaping @MainActor () -> Void) -> KassRunBuilder {
         KassRunBuilder(test: self).before(block)
     }
 
     /// Starts a structured run with an `after` section.
-    func after(_ block: @escaping () -> Void) -> KassRunBuilder {
+    func after(_ block: @escaping @MainActor () -> Void) -> KassRunBuilder {
         KassRunBuilder(test: self).after(block)
     }
 

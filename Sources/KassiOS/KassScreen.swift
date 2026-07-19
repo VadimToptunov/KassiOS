@@ -4,6 +4,7 @@ import XCTest
 ///
 /// Subclass it, declare your elements as `lazy` properties, and optionally list
 /// the elements that prove the screen is loaded in `onLoad`.
+@MainActor
 open class KassScreen {
 
     public let app: XCUIApplication
