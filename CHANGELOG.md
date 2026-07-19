@@ -6,6 +6,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.10.1] - 2026-07-19
+
 ### Changed
 - Adopted the Swift 6 language mode (`swift-tools-version:6.0`,
   `swiftLanguageMode(.v6)` on both targets) and drove
@@ -26,6 +28,18 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   closures/`self` references across Sendable-requiring boundaries
   (`XCTestCase.addTeardownBlock`, and `setUp`/`tearDown` overriding
   XCTestCase's nonisolated Objective-C lifecycle hooks).
+
+### Added
+- Documentation: DocC guides — *Coming from Kaspresso*, *Why your XCUITest suite
+  flakes*, *Parameterized UI tests*, and *Running KassiOS on CI* — plus a README
+  positioning rewrite (leads with "Swift Testing doesn't do UI testing" and "a
+  suite, not a helper", with a *Where Swift Testing fits* table) and Swift Package
+  Index swift-versions/platforms badges.
+
+### Fixed
+- Integration suite: `test_webView` no longer flakes — it now enters the home
+  scope before tapping the `NavigationLink`, instead of racing the login→home
+  transition.
 
 ## [0.10.0] - 2026-07-12
 
@@ -162,7 +176,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Initial DSL: `KassTestCase`, `KassScreen`, `KassElement`, implicit waits,
   flaky-safety (`Waiter`), step logging, and `onScreen`.
 
-[Unreleased]: https://github.com/VadimToptunov/KassiOS/compare/0.10.0...HEAD
+[Unreleased]: https://github.com/VadimToptunov/KassiOS/compare/0.10.1...HEAD
+[0.10.1]: https://github.com/VadimToptunov/KassiOS/compare/0.10.0...0.10.1
 [0.10.0]: https://github.com/VadimToptunov/KassiOS/compare/0.9.0...0.10.0
 [0.9.0]: https://github.com/VadimToptunov/KassiOS/compare/0.8.0...0.9.0
 [0.8.0]: https://github.com/VadimToptunov/KassiOS/compare/0.7.0...0.8.0
