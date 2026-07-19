@@ -1,13 +1,15 @@
 # ``KassiOS``
 
-A tiny, batteries-included DSL over XCUITest — readable screen objects, automatic
-waits, built-in flaky-safety, and Kaspresso-style ergonomics, with zero external
+A UI-testing suite over XCUITest — readable screen objects, automatic waits,
+built-in flaky-safety, and Kaspresso-style ergonomics, with zero external
 dependencies.
 
 ## Overview
 
-Raw XCUITest makes you manage timing by hand. KassiOS bakes waiting and retries
-into every interaction, so tests read like a script:
+Swift Testing replaces XCTest for *unit* tests, but it does not drive an app's
+UI — that is still XCUITest, and XCUITest still makes you manage timing by hand.
+KassiOS is the suite on top: it bakes waiting and retries into every interaction,
+so tests read like a script:
 
 ```swift
 final class LoginFlowUITests: KassTestCase {
@@ -33,6 +35,13 @@ For a full prose walkthrough see the
 [Guide](https://github.com/VadimToptunov/KassiOS/blob/main/Documentation/Guide.md).
 
 ## Topics
+
+### Guides
+
+- <doc:ComingFromKaspresso>
+- <doc:WhyXCUITestFlakes>
+- <doc:ParameterizedUITests>
+- <doc:CIRecipe>
 
 ### Writing tests
 
