@@ -2,12 +2,21 @@
 
 [![CI](https://github.com/VadimToptunov/KassiOS/actions/workflows/ci.yml/badge.svg)](https://github.com/VadimToptunov/KassiOS/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/VadimToptunov/KassiOS?sort=semver)](https://github.com/VadimToptunov/KassiOS/releases)
+[![Swift versions](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2FVadimToptunov%2FKassiOS%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/VadimToptunov/KassiOS)
+[![Platforms](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2FVadimToptunov%2FKassiOS%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/VadimToptunov/KassiOS)
 [![Docs](https://img.shields.io/badge/docs-DocC-informational)](https://vadimtoptunov.github.io/KassiOS/documentation/kassios/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-A tiny, batteries-included DSL on top of **XCUITest** — readable screen objects,
-automatic waits, and built-in flaky-safety. Kaspresso-style ergonomics for iOS,
-with **zero external dependencies** and one-line SPM install.
+**Swift Testing doesn't do UI testing.** Apple's new framework replaces XCTest for
+*unit* tests — but driving a real app's UI still means XCUITest, and XCUITest still
+makes you hand-manage timing, retries, and stale element references.
+
+KassiOS is a **UI-testing suite** on top of XCUITest — not a thin helper, but the
+full stack Kaspresso gives Android: readable screen objects, implicit waits under
+one shared flaky-safety budget, structured reports (Allure + JUnit), strict
+accessibility-identifier enforcement, parameterized runs, and zero-dependency
+snapshot regression. **Zero external dependencies**, one-line SPM install,
+**Swift 6** ready.
 
 > Types use a short `Kass` prefix (`KassScreen`, `KassElement`, `KassTestCase`, `KassConfig`). Change with one find-replace if you prefer another.
 
@@ -52,6 +61,20 @@ onScreen(HomeScreen.self) { home in
 ```
 
 No `waitForExistence`. No `sleep`. No stale references.
+
+### Where Swift Testing fits
+
+Swift Testing and KassiOS are complementary, not competitors:
+
+| | Swift Testing | KassiOS |
+| --- | --- | --- |
+| Layer | unit / logic | end-to-end UI |
+| Drives the app UI | no | yes (XCUITest) |
+| Runs in-process with your types | yes | no (separate UI-test target) |
+| Parameterized cases | `@Test(arguments:)` | `parameterized(_:)` |
+
+Use Swift Testing for your model and view-model logic; use KassiOS for the flows
+a user actually taps through. They live in different targets and never collide.
 
 ## Install
 
