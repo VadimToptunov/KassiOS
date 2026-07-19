@@ -106,7 +106,10 @@ final class DemoUITests: KassTestCase {
     func test_webView() {
         launch()
         onScreen(LoginScreen.self) { $0.email.typeText("a@b.c"); $0.signIn.tap() }
-        HomeScreen(app: app, config: config).openWeb.tap()
+        // Enter the home scope first so we wait for the login→home transition to
+        // finish (its `onLoad` `welcome`) before resolving `openWeb`; tapping the
+        // NavigationLink mid-transition is what made this test flaky.
+        onScreen(HomeScreen.self) { $0.openWeb.tap() }
         onScreen(WebScreen.self) { web in
             // Web content can be slow to load — give it a longer budget.
             web.heading.within(timeout: 30).assertVisible()
