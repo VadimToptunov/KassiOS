@@ -44,10 +44,21 @@ struct Agent {
         guard let request = try? JSONDecoder().decode(AgentRequest.self, from: body) else {
             return encode(AgentResponse(ok: false, error: "malformed request"))
         }
-        guard request.token == token else {
+        guard constantTimeEquals(request.token, token) else {
             return encode(AgentResponse(ok: false, error: "unauthorized"))
         }
         return encode(runner.run(request.command, udid: request.udid))
+    }
+
+    /// Constant-time token comparison — over loopback there's no network jitter
+    /// to mask a short-circuiting `==`, so compare every byte regardless.
+    static func constantTimeEquals(_ lhs: String, _ rhs: String) -> Bool {
+        let left = Array(lhs.utf8), right = Array(rhs.utf8)
+        var diff = UInt8(left.count == right.count ? 0 : 1)
+        for index in 0..<Swift.max(left.count, right.count) {
+            diff |= (index < left.count ? left[index] : 0) ^ (index < right.count ? right[index] : 0)
+        }
+        return diff == 0
     }
 
     /// Publishes the port + token to `~/.kassios-agent.json` so the in-simulator
@@ -59,7 +70,9 @@ struct Agent {
         let url = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".kassios-agent.json")
         let payload = ["port": String(port), "token": token]
         guard let data = try? JSONSerialization.data(withJSONObject: payload) else { return }
-        try? data.write(to: url, options: .atomic)
-        try? FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path)
+        // Create the file 0600 from the start — never a world-readable window
+        // (the token lives here). Remove any stale copy first so the mode sticks.
+        try? FileManager.default.removeItem(at: url)
+        FileManager.default.createFile(atPath: url.path, contents: data, attributes: [.posixPermissions: 0o600])
     }
 }

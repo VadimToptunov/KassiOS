@@ -49,11 +49,7 @@ enum AgentCommand: Codable, Equatable {
         case let .permissionReset(service, bundleID):
             return ["privacy", udid, "reset", service, bundleID]
         case let .statusBarOverride(time, battery, bars):
-            var args = ["status_bar", udid, "override"]
-            if let time = time { args += ["--time", time] }
-            if let battery = battery { args += ["--batteryLevel", String(battery)] }
-            if let bars = bars { args += ["--cellularBars", String(bars)] }
-            return args
+            return Self.statusBarOverrideArgs(udid: udid, time: time, battery: battery, bars: bars)
         case .statusBarClear:
             return ["status_bar", udid, "clear"]
         case let .appearance(mode):
@@ -65,5 +61,13 @@ enum AgentCommand: Codable, Equatable {
         case let .openURL(url):
             return ["openurl", udid, url]
         }
+    }
+
+    private static func statusBarOverrideArgs(udid: String, time: String?, battery: Int?, bars: Int?) -> [String] {
+        var args = ["status_bar", udid, "override"]
+        if let time = time { args += ["--time", time] }
+        if let battery = battery { args += ["--batteryLevel", String(battery)] }
+        if let bars = bars { args += ["--cellularBars", String(bars)] }
+        return args
     }
 }

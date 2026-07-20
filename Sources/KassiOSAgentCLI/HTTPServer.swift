@@ -38,6 +38,11 @@ struct HTTPServer {
         while true {
             let clientFD = accept(listenFD, nil, nil)
             if clientFD < 0 { continue }
+            // Bound each connection: the token is only checked after the body is
+            // read, so without a timeout an unauthenticated peer that connects
+            // and stalls would wedge this single-threaded loop for the whole run.
+            var timeout = timeval(tv_sec: 5, tv_usec: 0)
+            setsockopt(clientFD, SOL_SOCKET, SO_RCVTIMEO, &timeout, socklen_t(MemoryLayout<timeval>.size))
             let request = readAll(clientFD)
             let body = Self.httpBody(of: request)
             let responseBody = handler(body)
@@ -53,14 +58,13 @@ struct HTTPServer {
         var buffer = [UInt8](repeating: 0, count: 4096)
         // Read headers, then exactly Content-Length bytes of body.
         while true {
-            let n = read(fd, &buffer, buffer.count)
-            if n <= 0 { break }
-            data.append(contentsOf: buffer[0..<n])
+            let bytesRead = read(fd, &buffer, buffer.count)
+            if bytesRead <= 0 { break }   // EOF, error, or the recv timeout fired
+            data.append(contentsOf: buffer[0..<bytesRead])
             if let headerEnd = Self.headerEnd(in: data) {
                 let length = Self.contentLength(in: data)
                 if data.count - headerEnd >= length { break }
             }
-            if n < buffer.count && Self.headerEnd(in: data) == nil { continue }
         }
         return data
     }
@@ -70,9 +74,9 @@ struct HTTPServer {
             var offset = 0
             let base = raw.bindMemory(to: UInt8.self).baseAddress!
             while offset < data.count {
-                let n = Darwin.write(fd, base + offset, data.count - offset)
-                if n <= 0 { break }
-                offset += n
+                let written = Darwin.write(fd, base + offset, data.count - offset)
+                if written <= 0 { break }
+                offset += written
             }
         }
     }
@@ -101,7 +105,11 @@ struct HTTPServer {
     }
 
     static func httpResponse(_ body: Data) -> Data {
-        var response = Data("HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: \(body.count)\r\nConnection: close\r\n\r\n".utf8)
+        let headers = "HTTP/1.1 200 OK\r\n"
+            + "Content-Type: application/json\r\n"
+            + "Content-Length: \(body.count)\r\n"
+            + "Connection: close\r\n\r\n"
+        var response = Data(headers.utf8)
         response.append(body)
         return response
     }

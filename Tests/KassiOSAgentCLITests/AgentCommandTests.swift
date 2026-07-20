@@ -46,14 +46,22 @@ final class AgentCommandTests: XCTestCase {
     /// Auth is enforced: a mismatched token yields an unauthorized response.
     func test_handle_rejectsBadToken() throws {
         let body = try JSONEncoder().encode(AgentRequest(token: "wrong", udid: udid, command: .statusBarClear))
-        let response = try JSONDecoder().decode(AgentResponse.self, from: Agent.handle(body: body, token: "right", runner: SimctlRunner()))
+        let data = Agent.handle(body: body, token: "right", runner: SimctlRunner())
+        let response = try JSONDecoder().decode(AgentResponse.self, from: data)
         XCTAssertFalse(response.ok)
         XCTAssertEqual(response.error, "unauthorized")
     }
 
     func test_handle_rejectsMalformedBody() throws {
-        let response = try JSONDecoder().decode(AgentResponse.self, from: Agent.handle(body: Data("not json".utf8), token: "t", runner: SimctlRunner()))
+        let data = Agent.handle(body: Data("not json".utf8), token: "t", runner: SimctlRunner())
+        let response = try JSONDecoder().decode(AgentResponse.self, from: data)
         XCTAssertFalse(response.ok)
         XCTAssertEqual(response.error, "malformed request")
+    }
+
+    func test_constantTimeEquals() {
+        XCTAssertTrue(Agent.constantTimeEquals("secret", "secret"))
+        XCTAssertFalse(Agent.constantTimeEquals("secret", "secreT"))
+        XCTAssertFalse(Agent.constantTimeEquals("secret", "secre"))
     }
 }
