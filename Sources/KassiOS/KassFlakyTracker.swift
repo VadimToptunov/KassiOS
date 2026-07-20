@@ -1,10 +1,18 @@
 import Foundation
 
 /// One action that passed, but not on the first try — the flaky signal the
-/// interceptor chain sees for free.
+/// interceptor chain sees for free. Carries the element identity so a test with
+/// several flaky taps produces distinguishable entries.
 public struct KassFlakyRecovery: Codable, Sendable, Equatable {
     public let action: String
+    public let element: String
     public let attempts: Int
+
+    public init(action: String, element: String, attempts: Int) {
+        self.action = action
+        self.element = element
+        self.attempts = attempts
+    }
 }
 
 /// Accumulates retry-recoveries across a test run. `KassRetryInterceptor` records
@@ -13,16 +21,21 @@ public struct KassFlakyRecovery: Codable, Sendable, Equatable {
 /// is a quarantine candidate.
 ///
 /// Process-global (reset per test). With parallel test workers the tally is
-/// per-process, which still surfaces the flaky signal.
+/// per-process, which still surfaces the flaky signal. Attribution relies on the
+/// standard lifecycle order — `super.setUp()` first, `super.tearDown()` **last**;
+/// a subclass that runs DSL interactions after `super.tearDown()` will lose those
+/// recoveries.
 public final class KassFlakyTracker: @unchecked Sendable {
     public static let shared = KassFlakyTracker()
 
     private let lock = NSLock()
     private var recoveries: [KassFlakyRecovery] = []
 
-    func record(action: String, attempts: Int) {
+    /// Records an action that passed only after a retry. Public so a custom retry
+    /// interceptor (not just the built-in ``KassRetryInterceptor``) can participate.
+    public func record(action: String, element: String, attempts: Int) {
         lock.lock()
-        recoveries.append(KassFlakyRecovery(action: action, attempts: attempts))
+        recoveries.append(KassFlakyRecovery(action: action, element: element, attempts: attempts))
         lock.unlock()
     }
 
@@ -33,8 +46,10 @@ public final class KassFlakyTracker: @unchecked Sendable {
 
     /// Returns and clears the accumulated recoveries.
     public func drain() -> [KassFlakyRecovery] {
-        lock.lock(); defer { recoveries = []; lock.unlock() }
-        return recoveries
+        lock.lock(); defer { lock.unlock() }
+        let snapshot = recoveries
+        recoveries = []
+        return snapshot
     }
 }
 

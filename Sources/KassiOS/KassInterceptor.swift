@@ -90,7 +90,9 @@ public struct KassRetryInterceptor: KassInterceptor {
         }
         // Passed, but not first-try → a flaky recovery worth surfacing.
         if attempts.value > 1 {
-            KassFlakyTracker.shared.record(action: context.name, attempts: attempts.value)
+            KassFlakyTracker.shared.record(
+                action: context.name, element: context.elementDescription, attempts: attempts.value
+            )
         }
     }
 }
