@@ -14,6 +14,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   interceptors, timeout/flaky-safety) to the `.xcresult` and the structured
   report — designed to be handed straight to a coding agent rather than parsed
   out of xcresult after the fact.
+- **Flaky detection** (Phase 6): the retry interceptor records actions that
+  passed only *after* a retry into a `KassFlakyTracker`; at teardown a green test
+  that recovered attaches a machine-readable `[KassFlakyRecovery]` report — a
+  quarantine signal that falls out of the interceptor chain for free.
 
 ## [0.14.0] - 2026-07-21
 

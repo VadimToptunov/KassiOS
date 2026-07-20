@@ -34,6 +34,7 @@ open class KassTestCase: XCTestCase {
     /// boxed first — see `MainActorBox` for why.
     nonisolated open override func setUp() {
         super.setUp()
+        KassFlakyTracker.shared.reset()   // fresh flaky tally per test
         let this = MainActorBox(self)
         MainActor.assumeIsolated {
             this.value.continueAfterFailure = false
@@ -65,6 +66,19 @@ open class KassTestCase: XCTestCase {
                 this.value.add(treeAttachment)
                 this.value.config.reporter?.attach(name: "Accessibility tree", type: "text/plain", data: Data(tree.utf8))
             }
+            // Flakiness report: actions that passed only after a retry. A green
+            // test with entries here is a quarantine candidate.
+            let recoveries = KassFlakyTracker.shared.drain()
+            if !recoveries.isEmpty,
+               let data = try? JSONEncoder().encode(recoveries) {
+                let attachment = XCTAttachment(data: data, uniformTypeIdentifier: "public.json")
+                attachment.name = "Flaky recoveries — \(this.value.name)"
+                attachment.lifetime = .keepAlways
+                this.value.add(attachment)
+                this.value.config.reporter?.attach(name: "Flaky recoveries", type: "application/json", data: data)
+                this.value.config.logger.log("⚠️ \(recoveries.count) action(s) recovered on retry — potential flake")
+            }
+
             if this.value.reportingStarted {
                 this.value.config.reporter?.testFinished(
                     status: failed ? .failed : .passed,
