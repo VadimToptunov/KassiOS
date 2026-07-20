@@ -79,12 +79,18 @@ public struct KassRetryInterceptor: KassInterceptor {
 
     @MainActor
     public func intercept(_ context: KassActionContext, proceed: () throws -> Void) throws {
+        let attempts = KassAttemptCounter()
         try Waiter.retry(
             timeout: context.timeout,
             pollInterval: context.pollInterval,
             enabled: context.flakySafetyEnabled
         ) {
+            attempts.bump()
             try proceed()
+        }
+        // Passed, but not first-try → a flaky recovery worth surfacing.
+        if attempts.value > 1 {
+            KassFlakyTracker.shared.record(action: context.name, attempts: attempts.value)
         }
     }
 }

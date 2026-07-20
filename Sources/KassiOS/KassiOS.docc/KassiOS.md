@@ -108,6 +108,8 @@ For a full prose walkthrough see the
 ### Diagnostics
 
 - ``KassDiagnostic``
+- ``KassFlakyTracker``
+- ``KassFlakyRecovery``
 
 ### Errors
 
