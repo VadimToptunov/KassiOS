@@ -14,6 +14,7 @@ end
 # --- App target -------------------------------------------------------------
 app = project.new_target(:application, "KassDemo", :ios, "16.0")
 add(project, app, "DemoApp/*.swift")
+add(project, app, "../Sources/KassiOSStubs/*.swift")   # in-app network stub bridge
 app.build_configurations.each do |c|
   s = c.build_settings
   s["PRODUCT_BUNDLE_IDENTIFIER"] = "com.kassios.KassDemo"

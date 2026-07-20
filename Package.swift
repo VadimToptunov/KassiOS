@@ -13,7 +13,11 @@ let package = Package(
         // location, status bar). Runs on the Mac; the in-simulator test client
         // reaches it over 127.0.0.1. Separate product so the library needs it
         // only for the shared wire types.
-        .executable(name: "kassios-agent", targets: ["KassiOSAgentCLI"])
+        .executable(name: "kassios-agent", targets: ["KassiOSAgentCLI"]),
+        // The in-app network-stub bridge. An app links this *in debug only* and
+        // calls `KassiOSStubs.installIfConfigured()` at launch; the UI test's
+        // `launch(stubs:)` then drives its responses. Foundation-only, no server.
+        .library(name: "KassiOSStubs", targets: ["KassiOSStubs"])
     ],
     targets: [
         // The library imports XCTest so it can wrap XCUIElement. This is the same
@@ -43,6 +47,17 @@ let package = Package(
             name: "KassiOSAgentCLITests",
             dependencies: ["KassiOSAgentCLI"],
             path: "Tests/KassiOSAgentCLITests",
+            swiftSettings: [.swiftLanguageMode(.v6)]
+        ),
+        .target(
+            name: "KassiOSStubs",
+            path: "Sources/KassiOSStubs",
+            swiftSettings: [.swiftLanguageMode(.v6)]
+        ),
+        .testTarget(
+            name: "KassiOSStubsTests",
+            dependencies: ["KassiOSStubs"],
+            path: "Tests/KassiOSStubsTests",
             swiftSettings: [.swiftLanguageMode(.v6)]
         )
     ]

@@ -6,6 +6,15 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- **Network control** (Phase 4): the in-app stub bridge. A new `KassiOSStubs`
+  product the app links in debug and installs at launch
+  (`KassiOSStubs.installIfConfigured()`); the test drives it with
+  `launch(stubs: [.json(urlContains:body:)])` or `launch(offline: true)`. A
+  `URLProtocol` replays matching requests (or fails them with
+  `URLError.notConnectedToInternet`) — no server, no ports, deterministic, works
+  on simulator and real devices.
+
 ## [0.12.0] - 2026-07-20
 
 ### Added
