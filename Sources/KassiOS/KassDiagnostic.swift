@@ -1,9 +1,19 @@
 import XCTest
 
-/// A machine-readable snapshot of a failed action — designed to be **handed to a
-/// coding agent**, not parsed out of an `.xcresult` after the fact. Attached as
-/// JSON on every failure (and mirrored into the structured report).
+/// A machine-readable snapshot of a failed element interaction — designed to be
+/// **handed to a coding agent**, not parsed out of an `.xcresult` after the fact.
+/// Attached as JSON when a `perform`-backed interaction or a scroll fails (and
+/// mirrored into the structured report).
 public struct KassDiagnostic: Codable, Sendable {
+
+    /// A structured rectangle — fields, not a stringified `CGRect`, so an agent
+    /// reads them directly.
+    public struct Frame: Codable, Sendable {
+        public let x: Double
+        public let y: Double
+        public let width: Double
+        public let height: Double
+    }
 
     /// The resolved element's live state at the moment of failure.
     public struct ElementState: Codable, Sendable {
@@ -11,7 +21,7 @@ public struct KassDiagnostic: Codable, Sendable {
         public let hittable: Bool?
         public let resolvedIdentifier: String?
         public let label: String?
-        public let frame: String?
+        public let frame: Frame?
     }
 
     public let action: String              // e.g. "tap", "typeText('hi')"
@@ -36,10 +46,14 @@ public struct KassDiagnostic: Codable, Sendable {
 
 extension KassElement {
 
-    /// Builds the failure diagnostic for the action that just failed.
-    func makeDiagnostic(action: String, kind: KassActionKind, error: Error, file: StaticString, line: UInt) -> KassDiagnostic {
-        let element = resolve()
+    /// Builds the failure diagnostic from the already-resolved `element` (pass the
+    /// same snapshot used for the human-readable message so the two can't disagree
+    /// if the app animates between resolves).
+    func makeDiagnostic(
+        action: String, kind: KassActionKind, error: Error, file: StaticString, line: UInt, element: XCUIElement
+    ) -> KassDiagnostic {
         let exists = element.exists
+        let frame = exists ? element.frame : nil
         return KassDiagnostic(
             action: action,
             kind: "\(kind)",
@@ -56,7 +70,7 @@ extension KassElement {
                 hittable: exists ? element.isHittable : nil,
                 resolvedIdentifier: exists ? element.identifier : nil,
                 label: exists ? element.label : nil,
-                frame: exists ? "\(element.frame)" : nil
+                frame: frame.map { KassDiagnostic.Frame(x: $0.origin.x, y: $0.origin.y, width: $0.width, height: $0.height) }
             )
         )
     }
@@ -64,6 +78,10 @@ extension KassElement {
     /// Attaches the diagnostic JSON to the `.xcresult` and the structured report.
     func attachDiagnostic(_ diagnostic: KassDiagnostic) {
         let data = diagnostic.jsonData()
+        guard !data.isEmpty else {
+            config.logger.log("⚠️ KassiOS: could not encode the diagnostic for '\(diagnostic.action)'")
+            return
+        }
         let attachment = XCTAttachment(data: data, uniformTypeIdentifier: "public.json")
         attachment.name = "KassiOS diagnostic (JSON)"
         attachment.lifetime = .keepAlways

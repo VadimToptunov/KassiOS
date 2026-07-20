@@ -507,6 +507,9 @@ public extension KassElement {
             config.reporter?.stepFinished(status: .failed, message: "\(error)")
             let message = "KassiOS: \(description) — scrollTo failed: \(error)"
             config.logger.log("❌ \(message)")
+            attachDiagnostic(makeDiagnostic(
+                action: "scrollTo(\(direction))", kind: .scroll, error: error, file: file, line: line, element: resolve()
+            ))
             XCTFail(message, file: file, line: line)
         }
         return self
@@ -561,6 +564,9 @@ public extension KassElement {
             config.reporter?.stepFinished(status: .failed, message: "\(error)")
             let message = "KassiOS: \(description) — softScrollTo failed: \(error)"
             config.logger.log("❌ \(message)")
+            attachDiagnostic(makeDiagnostic(
+                action: "softScrollTo(\(direction))", kind: .scroll, error: error, file: file, line: line, element: resolve()
+            ))
             XCTFail(message, file: file, line: line)
         }
         return self
@@ -601,13 +607,14 @@ public extension KassElement {
             try enforceIdentifierIfNeeded(resolve())
             config.reporter?.stepFinished(status: .passed, message: nil)
         } catch {
-            let message = "KassiOS: \(description) — \(name) failed: \(error)\(failureDiagnostics())"
+            let failed = resolve()   // one snapshot shared by both diagnostics
+            let message = "KassiOS: \(description) — \(name) failed: \(error)\(failureDiagnostics(for: failed))"
             config.logger.log("❌ \(message)")
             if config.captureScreenshotOnFailure {
                 attachFailureScreenshot(label: "\(name) — \(description)")
             }
             // Machine-readable failure artifact — hand it to a coding agent.
-            attachDiagnostic(makeDiagnostic(action: name, kind: kind, error: error, file: file, line: line))
+            attachDiagnostic(makeDiagnostic(action: name, kind: kind, error: error, file: file, line: line, element: failed))
             config.reporter?.stepFinished(status: .failed, message: message)
             XCTFail(message, file: file, line: line)
         }
@@ -637,8 +644,7 @@ public extension KassElement {
 
     /// A one-line snapshot of the element's live state, appended to failures so
     /// the report points precisely at the offending element.
-    private func failureDiagnostics() -> String {
-        let element = resolve()
+    private func failureDiagnostics(for element: XCUIElement) -> String {
         guard element.exists else { return "\n  ↳ element not found in the current hierarchy" }
         return "\n  ↳ exists=true hittable=\(element.isHittable) id='\(element.identifier)' "
             + "label='\(element.label)' type=\(element.elementType.rawValue) frame=\(element.frame)"
