@@ -82,7 +82,7 @@ a user actually taps through. They live in different targets and never collide.
 Swift Package Manager. Add the package and link it to your **UI Test target**:
 
 ```swift
-.package(url: "https://github.com/VadimToptunov/KassiOS.git", from: "0.14.0")
+.package(url: "https://github.com/VadimToptunov/KassiOS.git", from: "0.15.0")
 ```
 
 ## Use
