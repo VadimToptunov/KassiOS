@@ -80,6 +80,9 @@ For a full prose walkthrough see the
 
 - ``KassInterceptor``
 - ``KassRetryInterceptor``
+- ``KassLoggingInterceptor``
+- ``KassSystemAlertInterceptor``
+- ``KassSystemAlertAction``
 - ``KassActionContext``
 - ``KassActionKind``
 

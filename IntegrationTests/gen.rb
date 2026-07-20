@@ -19,6 +19,8 @@ app.build_configurations.each do |c|
   s["PRODUCT_BUNDLE_IDENTIFIER"] = "com.kassios.KassDemo"
   s["GENERATE_INFOPLIST_FILE"] = "YES"
   s["INFOPLIST_KEY_UILaunchScreen_Generation"] = "YES"
+  # Lets the demo raise a real location system dialog (for SystemAlertInterceptor).
+  s["INFOPLIST_KEY_NSLocationWhenInUseUsageDescription"] = "Demo location permission for KassiOS system-alert tests."
   s["SWIFT_VERSION"] = "5.0"
   s["IPHONEOS_DEPLOYMENT_TARGET"] = "16.0"
   s["TARGETED_DEVICE_FAMILY"] = "1,2"

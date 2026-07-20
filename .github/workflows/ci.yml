@@ -66,6 +66,14 @@ jobs:
           echo "Using simulator $UDID"
           echo "udid=$UDID" >> "$GITHUB_OUTPUT"
 
+      - name: Reset location permission
+        run: |
+          # So SystemAlertTests actually raises the location dialog (a warm
+          # simulator that already granted/denied it would skip the prompt and
+          # false-green the interceptor test).
+          xcrun simctl boot "${{ steps.sim.outputs.udid }}" || true
+          xcrun simctl privacy "${{ steps.sim.outputs.udid }}" reset location || true
+
       - name: Run UI tests
         working-directory: IntegrationTests
         run: |
