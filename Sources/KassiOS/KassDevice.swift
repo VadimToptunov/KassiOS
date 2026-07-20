@@ -169,4 +169,52 @@ public struct KassDevice {
         safari.typeText("\n")
     }
     #endif
+
+    // MARK: - Tier B: relaunch with settings (launch arguments)
+
+    /// Relaunches the app with locale/language/Dynamic-Type overrides applied as
+    /// launch arguments — **Tier B**: no host bridge, works on simulator *and*
+    /// real devices, but requires a relaunch (it's modelled as one on purpose,
+    /// rather than pretending the change is live).
+    ///
+    /// ```swift
+    /// device.relaunch { $0.locale("de_DE").language("de") }
+    /// ```
+    @discardableResult
+    public func relaunch(_ configure: (KassLaunchOptions) -> KassLaunchOptions) -> XCUIApplication {
+        let options = configure(KassLaunchOptions())
+        app.terminate()
+        app.launchArguments += options.arguments
+        app.launch()
+        return app
+    }
+}
+
+/// Builder for ``KassDevice/relaunch(_:)`` — the Tier B device settings that map
+/// to launch arguments. Each method returns a new value, so calls chain:
+/// `$0.locale("de_DE").language("de")`.
+public struct KassLaunchOptions {
+    private(set) var arguments: [String] = []
+
+    private func adding(_ args: [String]) -> KassLaunchOptions {
+        var copy = self
+        copy.arguments += args
+        return copy
+    }
+
+    /// `-AppleLocale`, e.g. `"de_DE"`. Drives `Locale.current`.
+    public func locale(_ identifier: String) -> KassLaunchOptions {
+        adding(["-AppleLocale", identifier])
+    }
+
+    /// `-AppleLanguages`, e.g. `"de"`. Drives the app's language.
+    public func language(_ code: String) -> KassLaunchOptions {
+        adding(["-AppleLanguages", "(\(code))"])
+    }
+
+    /// `-UIPreferredContentSizeCategoryName`, e.g.
+    /// `"UICTContentSizeCategoryAccessibilityXL"` for a large Dynamic Type size.
+    public func dynamicType(_ category: String) -> KassLaunchOptions {
+        adding(["-UIPreferredContentSizeCategoryName", category])
+    }
 }
