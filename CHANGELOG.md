@@ -11,6 +11,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   — a `KassLaunchOptions` builder (locale / language / Dynamic Type) applied as
   launch arguments. No host bridge; works on simulator and real devices, modelled
   honestly as a relaunch.
+- **Device control Tier C** (Phase 3): the `kassios-agent` executable — a
+  127.0.0.1-only, token-authenticated host bridge that shells out to an
+  allowlisted `simctl` command set. New DSL `device.permissions.grant(_:for:)`,
+  `device.statusBar.freeze(...)`, `device.location.set(...)`, `device.push(...)`,
+  `device.appearance(_:)` — each keyed by `SIMULATOR_UDID` (parallel-safe) and
+  `XCTSkip`ping (never hanging) when no agent is reachable or on a real device.
 
 ## [0.11.0] - 2026-07-20
 

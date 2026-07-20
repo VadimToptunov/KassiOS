@@ -31,16 +31,14 @@ jobs:
           xcodebuild -version
           swift --version
 
-      # The library wraps XCUITest, so it's built with Xcode (not `swift build`).
-      # The unit tests are pure logic, so they run on the macOS destination —
-      # fastest and free of simulator-name drift across runner images.
+      # Pure-logic unit tests across every target — including the agent CLI's,
+      # which `@testable import`s an executable target (that only SwiftPM's
+      # `swift test` resolves; `xcodebuild -scheme` can't). Runs on the macOS
+      # host, no simulator.
       - name: Unit tests
         run: |
           set -o pipefail
-          xcodebuild test \
-            -scheme KassiOS \
-            -destination 'platform=macOS' \
-            | tail -50
+          swift test 2>&1 | tail -60
 
   ui-tests:
     name: UI tests (simulator)
@@ -73,6 +71,17 @@ jobs:
           # false-green the interceptor test).
           xcrun simctl boot "${{ steps.sim.outputs.udid }}" || true
           xcrun simctl privacy "${{ steps.sim.outputs.udid }}" reset location || true
+
+      - name: Start the kassios-agent (Tier C host bridge)
+        run: |
+          # Builds and starts the host agent so DeviceTierCTests exercise the
+          # real bridge instead of skipping. The agent writes ~/.kassios-agent.json,
+          # which the in-simulator test runner reads via $SIMULATOR_HOST_HOME.
+          swift build --product kassios-agent
+          KASSIOS_AGENT_TOKEN="$(uuidgen)" KASSIOS_AGENT_PORT=8437 \
+            nohup .build/debug/kassios-agent > agent.log 2>&1 &
+          sleep 2
+          cat agent.log || true
 
       - name: Run UI tests
         working-directory: IntegrationTests
