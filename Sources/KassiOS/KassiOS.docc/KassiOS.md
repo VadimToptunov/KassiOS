@@ -62,6 +62,11 @@ For a full prose walkthrough see the
 
 - ``KassDevice``
 - ``KassLaunchOptions``
+- ``KassPermissions``
+- ``KassPermissionService``
+- ``KassStatusBar``
+- ``KassLocation``
+- ``KassAppearance``
 
 ### Configuration
 

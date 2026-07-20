@@ -74,6 +74,17 @@ jobs:
           xcrun simctl boot "${{ steps.sim.outputs.udid }}" || true
           xcrun simctl privacy "${{ steps.sim.outputs.udid }}" reset location || true
 
+      - name: Start the kassios-agent (Tier C host bridge)
+        run: |
+          # Builds and starts the host agent so DeviceTierCTests exercise the
+          # real bridge instead of skipping. The agent writes ~/.kassios-agent.json,
+          # which the in-simulator test runner reads via $SIMULATOR_HOST_HOME.
+          swift build --product kassios-agent
+          KASSIOS_AGENT_TOKEN="$(uuidgen)" KASSIOS_AGENT_PORT=8437 \
+            nohup .build/debug/kassios-agent > agent.log 2>&1 &
+          sleep 2
+          cat agent.log || true
+
       - name: Run UI tests
         working-directory: IntegrationTests
         run: |
