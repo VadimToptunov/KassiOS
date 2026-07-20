@@ -16,6 +16,21 @@ public struct KassElementCollection {
         self.query = query
     }
 
+    /// Builds the interceptor context for a collection assertion.
+    private func context(_ name: String, file: StaticString, line: UInt) -> KassActionContext {
+        KassActionContext(
+            kind: .assert,
+            name: name,
+            elementDescription: description,
+            identifier: nil,
+            timeout: config.timeout,
+            pollInterval: config.pollInterval,
+            flakySafetyEnabled: config.flakySafetyEnabled,
+            file: file,
+            line: line
+        )
+    }
+
     /// Live number of matching elements.
     public var count: Int { query().count }
 
@@ -82,7 +97,7 @@ public struct KassElementCollection {
     @discardableResult
     public func assertCount(_ expected: Int, file: StaticString = #filePath, line: UInt = #line) -> KassElementCollection {
         do {
-            try Waiter.retry(timeout: config.timeout, pollInterval: config.pollInterval, enabled: config.flakySafetyEnabled) {
+            try KassInterceptorChain.run(config.interceptors, context: context("assertCount(\(expected))", file: file, line: line)) {
                 config.synchronizer.waitForIdle(timeout: config.timeout)
                 let actual = query().count
                 guard actual == expected else { throw KassError("expected \(expected) but found \(actual)") }
@@ -98,7 +113,7 @@ public struct KassElementCollection {
     @discardableResult
     public func assertNotEmpty(file: StaticString = #filePath, line: UInt = #line) -> KassElementCollection {
         do {
-            try Waiter.retry(timeout: config.timeout, pollInterval: config.pollInterval, enabled: config.flakySafetyEnabled) {
+            try KassInterceptorChain.run(config.interceptors, context: context("assertNotEmpty", file: file, line: line)) {
                 config.synchronizer.waitForIdle(timeout: config.timeout)
                 guard query().count > 0 else { throw KassError("collection is empty") }
             }

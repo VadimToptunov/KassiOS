@@ -42,6 +42,12 @@ public struct KassConfig: Sendable {
     /// Off by default — handy for building a visual trail of a whole test.
     public var screenshotEachStep: Bool
 
+    /// The chain every waiting DSL action flows through, outermost first.
+    /// Defaults to a single ``KassRetryInterceptor`` — the built-in flaky-safety,
+    /// now a reorderable link. Add your own around it: before the retry to run
+    /// once, after it to run on every attempt.
+    public var interceptors: [KassInterceptor]
+
     public init(
         timeout: TimeInterval = 15,
         pollInterval: TimeInterval = 0.5,
@@ -51,7 +57,8 @@ public struct KassConfig: Sendable {
         synchronizer: KassSynchronizer = NoOpSynchronizer(),
         accessibilityIdentifierPolicy: KassIdentifierPolicy = .ignore,
         captureScreenshotOnFailure: Bool = true,
-        screenshotEachStep: Bool = false
+        screenshotEachStep: Bool = false,
+        interceptors: [KassInterceptor] = [KassRetryInterceptor()]
     ) {
         self.timeout = timeout
         self.pollInterval = pollInterval
@@ -62,6 +69,7 @@ public struct KassConfig: Sendable {
         self.accessibilityIdentifierPolicy = accessibilityIdentifierPolicy
         self.captureScreenshotOnFailure = captureScreenshotOnFailure
         self.screenshotEachStep = screenshotEachStep
+        self.interceptors = interceptors
     }
 
     public static let `default` = KassConfig()

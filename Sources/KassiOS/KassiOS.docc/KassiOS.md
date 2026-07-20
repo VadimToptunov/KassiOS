@@ -76,6 +76,13 @@ For a full prose walkthrough see the
 - ``KassSynchronizer``
 - ``NoOpSynchronizer``
 
+### Interceptors
+
+- ``KassInterceptor``
+- ``KassRetryInterceptor``
+- ``KassActionContext``
+- ``KassActionKind``
+
 ### Errors
 
 - ``KassError``
