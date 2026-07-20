@@ -93,6 +93,10 @@ struct LoginView: View {
             .buttonStyle(.borderedProminent)
             .accessibilityIdentifier("signIn")
 
+            // Deliberately WITHOUT an accessibility identifier — the
+            // accessibility audit should flag it.
+            Button("Help") {}
+
             Spacer()
         }
         .padding()

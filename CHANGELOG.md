@@ -6,6 +6,15 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- **Accessibility audit** (Phase 5): `auditAccessibilityIdentifiers()` proactively
+  scans the current screen for **hittable, interactive** elements missing an
+  accessibility identifier — the ones only reachable by brittle label text —
+  reporting each (with a screenshot + report attachment). Configurable
+  `severity` (`.warn` / `.fail`) and an allowlist for legitimately-unlabelled
+  (decorative / system) elements. Complements the existing per-element
+  `.enforce` policy, which only fires on elements a test actually uses.
+
 ## [0.13.0] - 2026-07-21
 
 ### Added

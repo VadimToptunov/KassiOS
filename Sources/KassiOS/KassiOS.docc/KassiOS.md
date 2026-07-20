@@ -68,6 +68,12 @@ For a full prose walkthrough see the
 - ``KassLocation``
 - ``KassAppearance``
 
+### Accessibility
+
+- ``KassAccessibilityAudit``
+- ``KassAuditSeverity``
+- ``KassA11yFinding``
+
 ### Network stubbing
 
 - ``KassStub``
