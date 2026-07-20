@@ -3,6 +3,21 @@ import XCTest
 @MainActor
 public extension KassTestCase {
 
+    /// Builds the interceptor context for a wait-combinator.
+    private func combinatorContext(_ name: String, timeout: TimeInterval?, file: StaticString, line: UInt) -> KassActionContext {
+        KassActionContext(
+            kind: .wait,
+            name: name,
+            elementDescription: name,
+            identifier: nil,
+            timeout: timeout ?? config.timeout,
+            pollInterval: config.pollInterval,
+            flakySafetyEnabled: config.flakySafetyEnabled,
+            file: file,
+            line: line
+        )
+    }
+
     /// Waits until any of `elements` exists and returns its index (or fails).
     /// Handy when a tap can lead to one of several screens.
     @discardableResult
@@ -13,15 +28,19 @@ public extension KassTestCase {
         line: UInt = #line
     ) -> Int? {
         do {
-            return try Waiter.retry(
-                timeout: timeout ?? config.timeout,
-                pollInterval: config.pollInterval,
-                enabled: config.flakySafetyEnabled
+            var found: Int?
+            try KassInterceptorChain.run(
+                config.interceptors,
+                context: combinatorContext("waitForAny(\(elements.count))", timeout: timeout, file: file, line: line)
             ) {
-                config.synchronizer.waitForIdle(timeout: config.timeout)
-                for (index, element) in elements.enumerated() where element.resolve().exists { return index }
+                self.config.synchronizer.waitForIdle(timeout: self.config.timeout)
+                for (index, element) in elements.enumerated() where element.resolve().exists {
+                    found = index
+                    return
+                }
                 throw KassError("none of \(elements.count) elements appeared")
             }
+            return found
         } catch {
             config.logger.log("❌ waitForAny failed: \(error)")
             XCTFail("waitForAny failed: \(error)", file: file, line: line)
@@ -37,12 +56,11 @@ public extension KassTestCase {
         line: UInt = #line
     ) {
         do {
-            try Waiter.retry(
-                timeout: timeout ?? config.timeout,
-                pollInterval: config.pollInterval,
-                enabled: config.flakySafetyEnabled
+            try KassInterceptorChain.run(
+                config.interceptors,
+                context: combinatorContext("waitForAll(\(elements.count))", timeout: timeout, file: file, line: line)
             ) {
-                config.synchronizer.waitForIdle(timeout: config.timeout)
+                self.config.synchronizer.waitForIdle(timeout: self.config.timeout)
                 for element in elements where !element.resolve().exists {
                     throw KassError("\(element.description) not present yet")
                 }
