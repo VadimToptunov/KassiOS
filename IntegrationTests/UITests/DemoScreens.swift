@@ -20,6 +20,8 @@ final class HomeScreen: KassScreen {
     lazy var requestLocation = button("requestLocation")
     lazy var locationStatus = staticText("locationStatus")
     lazy var locale = staticText("locale")
+    lazy var fetchButton = button("fetchButton")
+    lazy var fetchResult = staticText("fetchResult")
     lazy var refreshed = staticText("refreshed")
     lazy var list = custom("home-scroll") { [app] in
         let collection = app.collectionViews.firstMatch

@@ -60,13 +60,14 @@ final class LoginTests: KassTestCase {
 - **Out-of-process.** XCUITest drives the app from a separate process, so KassiOS
   can't reach into your view models the way an in-process Espresso/Kaspresso test
   can. Prefer accessibility identifiers and launch arguments to set up state.
-- **Network stubbing.** There is no in-process interceptor to swap a response
-  mid-test. Use `launch(stubs:)` — the app reads `KASS_STUB_*` on launch and
-  serves fixtures. Richer network control is Phase 4 on the roadmap.
-- **Interceptors.** Kaspresso's interceptor chain (before/after every action,
-  auto-screenshots, custom failure handling) is on the KassiOS roadmap (Phase 2),
-  not shipped yet. Today the equivalents are ``KassConfig/screenshotEachStep`` and
-  the ``KassReporter`` hooks.
+- **Network stubbing.** Link `KassiOSStubs` in the app (debug) and drive it from
+  the test with `launch(networkStubs: [.json(urlContains:body:)])` or
+  `launch(offline: true)` — an in-process `URLProtocol` replays responses (or
+  fails offline), deterministically. (The older `launch(stubs:)` sets `KASS_STUB_*`
+  env for the app to interpret itself.)
+- **Interceptors.** KassiOS has the Kaspresso-style chain: every action flows
+  through `KassConfig.interceptors`, with a reorderable `KassRetryInterceptor`
+  plus `KassLoggingInterceptor` and `KassSystemAlertInterceptor`.
 
 ## What transfers unchanged
 

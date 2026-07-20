@@ -39,6 +39,8 @@ struct KassDemoApp: App {
         if ProcessInfo.processInfo.environment["KASS_DISABLE_ANIMATIONS"] == "1" {
             UIView.setAnimationsEnabled(false)
         }
+        // In-app network stub bridge (real apps guard this with `#if DEBUG`).
+        KassiOSStubs.installIfConfigured()
     }
 
     var body: some Scene {
@@ -102,11 +104,30 @@ struct HomeView: View {
     @State private var notificationsOn = false
     @State private var showAlert = false
     @State private var refreshed = false
+    @State private var fetchResult = ""
     @StateObject private var location = LocationRequester()
     private let items = (0..<12).map { "Item \($0)" }
 
+    private func fetch() {
+        let url = URL(string: "https://api.example.com/user")!
+        URLSession.shared.dataTask(with: url) { data, _, error in
+            DispatchQueue.main.async {
+                if let error = error as? URLError {
+                    fetchResult = error.code == .notConnectedToInternet ? "offline" : "error"
+                } else {
+                    fetchResult = String(data: data ?? Data(), encoding: .utf8) ?? ""
+                }
+            }
+        }.resume()
+    }
+
     var body: some View {
         Form {
+            Button("Fetch") { fetch() }
+                .accessibilityIdentifier("fetchButton")
+            Text(fetchResult)
+                .accessibilityIdentifier("fetchResult")
+
             if refreshed {
                 Text("Refreshed")
                     .accessibilityIdentifier("refreshed")

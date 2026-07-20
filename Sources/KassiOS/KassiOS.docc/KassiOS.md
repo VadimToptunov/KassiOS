@@ -68,6 +68,10 @@ For a full prose walkthrough see the
 - ``KassLocation``
 - ``KassAppearance``
 
+### Network stubbing
+
+- ``KassStub``
+
 ### Configuration
 
 - ``KassConfig``
