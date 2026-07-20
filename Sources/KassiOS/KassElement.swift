@@ -606,6 +606,8 @@ public extension KassElement {
             if config.captureScreenshotOnFailure {
                 attachFailureScreenshot(label: "\(name) — \(description)")
             }
+            // Machine-readable failure artifact — hand it to a coding agent.
+            attachDiagnostic(makeDiagnostic(action: name, kind: kind, error: error, file: file, line: line))
             config.reporter?.stepFinished(status: .failed, message: message)
             XCTFail(message, file: file, line: line)
         }

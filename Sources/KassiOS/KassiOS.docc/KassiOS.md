@@ -105,6 +105,10 @@ For a full prose walkthrough see the
 - ``KassActionContext``
 - ``KassActionKind``
 
+### Diagnostics
+
+- ``KassDiagnostic``
+
 ### Errors
 
 - ``KassError``

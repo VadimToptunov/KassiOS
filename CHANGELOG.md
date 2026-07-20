@@ -6,6 +6,14 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- **Agent-readable diagnostics** (Phase 6): every action failure now attaches a
+  structured `KassDiagnostic` JSON artifact (the action + kind, the resolved
+  element's live state, expected identifier, error, source location, active
+  interceptors, timeout/flaky-safety) to the `.xcresult` and the structured
+  report — designed to be handed straight to a coding agent rather than parsed
+  out of xcresult after the fact.
+
 ## [0.14.0] - 2026-07-21
 
 ### Added
