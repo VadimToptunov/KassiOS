@@ -87,16 +87,13 @@ open class KassScreen {
     // MARK: - Helpers
 
     static func typeName(_ type: XCUIElement.ElementType) -> String {
-        switch type {
-        case .button: return "button"
-        case .staticText: return "text"
-        case .textField: return "textField"
-        case .secureTextField: return "secureTextField"
-        case .image: return "image"
-        case .cell: return "cell"
-        case .switch: return "switch"
-        case .link: return "link"
-        default: return "element"
-        }
+        let names: [XCUIElement.ElementType: String] = [
+            .button: "button", .staticText: "text", .textField: "textField",
+            .secureTextField: "secureTextField", .image: "image", .cell: "cell",
+            .switch: "switch", .link: "link", .searchField: "searchField",
+            .slider: "slider", .stepper: "stepper", .segmentedControl: "segmentedControl",
+            .picker: "picker", .menuButton: "menuButton"
+        ]
+        return names[type] ?? "element"
     }
 }

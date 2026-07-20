@@ -70,7 +70,6 @@ For a full prose walkthrough see the
 
 ### Accessibility
 
-- ``KassAccessibilityAudit``
 - ``KassAuditSeverity``
 - ``KassA11yFinding``
 

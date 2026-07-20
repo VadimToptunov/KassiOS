@@ -15,13 +15,15 @@ public struct KassA11yFinding: Sendable, Equatable {
     public let label: String
 }
 
-public enum KassAccessibilityAudit {
+enum KassAccessibilityAudit {
 
     /// The interactive element types worth an identifier. Static, non-interactive
-    /// text/images are intentionally excluded.
-    public static let interactiveTypes: [XCUIElement.ElementType] = [
+    /// text/images are excluded — as is `.link`, which is dominated by WKWebView
+    /// content that can't carry a settable identifier (add it explicitly via
+    /// `types:` if your native links need auditing).
+    static let interactiveTypes: [XCUIElement.ElementType] = [
         .button, .textField, .secureTextField, .searchField, .switch,
-        .slider, .stepper, .segmentedControl, .picker, .link, .menuButton
+        .slider, .stepper, .segmentedControl, .picker, .menuButton
     ]
 
     /// The pure rule — factored out so it's unit-testable without a simulator.
@@ -66,13 +68,17 @@ public extension KassTestCase {
     ///   - severity: `.fail` (default) or `.warn`.
     @discardableResult
     func auditAccessibilityIdentifiers(
-        types: [XCUIElement.ElementType] = KassAccessibilityAudit.interactiveTypes,
+        types: [XCUIElement.ElementType]? = nil,
         allowingLabels: [String] = [],
         severity: KassAuditSeverity = .fail,
         file: StaticString = #filePath,
         line: UInt = #line
     ) -> [KassA11yFinding] {
-        let findings = KassAccessibilityAudit.findings(in: app, types: types, allowingLabels: allowingLabels)
+        // Settle first, like every other read path, so we don't scan mid-animation.
+        config.synchronizer.waitForIdle(timeout: config.timeout)
+        let findings = KassAccessibilityAudit.findings(
+            in: app, types: types ?? KassAccessibilityAudit.interactiveTypes, allowingLabels: allowingLabels
+        )
         guard !findings.isEmpty else { return [] }
 
         let report = findings.map { "• \($0.elementType) '\($0.label)'" }.joined(separator: "\n")
@@ -81,10 +87,7 @@ public extension KassTestCase {
         device.attachText("Accessibility audit", message)
         device.screenshot("Accessibility audit")
 
-        switch severity {
-        case .warn:
-            XCTContext.runActivity(named: "⚠️ Accessibility audit: \(findings.count) unidentified element(s)") { _ in }
-        case .fail:
+        if severity == .fail {
             XCTFail("KassiOS accessibility audit: \(message)", file: file, line: line)
         }
         return findings
