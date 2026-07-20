@@ -58,6 +58,11 @@ For a full prose walkthrough see the
 - ``KassElementCollection``
 - ``KassScrollDirection``
 
+### Device control
+
+- ``KassDevice``
+- ``KassLaunchOptions``
+
 ### Configuration
 
 - ``KassConfig``

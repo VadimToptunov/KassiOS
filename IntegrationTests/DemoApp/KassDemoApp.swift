@@ -116,6 +116,9 @@ struct HomeView: View {
                 .font(.headline)
                 .accessibilityIdentifier("welcome")
 
+            Text(Locale.current.identifier)
+                .accessibilityIdentifier("locale")
+
             Button("Request Location") { location.request() }
                 .accessibilityIdentifier("requestLocation")
             Text(location.status)

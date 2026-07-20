@@ -6,6 +6,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- **Device control Tier B** (Phase 3): `device.relaunch { $0.locale("de_DE") }`
+  — a `KassLaunchOptions` builder (locale / language / Dynamic Type) applied as
+  launch arguments. No host bridge; works on simulator and real devices, modelled
+  honestly as a relaunch.
+
 ## [0.11.0] - 2026-07-20
 
 ### Added
