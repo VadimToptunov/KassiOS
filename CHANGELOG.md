@@ -6,6 +6,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-07-20
+
 ### Added
 - **Interceptor core** (Phase 2): a pluggable chain every waiting DSL action
   flows through (`KassConfig.interceptors`). `KassInterceptor` +
@@ -191,7 +193,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Initial DSL: `KassTestCase`, `KassScreen`, `KassElement`, implicit waits,
   flaky-safety (`Waiter`), step logging, and `onScreen`.
 
-[Unreleased]: https://github.com/VadimToptunov/KassiOS/compare/0.10.1...HEAD
+[Unreleased]: https://github.com/VadimToptunov/KassiOS/compare/0.11.0...HEAD
+[0.11.0]: https://github.com/VadimToptunov/KassiOS/compare/0.10.1...0.11.0
 [0.10.1]: https://github.com/VadimToptunov/KassiOS/compare/0.10.0...0.10.1
 [0.10.0]: https://github.com/VadimToptunov/KassiOS/compare/0.9.0...0.10.0
 [0.9.0]: https://github.com/VadimToptunov/KassiOS/compare/0.8.0...0.9.0
