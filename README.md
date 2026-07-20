@@ -271,6 +271,69 @@ device.waitForIdle()                         // via the configured synchronizer
 let springboard = device.springboard         // home screen / system alerts host
 ```
 
+### Tier B — relaunch with locale / language / Dynamic Type
+
+Some device settings can't change live; KassiOS models them honestly as a
+relaunch (launch arguments — works on the simulator *and* real devices):
+
+```swift
+device.relaunch { $0.locale("de_DE").language("de") }
+device.relaunch { $0.dynamicType("UICTContentSizeCategoryAccessibilityXL") }
+```
+
+## Device control: `kassios-agent` (Tier C)
+
+The UI test runs **inside** the simulator, but `xcrun simctl` is a **host-side**
+command — a test can't exec it directly. `kassios-agent` bridges that gap: a tiny
+Mac process the in-simulator test talks to over `localhost`, so you can grant
+permissions, freeze the status bar, set location, push, and flip appearance from
+your test.
+
+```swift
+try device.permissions.grant(.location, for: "com.example.App")
+try device.statusBar.freeze(time: "9:41", battery: 100, cellularBars: 4) // deterministic screenshots
+try device.location.set(latitude: 34.7071, longitude: 33.0226)
+try device.appearance(.dark)
+try device.push(payloadJSON: #"{"aps":{"alert":"Hi"}}"#, to: "com.example.App")
+```
+
+Each call **`XCTSkip`s with an actionable message** — never hangs — when no agent
+is running or on a real device, so a suite without the agent still goes green.
+
+### Security posture
+
+The agent shells out to the host, so it's built to be treated like it:
+
+- **Loopback only.** Binds `127.0.0.1`, never `0.0.0.0`.
+- **Token-authenticated.** A per-run token is required on every request (checked
+  in constant time); unauthorized requests are refused before anything runs.
+- **Allowlisted.** It maps a fixed command set to `simctl` and **never** forwards
+  arbitrary argv or runs through a shell.
+- **Per-device.** Every command carries the target `SIMULATOR_UDID`, so parallel
+  runs across simulators don't cross wires.
+- **Bounded.** Each connection has a receive timeout; it can't be stalled by an
+  unauthenticated peer.
+
+On startup the agent writes its port + token to `~/.kassios-agent.json` (mode
+`0600`); the in-simulator test discovers it via `$SIMULATOR_HOST_HOME` — the one
+channel that actually reaches the XCUITest runner process.
+
+### Running it in CI
+
+Build and start the agent before the UI-test step; nothing else to wire up:
+
+```bash
+swift build --product kassios-agent
+KASSIOS_AGENT_TOKEN="$(uuidgen)" KASSIOS_AGENT_PORT=8437 \
+  nohup .build/debug/kassios-agent >agent.log 2>&1 &
+sleep 2
+
+xcodebuild test -scheme MyAppUITests -destination '…'
+```
+
+The agent is a **separate product** — the core library depends on nothing new,
+and test targets that don't want the bridge don't build it.
+
 ## Reusable flows (scenarios)
 
 Extract common journeys into a `KassScenario` and replay them anywhere:
