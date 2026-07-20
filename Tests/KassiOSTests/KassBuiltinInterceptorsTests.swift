@@ -38,4 +38,25 @@ final class KassBuiltinInterceptorsTests: XCTestCase {
         XCTAssertTrue(logger.messages[1].hasPrefix("✗"))
         XCTAssertTrue(logger.messages[1].contains("boom"))
     }
+
+    func test_systemAlert_firstMatchingTitle_picksFirstPresentInOrder() {
+        let present: Set<String> = ["Allow While Using App", "Don't Allow"]
+        // "Allow" is absent, so the next candidate that IS present wins.
+        XCTAssertEqual(
+            KassSystemAlertInterceptor.firstMatchingTitle(
+                in: ["Allow", "Allow While Using App"],
+                exists: { present.contains($0) }
+            ),
+            "Allow While Using App"
+        )
+    }
+
+    func test_systemAlert_firstMatchingTitle_nilWhenNoneMatch() {
+        XCTAssertNil(
+            KassSystemAlertInterceptor.firstMatchingTitle(
+                in: ["Allow", "OK"],
+                exists: { _ in false }
+            )
+        )
+    }
 }

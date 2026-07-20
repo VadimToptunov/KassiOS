@@ -47,11 +47,13 @@ public struct KassSystemAlertInterceptor: KassInterceptor {
     let action: KassSystemAlertAction
     let acceptButtons: [String]
     let dismissButtons: [String]
+    let logger: KassLogger
 
     /// - Parameters:
     ///   - action: whether to accept or dismiss dialogs (default `.accept`).
     ///   - accept / dismiss: button titles to try, in order. The defaults cover
     ///     the common iOS permission prompts; override for localized runs.
+    ///   - logger: where a "present but unhandled" diagnostic is written.
     public init(
         _ action: KassSystemAlertAction = .accept,
         accept: [String] = [
@@ -60,11 +62,13 @@ public struct KassSystemAlertInterceptor: KassInterceptor {
         ],
         dismiss: [String] = [
             "Don't Allow", "Ask App Not to Track", "Not Now", "Cancel"
-        ]
+        ],
+        logger: KassLogger = ConsoleKassLogger()
     ) {
         self.action = action
         self.acceptButtons = accept
         self.dismissButtons = dismiss
+        self.logger = logger
     }
 
     @MainActor
@@ -76,6 +80,12 @@ public struct KassSystemAlertInterceptor: KassInterceptor {
         try proceed()
     }
 
+    /// The first candidate title that is present — the pure selection rule,
+    /// factored out so it can be unit-tested without a running simulator.
+    static func firstMatchingTitle(in candidates: [String], exists: (String) -> Bool) -> String? {
+        candidates.first(where: exists)
+    }
+
     /// Taps the first matching button on the frontmost springboard alert, if any.
     @MainActor
     private func handlePendingAlert() {
@@ -83,12 +93,14 @@ public struct KassSystemAlertInterceptor: KassInterceptor {
         let alert = springboard.alerts.firstMatch
         guard alert.exists else { return }
         let titles = action == .accept ? acceptButtons : dismissButtons
-        for title in titles {
-            let button = alert.buttons[title]
-            if button.exists {
-                button.tap()
-                return
-            }
+        if let match = Self.firstMatchingTitle(in: titles, exists: { alert.buttons[$0].exists }) {
+            alert.buttons[match].tap()
+        } else {
+            // A dialog is up but none of our titles matched (localized, or a new
+            // iOS wording). Say so loudly — otherwise the next action just fails
+            // with a baffling "not hittable" against the modal-blocked screen.
+            let found = alert.buttons.allElementsBoundByIndex.map(\.label)
+            logger.log("⚠️ KassSystemAlertInterceptor: system alert present but none of \(titles) matched its buttons \(found)")
         }
     }
 }
