@@ -6,6 +6,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-07-20
+
 ### Added
 - **Device control Tier B** (Phase 3): `device.relaunch { $0.locale("de_DE") }`
   — a `KassLaunchOptions` builder (locale / language / Dynamic Type) applied as
@@ -205,7 +207,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Initial DSL: `KassTestCase`, `KassScreen`, `KassElement`, implicit waits,
   flaky-safety (`Waiter`), step logging, and `onScreen`.
 
-[Unreleased]: https://github.com/VadimToptunov/KassiOS/compare/0.11.0...HEAD
+[Unreleased]: https://github.com/VadimToptunov/KassiOS/compare/0.12.0...HEAD
+[0.12.0]: https://github.com/VadimToptunov/KassiOS/compare/0.11.0...0.12.0
 [0.11.0]: https://github.com/VadimToptunov/KassiOS/compare/0.10.1...0.11.0
 [0.10.1]: https://github.com/VadimToptunov/KassiOS/compare/0.10.0...0.10.1
 [0.10.0]: https://github.com/VadimToptunov/KassiOS/compare/0.9.0...0.10.0
