@@ -512,6 +512,60 @@ public extension KassElement {
         return self
     }
 
+    /// Like ``scrollTo(in:direction:file:line:)`` but with a gentle, short
+    /// press-drag (~30% of the container) instead of `swipeUp`'s momentum fling,
+    /// which overshoots and skips past small targets. Slower but more
+    /// deterministic — reach for it when a full swipe keeps flying past the row.
+    @discardableResult
+    func softScrollTo(
+        in container: KassElement,
+        direction: KassScrollDirection = .up,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) -> KassElement {
+        config.reporter?.stepStarted("softScrollTo \(description)")
+        let context = KassActionContext(
+            kind: .scroll,
+            name: "softScrollTo(\(direction))",
+            elementDescription: description,
+            identifier: expectedIdentifier,
+            timeout: config.timeout,
+            pollInterval: config.pollInterval,
+            flakySafetyEnabled: config.flakySafetyEnabled,
+            file: file,
+            line: line
+        )
+        do {
+            try KassInterceptorChain.run(config.interceptors, context: context) {
+                config.synchronizer.waitForIdle(timeout: config.timeout)
+                let target = resolve()
+                if target.exists && target.isHittable { return }
+                let scroll = container.resolve()
+                guard scroll.exists else {
+                    throw KassError("scroll container \(container.description) does not exist")
+                }
+                // A short drag mirroring the swipe direction (start → end).
+                let (start, end): (CGVector, CGVector)
+                switch direction {
+                case .up: (start, end) = (CGVector(dx: 0.5, dy: 0.65), CGVector(dx: 0.5, dy: 0.35))
+                case .down: (start, end) = (CGVector(dx: 0.5, dy: 0.35), CGVector(dx: 0.5, dy: 0.65))
+                case .left: (start, end) = (CGVector(dx: 0.65, dy: 0.5), CGVector(dx: 0.35, dy: 0.5))
+                case .right: (start, end) = (CGVector(dx: 0.35, dy: 0.5), CGVector(dx: 0.65, dy: 0.5))
+                }
+                scroll.coordinate(withNormalizedOffset: start)
+                    .press(forDuration: 0.05, thenDragTo: scroll.coordinate(withNormalizedOffset: end))
+                throw KassError("not visible yet after soft-scrolling \(direction)")
+            }
+            config.reporter?.stepFinished(status: .passed, message: nil)
+        } catch {
+            config.reporter?.stepFinished(status: .failed, message: "\(error)")
+            let message = "KassiOS: \(description) — softScrollTo failed: \(error)"
+            config.logger.log("❌ \(message)")
+            XCTFail(message, file: file, line: line)
+        }
+        return self
+    }
+
     /// Escape hatch for anything not yet wrapped. Runs `body` under the same
     /// flaky-safety and logging as the built-in interactions.
     @discardableResult

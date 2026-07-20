@@ -107,6 +107,7 @@ open class KassTestCase: XCTestCase {
         startReportingIfNeeded()
         app.launchArguments += arguments
         for (key, value) in environment { app.launchEnvironment[key] = value }
+        if config.disableAnimations { app.launchEnvironment["KASS_DISABLE_ANIMATIONS"] = "1" }
         app.launch()
         return app
     }

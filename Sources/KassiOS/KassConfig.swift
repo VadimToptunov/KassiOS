@@ -48,6 +48,13 @@ public struct KassConfig: Sendable {
     /// once, after it to run on every attempt.
     public var interceptors: [KassInterceptor]
 
+    /// When `true`, ``KassTestCase/launch(arguments:environment:)`` sets
+    /// `KASS_DISABLE_ANIMATIONS=1` in the launch environment. Faster, steadier
+    /// runs — but the **app must honour it** (read the variable on startup and
+    /// call `UIView.setAnimationsEnabled(false)`), since a UI test can't disable
+    /// another process's animations. Defaults to `false` to preserve behaviour.
+    public var disableAnimations: Bool
+
     public init(
         timeout: TimeInterval = 15,
         pollInterval: TimeInterval = 0.5,
@@ -58,7 +65,8 @@ public struct KassConfig: Sendable {
         accessibilityIdentifierPolicy: KassIdentifierPolicy = .ignore,
         captureScreenshotOnFailure: Bool = true,
         screenshotEachStep: Bool = false,
-        interceptors: [KassInterceptor] = [KassRetryInterceptor()]
+        interceptors: [KassInterceptor] = [KassRetryInterceptor()],
+        disableAnimations: Bool = false
     ) {
         self.timeout = timeout
         self.pollInterval = pollInterval
@@ -70,6 +78,7 @@ public struct KassConfig: Sendable {
         self.captureScreenshotOnFailure = captureScreenshotOnFailure
         self.screenshotEachStep = screenshotEachStep
         self.interceptors = interceptors
+        self.disableAnimations = disableAnimations
     }
 
     public static let `default` = KassConfig()
