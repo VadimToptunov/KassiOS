@@ -33,6 +33,14 @@ final class LocationRequester: NSObject, ObservableObject, CLLocationManagerDele
 /// strict mode (`.enforce`) passes against it.
 @main
 struct KassDemoApp: App {
+    init() {
+        // Honour KassiOS's `config.disableAnimations` (a UI test can't disable
+        // another process's animations, so the app opts in on startup).
+        if ProcessInfo.processInfo.environment["KASS_DISABLE_ANIMATIONS"] == "1" {
+            UIView.setAnimationsEnabled(false)
+        }
+    }
+
     var body: some Scene {
         WindowGroup { RootView() }
     }

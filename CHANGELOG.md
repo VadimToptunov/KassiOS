@@ -16,6 +16,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Built-in interceptors: `KassLoggingInterceptor` (per-action log) and
   `KassSystemAlertInterceptor` (auto-accept/dismiss iOS permission dialogs —
   location, notifications, tracking, …).
+- `KassElement.softScrollTo(in:direction:)` — a gentle, short press-drag that
+  reaches small off-screen rows without `swipeUp`'s momentum overshoot.
+- `KassConfig.disableAnimations` (opt-in) — sets `KASS_DISABLE_ANIMATIONS=1` in
+  the launch environment for the app to honour, for faster, steadier runs.
 
 ## [0.10.1] - 2026-07-19
 

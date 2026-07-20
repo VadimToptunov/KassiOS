@@ -25,6 +25,8 @@ final class HomeScreen: KassScreen {
         return collection.exists ? collection : app.tables.firstMatch
     }
 
+    func item(_ index: Int) -> KassElement { staticText("item-\(index)") }
+
     override var onLoad: [KassElement] { [welcome] }
 }
 
