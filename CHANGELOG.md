@@ -6,6 +6,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-07-21
+
 ### Added
 - **Accessibility audit** (Phase 5): `auditAccessibilityIdentifiers()` proactively
   scans the current screen for **hittable, interactive** elements missing an
@@ -227,7 +229,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Initial DSL: `KassTestCase`, `KassScreen`, `KassElement`, implicit waits,
   flaky-safety (`Waiter`), step logging, and `onScreen`.
 
-[Unreleased]: https://github.com/VadimToptunov/KassiOS/compare/0.13.0...HEAD
+[Unreleased]: https://github.com/VadimToptunov/KassiOS/compare/0.14.0...HEAD
+[0.14.0]: https://github.com/VadimToptunov/KassiOS/compare/0.13.0...0.14.0
 [0.13.0]: https://github.com/VadimToptunov/KassiOS/compare/0.12.0...0.13.0
 [0.12.0]: https://github.com/VadimToptunov/KassiOS/compare/0.11.0...0.12.0
 [0.11.0]: https://github.com/VadimToptunov/KassiOS/compare/0.10.1...0.11.0
