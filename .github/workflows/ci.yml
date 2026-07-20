@@ -31,16 +31,14 @@ jobs:
           xcodebuild -version
           swift --version
 
-      # The library wraps XCUITest, so it's built with Xcode (not `swift build`).
-      # The unit tests are pure logic, so they run on the macOS destination —
-      # fastest and free of simulator-name drift across runner images.
+      # Pure-logic unit tests across every target — including the agent CLI's,
+      # which `@testable import`s an executable target (that only SwiftPM's
+      # `swift test` resolves; `xcodebuild -scheme` can't). Runs on the macOS
+      # host, no simulator.
       - name: Unit tests
         run: |
           set -o pipefail
-          xcodebuild test \
-            -scheme KassiOS \
-            -destination 'platform=macOS' \
-            | tail -50
+          swift test 2>&1 | tail -60
 
   ui-tests:
     name: UI tests (simulator)
