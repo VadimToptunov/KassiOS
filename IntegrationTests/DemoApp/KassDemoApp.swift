@@ -1,5 +1,32 @@
 import SwiftUI
 import WebKit
+import CoreLocation
+
+/// Requests location permission — used to raise a real iOS system dialog so the
+/// `KassSystemAlertInterceptor` can be exercised end-to-end.
+@MainActor
+final class LocationRequester: NSObject, ObservableObject, CLLocationManagerDelegate {
+    @Published var status = "notDetermined"
+    private let manager = CLLocationManager()
+
+    override init() {
+        super.init()
+        manager.delegate = self
+    }
+
+    func request() { manager.requestWhenInUseAuthorization() }
+
+    nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        let authorization = manager.authorizationStatus
+        Task { @MainActor in
+            switch authorization {
+            case .authorizedWhenInUse, .authorizedAlways: self.status = "authorized"
+            case .denied, .restricted: self.status = "denied"
+            default: self.status = "notDetermined"
+            }
+        }
+    }
+}
 
 /// A tiny SwiftUI app with proper accessibility identifiers, used as the host
 /// for KassiOS's own UI tests. Every interactive element carries an id, so
@@ -67,6 +94,7 @@ struct HomeView: View {
     @State private var notificationsOn = false
     @State private var showAlert = false
     @State private var refreshed = false
+    @StateObject private var location = LocationRequester()
     private let items = (0..<12).map { "Item \($0)" }
 
     var body: some View {
@@ -79,6 +107,11 @@ struct HomeView: View {
             Text("Welcome!")
                 .font(.headline)
                 .accessibilityIdentifier("welcome")
+
+            Button("Request Location") { location.request() }
+                .accessibilityIdentifier("requestLocation")
+            Text(location.status)
+                .accessibilityIdentifier("locationStatus")
 
             Toggle("Notifications", isOn: $notificationsOn)
                 .accessibilityIdentifier("notifications")

@@ -6,6 +6,17 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- **Interceptor core** (Phase 2): a pluggable chain every waiting DSL action
+  flows through (`KassConfig.interceptors`). `KassInterceptor` +
+  `KassActionContext`/`KassActionKind`, with the built-in flaky-safety lifted
+  into a reorderable `KassRetryInterceptor` (position an interceptor before it to
+  run once, after it to run per attempt). Behaviour-preserving: the default
+  `[KassRetryInterceptor()]` matches the previous inline retry exactly.
+- Built-in interceptors: `KassLoggingInterceptor` (per-action log) and
+  `KassSystemAlertInterceptor` (auto-accept/dismiss iOS permission dialogs —
+  location, notifications, tracking, …).
+
 ## [0.10.1] - 2026-07-19
 
 ### Changed
