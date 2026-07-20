@@ -45,7 +45,8 @@ final class KassStubURLProtocol: URLProtocol {
     static func match(_ request: URLRequest) -> KassStubDefinition? {
         guard let url = request.url?.absoluteString else { return nil }
         return stubs.first { stub in
-            // An empty substring matches everything (Swift's contains("") is false).
+            // Empty substring = match every URL (whole-app offline). Explicit,
+            // because Foundation's `String.contains("")` returns false here.
             (stub.urlContains.isEmpty || url.contains(stub.urlContains))
                 && (stub.method == nil || stub.method?.uppercased() == request.httpMethod?.uppercased())
         }
@@ -66,9 +67,14 @@ final class KassStubURLProtocol: URLProtocol {
             client?.urlProtocol(self, didFailWithError: URLError(.notConnectedToInternet))
             return
         }
-        let response = HTTPURLResponse(
+        guard let response = HTTPURLResponse(
             url: url, statusCode: stub.statusCode, httpVersion: "HTTP/1.1", headerFields: stub.headers
-        ) ?? HTTPURLResponse()
+        ) else {
+            // Fail loudly rather than substitute a bogus 200 — a malformed stub
+            // (bad status code / headers) should surface, not silently "succeed".
+            client?.urlProtocol(self, didFailWithError: URLError(.badServerResponse))
+            return
+        }
         client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
         client?.urlProtocol(self, didLoad: Data(stub.body.utf8))
         client?.urlProtocolDidFinishLoading(self)

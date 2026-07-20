@@ -6,7 +6,7 @@ import XCTest
 final class NetworkStubTests: KassTestCase {
 
     func test_stubbedResponse_drivesUI() {
-        launch(stubs: [.json(urlContains: "/user", body: #"{"name":"Alex"}"#)])
+        launch(networkStubs: [.json(urlContains: "/user", body: #"{"name":"Alex"}"#)])
         onScreen(LoginScreen.self) { $0.email.typeText("a@b.c"); $0.signIn.tap() }
         onScreen(HomeScreen.self) { home in
             home.fetchButton.tap()
