@@ -19,6 +19,9 @@ jobs:
         run: brew install swiftlint
       - name: Lint
         run: swiftlint lint --strict
+      - name: Lint the plugin package
+        working-directory: Plugins
+        run: swiftlint lint --strict
 
   test:
     name: Build & test
@@ -43,6 +46,39 @@ jobs:
       - name: Failing unit tests
         if: failure()
         run: grep -E "error:|failed \(|with [1-9]+ failure" swift-test.log || true
+
+  plugin-lint:
+    name: kassios-lint (plugin package)
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      # The nested Plugins/ package depends on swift-syntax (pinned to a 6.3
+      # release); build it with the newest Xcode so its toolchain matches. The
+      # root package never sees this dependency — that's why it lives here.
+      - name: Select newest Xcode
+        run: sudo xcode-select -s "$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)"
+
+      - name: Show toolchain
+        run: swift --version
+
+      - name: Build & test the linter
+        working-directory: Plugins
+        run: |
+          set -o pipefail
+          swift build 2>&1 | tail -20
+          swift test 2>&1 | tee plugin-test.log | tail -40
+
+      - name: Failing linter tests
+        if: failure()
+        working-directory: Plugins
+        run: grep -E "error:|failed \(|with [1-9]+ failure" plugin-test.log || true
+
+      # Dogfood: run the tool over the repo's own screen objects. Non-strict, so
+      # findings are informational and never fail the build.
+      - name: Dogfood kassios-lint on the repo's screens
+        working-directory: Plugins
+        run: swift run kassios-lint ../Examples ../IntegrationTests || true
 
   ui-tests:
     name: UI tests (simulator)

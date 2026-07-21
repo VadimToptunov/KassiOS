@@ -43,6 +43,7 @@ For a full prose walkthrough see the
 - <doc:ParameterizedUITests>
 - <doc:CIRecipe>
 - <doc:TypedNavigation>
+- <doc:StaticLinting>
 
 ### Writing tests
 
