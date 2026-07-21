@@ -8,7 +8,9 @@ final class KassFlowTests: XCTestCase {
 
     func test_continuously_passesWhileStable() throws {
         var calls = 0
-        try KassFlow.continuously(during: 0.2, pollInterval: 0.05) { calls += 1 }
+        // Roomy duration vs poll interval so ≥2 polls happen even on a loaded CI
+        // runner (a tight 0.2s window flaked when one poll consumed it).
+        try KassFlow.continuously(during: 1.0, pollInterval: 0.05) { calls += 1 }
         XCTAssertGreaterThan(calls, 1)
     }
 

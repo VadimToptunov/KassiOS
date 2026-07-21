@@ -38,7 +38,11 @@ jobs:
       - name: Unit tests
         run: |
           set -o pipefail
-          swift test 2>&1 | tail -60
+          swift test 2>&1 | tee swift-test.log | tail -80
+
+      - name: Failing unit tests
+        if: failure()
+        run: grep -E "error:|failed \(|with [1-9]+ failure" swift-test.log || true
 
   ui-tests:
     name: UI tests (simulator)
