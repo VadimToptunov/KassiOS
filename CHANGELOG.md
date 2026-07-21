@@ -6,6 +6,15 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- **Snapshot diff & masking**: on a snapshot mismatch KassiOS now attaches a
+  triptych — the reference, the actual, and a generated **diff** image (unchanged
+  UI dimmed to grayscale, changed pixels flagged red) — instead of just the
+  failing image, so you can see *what* moved from the `.xcresult`. New
+  `assertSnapshot(..., ignoring: [CGRect])` masks normalized (0...1) regions out
+  of both images before comparing, to neutralize dynamic content (a status-bar
+  clock, a timestamp). Still zero-dependency (ImageIO/CoreGraphics).
+
 ## [0.17.0] - 2026-07-21
 
 ### Added
