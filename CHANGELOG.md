@@ -6,6 +6,14 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- **Typed, fluent navigation** (Phase 7): `KassScreen.navigate(to:)` asserts the
+  landing screen's `onLoad` (its "I have arrived" condition) and returns it, so a
+  multi-screen test reads as a route and fails fast when it doesn't land where
+  expected — `onScreen(A) { … }.navigate(to: B.self).someElement`. Opt-in:
+  one-screen tests stay one screen simple. New DocC guide *Typed navigation & the
+  Robot pattern*.
+
 ## [0.15.0] - 2026-07-21
 
 ### Added
