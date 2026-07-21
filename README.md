@@ -416,6 +416,29 @@ Run Apple's accessibility audit too:
 if #available(iOS 17.0, *) { assertNoAccessibilityIssues() }
 ```
 
+### Static lint — `kassios-lint`
+
+The audit above runs at test time, on a live app. `kassios-lint` is its
+compile-time twin: a SwiftSyntax linter that reads your screen-object *source*
+and flags the same class of problems before you even launch the simulator —
+`KassScreen` subclasses with no non-empty `onLoad` (**KAS001**) and element
+builders whose identifier isn't a static string literal (**KAS002**).
+
+It lives in a **nested package** at `Plugins/` so swift-syntax never becomes a
+dependency of the core library — adding KassiOS to your app pulls in nothing.
+Run it as a command plugin or a standalone tool:
+
+```sh
+# From a checkout of this repo (or vendor the Plugins/ folder):
+cd Plugins
+swift run kassios-lint ../MyApp/UITests   # informational; --strict to fail on any finding
+# or, as an SPM command plugin:
+swift package kassios-lint
+```
+
+Add `swift run kassios-lint --strict UITests` to CI to keep every screen object
+identifier-clean. See the DocC guide *Static linting with kassios-lint*.
+
 Share one config across a group with `KassSuite`, and structure a body with
 `before`/`after`/`run` (`after` runs even on a hard failure):
 

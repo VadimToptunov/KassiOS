@@ -6,6 +6,15 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- **Static lint** (Phase 5.2): `kassios-lint`, a SwiftSyntax-based linter that
+  statically twins the runtime `auditAccessibilityIdentifiers()` audit. It
+  flags `KassScreen` subclasses with no non-empty `onLoad` (KAS001) and
+  element-builder calls whose identifier isn't a static string literal
+  (KAS002). Lives in a **nested** package at `Plugins/` (an SPM command
+  plugin, `swift package kassios-lint`) so swift-syntax never becomes a
+  dependency of the core `KassiOS` library — the root manifest is untouched.
+
 ## [0.16.0] - 2026-07-21
 
 ### Added

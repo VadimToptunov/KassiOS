@@ -1,0 +1,24 @@
+# SwiftLint configuration for the nested kassios-lint package.
+included:
+  - Sources
+  - Tests
+  - Plugins
+
+disabled_rules:
+  - todo
+  - trailing_comma
+  - large_tuple
+
+opt_in_rules:
+  - closure_spacing
+  - overridden_super_call
+
+line_length:
+  warning: 140
+  error: 220
+  ignores_comments: true
+  ignores_urls: true
+
+identifier_name:
+  min_length: 2
+  excluded: [id, x, y, e, f, i]
