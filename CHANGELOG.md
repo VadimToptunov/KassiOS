@@ -6,6 +6,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-07-21
+
 ### Added
 - **Typed, fluent navigation** (Phase 7): `KassScreen.navigate(to:)` asserts the
   landing screen's `onLoad` (its "I have arrived" condition) and returns it, so a
@@ -252,7 +254,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Initial DSL: `KassTestCase`, `KassScreen`, `KassElement`, implicit waits,
   flaky-safety (`Waiter`), step logging, and `onScreen`.
 
-[Unreleased]: https://github.com/VadimToptunov/KassiOS/compare/0.15.0...HEAD
+[Unreleased]: https://github.com/VadimToptunov/KassiOS/compare/0.16.0...HEAD
+[0.16.0]: https://github.com/VadimToptunov/KassiOS/compare/0.15.0...0.16.0
 [0.15.0]: https://github.com/VadimToptunov/KassiOS/compare/0.14.0...0.15.0
 [0.14.0]: https://github.com/VadimToptunov/KassiOS/compare/0.13.0...0.14.0
 [0.13.0]: https://github.com/VadimToptunov/KassiOS/compare/0.12.0...0.13.0
