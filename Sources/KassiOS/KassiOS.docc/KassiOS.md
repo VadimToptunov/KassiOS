@@ -42,6 +42,7 @@ For a full prose walkthrough see the
 - <doc:WhyXCUITestFlakes>
 - <doc:ParameterizedUITests>
 - <doc:CIRecipe>
+- <doc:TypedNavigation>
 
 ### Writing tests
 
