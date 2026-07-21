@@ -39,9 +39,10 @@ final class HomeScreen: KassScreen {
 }
 ```
 
-`navigate(to:)`/`proceed(to:)` (and `onScreen`) check every `onLoad` element
-exists before proceeding — killing the class of races where a test taps the next
-screen before it renders.
+`navigate(to:)` (and `onScreen`) check every `onLoad` element exists before
+proceeding — killing the class of races where a test taps the next screen before
+it renders. A screen with an empty `onLoad` has nothing to verify, so
+`navigate(to:)` logs a warning: give every destination an `onLoad`.
 
 ## The Robot pattern (optional layer)
 
