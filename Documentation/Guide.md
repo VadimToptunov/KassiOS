@@ -602,8 +602,20 @@ source path may be read-only or different), otherwise a `__Snapshots__` folder
 beside the test file. The first run (or `record: true`, or the
 `KASS_RECORD_SNAPSHOTS` env var) records the reference and fails, prompting you
 to commit it. Comparison is pixel-based, so **pin the simulator device and OS** —
-otherwise anti-aliasing differences cause noise. A mismatch attaches the failing
-image to the report.
+otherwise anti-aliasing differences cause noise.
+
+Mask out dynamic regions (a status-bar clock, a live timestamp) with normalized
+`ignoring` rects — masked areas never trigger a mismatch:
+
+```swift
+// Ignore the top 4% (status bar) — rects are normalized 0...1 of the image.
+assertSnapshot(named: "home", ignoring: [CGRect(x: 0, y: 0, width: 1, height: 0.04)])
+```
+
+On a mismatch KassiOS attaches three images to the report — the **reference**,
+the **actual**, and a generated **diff** (unchanged UI dimmed to faint
+grayscale, changed pixels flagged red) — so you can see *what* moved straight
+from the `.xcresult` without eyeballing two screenshots side by side.
 
 ## When to use KassiOS — and when not to
 
