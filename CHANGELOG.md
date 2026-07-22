@@ -6,6 +6,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-07-22
+
 ### Added
 - **Snapshot diff & masking**: on a snapshot mismatch KassiOS now attaches a
   triptych — the reference, the actual, and a generated **diff** image (unchanged
@@ -274,7 +276,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Initial DSL: `KassTestCase`, `KassScreen`, `KassElement`, implicit waits,
   flaky-safety (`Waiter`), step logging, and `onScreen`.
 
-[Unreleased]: https://github.com/VadimToptunov/KassiOS/compare/0.17.0...HEAD
+[Unreleased]: https://github.com/VadimToptunov/KassiOS/compare/0.18.0...HEAD
+[0.18.0]: https://github.com/VadimToptunov/KassiOS/compare/0.17.0...0.18.0
 [0.17.0]: https://github.com/VadimToptunov/KassiOS/compare/0.16.0...0.17.0
 [0.16.0]: https://github.com/VadimToptunov/KassiOS/compare/0.15.0...0.16.0
 [0.15.0]: https://github.com/VadimToptunov/KassiOS/compare/0.14.0...0.15.0
