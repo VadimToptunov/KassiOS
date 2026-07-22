@@ -21,12 +21,13 @@ struct Agent {
         }
         let port = UInt16(env["KASSIOS_AGENT_PORT"] ?? "8437") ?? 8437
         let runner = SimctlRunner()
+        let recordingManager = RecordingManager()
         do {
             let server = try HTTPServer(port: port)
             writeDiscoveryFile(port: port, token: token)
             FileHandle.standardError.write(Data("kassios-agent: listening on 127.0.0.1:\(port)\n".utf8))
             server.serve { body in
-                handle(body: body, token: token, runner: runner)
+                handle(body: body, token: token, runner: runner, recordingManager: recordingManager)
             }
         } catch {
             FileHandle.standardError.write(Data("kassios-agent: \(error)\n".utf8))
@@ -35,8 +36,15 @@ struct Agent {
     }
 
     /// Decodes a request, checks the token, runs the command. Returns the JSON
-    /// response body.
-    static func handle(body: Data, token: String, runner: SimctlRunner) -> Data {
+    /// response body. `startRecording`/`stopRecording` are handled by
+    /// `recordingManager` before falling through to the generic `runner` —
+    /// they're long-lived processes the runner isn't built to wait on.
+    static func handle(
+        body: Data,
+        token: String,
+        runner: SimctlRunner,
+        recordingManager: RecordingManager
+    ) -> Data {
         let encoder = JSONEncoder()
         func encode(_ response: AgentResponse) -> Data {
             (try? encoder.encode(response)) ?? Data("{\"ok\":false}".utf8)
@@ -47,7 +55,14 @@ struct Agent {
         guard constantTimeEquals(request.token, token) else {
             return encode(AgentResponse(ok: false, error: "unauthorized"))
         }
-        return encode(runner.run(request.command, udid: request.udid))
+        switch request.command {
+        case .startRecording:
+            return encode(recordingManager.start(udid: request.udid))
+        case .stopRecording:
+            return encode(recordingManager.stop(udid: request.udid))
+        default:
+            return encode(runner.run(request.command, udid: request.udid))
+        }
     }
 
     /// Constant-time token comparison — over loopback there's no network jitter

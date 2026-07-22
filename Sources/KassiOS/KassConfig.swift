@@ -55,6 +55,11 @@ public struct KassConfig: Sendable {
     /// another process's animations. Defaults to `false` to preserve behaviour.
     public var disableAnimations: Bool
 
+    /// Opt-in: when the Tier C host agent is reachable, record the simulator
+    /// screen during the test and attach the video to the report if the test
+    /// fails (simulator only; best-effort).
+    public var recordVideoOnFailure: Bool
+
     public init(
         timeout: TimeInterval = 15,
         pollInterval: TimeInterval = 0.5,
@@ -66,7 +71,8 @@ public struct KassConfig: Sendable {
         captureScreenshotOnFailure: Bool = true,
         screenshotEachStep: Bool = false,
         interceptors: [KassInterceptor] = [KassRetryInterceptor()],
-        disableAnimations: Bool = false
+        disableAnimations: Bool = false,
+        recordVideoOnFailure: Bool = false
     ) {
         self.timeout = timeout
         self.pollInterval = pollInterval
@@ -79,6 +85,7 @@ public struct KassConfig: Sendable {
         self.screenshotEachStep = screenshotEachStep
         self.interceptors = interceptors
         self.disableAnimations = disableAnimations
+        self.recordVideoOnFailure = recordVideoOnFailure
     }
 
     public static let `default` = KassConfig()

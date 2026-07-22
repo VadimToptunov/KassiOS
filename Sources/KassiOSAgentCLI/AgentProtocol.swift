@@ -16,11 +16,14 @@ struct AgentResponse: Codable {
     let ok: Bool
     let output: String
     let error: String?
+    /// Base64-encoded payload bytes — currently only the mp4 from `stopRecording`.
+    let data: String?
 
-    init(ok: Bool, output: String = "", error: String? = nil) {
+    init(ok: Bool, output: String = "", error: String? = nil, data: String? = nil) {
         self.ok = ok
         self.output = output
         self.error = error
+        self.data = data
     }
 }
 
@@ -36,10 +39,15 @@ enum AgentCommand: Codable, Equatable {
     case location(latitude: Double, longitude: Double)
     case pushNotification(bundleID: String, payloadJSON: String)
     case openURL(String)
+    case startRecording
+    case stopRecording
 
     /// The `simctl` argv for this command (everything after `xcrun simctl`).
     /// For `pushNotification` the final element is a placeholder the runner
-    /// replaces with a real payload-file path.
+    /// replaces with a real payload-file path. `startRecording`/`stopRecording`
+    /// aren't one-shot `simctl` invocations — they're handled by the agent's
+    /// `RecordingManager`, so they never reach the generic runner and have no
+    /// argv of their own.
     func simctlArguments(udid: String) -> [String] {
         switch self {
         case let .permissionGrant(service, bundleID):
@@ -60,6 +68,8 @@ enum AgentCommand: Codable, Equatable {
             return ["push", udid, bundleID, "<payload-file>"]
         case let .openURL(url):
             return ["openurl", udid, url]
+        case .startRecording, .stopRecording:
+            return []
         }
     }
 

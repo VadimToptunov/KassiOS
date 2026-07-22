@@ -53,13 +53,16 @@ struct KassAgentClient {
         return client
     }
 
+    /// `timeout` defaults to 15s; `stopRecording` overrides it because its
+    /// response carries the whole mp4 (potentially several MB) base64-encoded,
+    /// which takes longer than a one-shot `simctl` command to transfer.
     @discardableResult
-    func send(_ command: AgentCommand) throws -> AgentResponse {
+    func send(_ command: AgentCommand, timeout: TimeInterval = 15) throws -> AgentResponse {
         var request = URLRequest(url: URL(string: "http://127.0.0.1:\(port)/command")!)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try JSONEncoder().encode(AgentRequest(token: token, udid: udid, command: command))
-        request.timeoutInterval = 15
+        request.timeoutInterval = timeout
 
         let box = ResultBox()
         let semaphore = DispatchSemaphore(value: 0)
@@ -134,6 +137,22 @@ public extension KassDevice {
     /// **Tier C** (simulator only). Skips if no agent is running.
     func appearance(_ mode: KassAppearance) throws {
         try KassAgentClient.require().send(.appearance(mode.rawValue))
+    }
+
+    /// Starts a screen recording of the simulator via the host agent —
+    /// **Tier C** (simulator only). Pair with ``stopRecording()``. Skips if no
+    /// agent is running.
+    func startRecording() throws {
+        try KassAgentClient.require().send(.startRecording)
+    }
+
+    /// Stops the in-progress recording started by ``startRecording()`` and
+    /// returns the recorded mp4 bytes, or `nil` if nothing was recorded — via
+    /// the host agent, **Tier C** (simulator only). Skips if no agent is running.
+    @discardableResult
+    func stopRecording() throws -> Data? {
+        let response = try KassAgentClient.require().send(.stopRecording, timeout: 120)
+        return response.data.flatMap { Data(base64Encoded: $0) }
     }
 }
 
