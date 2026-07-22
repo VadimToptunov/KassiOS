@@ -28,9 +28,9 @@ public extension KassTestCase {
     /// `device.screenshot(...)` shots inside `flow` for review. Launch-argument
     /// based, so it works on simulator and real devices.
     ///
-    /// Like ``forEachLocale(_:_:)``, it relaunches applying these arguments on
-    /// top of the app's existing launch arguments — call it on a fresh launch
-    /// (or standalone) so a prior relaunch's locale doesn't carry over.
+    /// Like ``forEachLocale(_:_:)``, it composes these arguments against the
+    /// app's original launch-argument base (see `KassTestCase.launch(arguments:)`),
+    /// so a prior relaunch's locale never carries over.
     func runPseudolocalized(rightToLeft: Bool = false, _ flow: () -> Void) {
         // Route through `relaunch(arguments:)` (not `device.relaunch`) so the
         // pseudolocalized launch gets the same reporting + `disableAnimations`
