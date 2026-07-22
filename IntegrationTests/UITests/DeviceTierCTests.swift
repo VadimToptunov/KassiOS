@@ -45,7 +45,10 @@ final class DeviceTierCTests: KassTestCase {
         }
         launch()
         try device.startRecording()
-        onScreen(LoginScreen.self) { $0.email.typeText("a@b.c") }
+        // Record a real span (login → home) so recordVideo captures frames
+        // rather than racing an instant stop.
+        onScreen(LoginScreen.self) { $0.email.typeText("a@b.c"); $0.signIn.tap() }
+        onScreen(HomeScreen.self) { $0.welcome.assertVisible() }
         let data = try device.stopRecording()
         XCTAssertNotNil(data)
         XCTAssertFalse(data?.isEmpty ?? true)

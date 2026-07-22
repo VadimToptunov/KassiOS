@@ -37,6 +37,14 @@ final class RecordingManager: @unchecked Sendable {
             return AgentResponse(ok: false, error: "failed to launch recordVideo: \(error)")
         }
 
+        // `recordVideo` takes a beat to open its output file. Wait for it to
+        // appear before returning, so a fast test that stops almost immediately
+        // doesn't race startup and get an empty/missing file back.
+        let ready = Date().addingTimeInterval(5)
+        while process.isRunning && !FileManager.default.fileExists(atPath: url.path) && Date() < ready {
+            usleep(50_000)
+        }
+
         lock.lock()
         recordings[udid] = Recording(process: process, url: url)
         lock.unlock()
