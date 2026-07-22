@@ -20,11 +20,24 @@ open class KassTestCase: XCTestCase {
     public nonisolated(unsafe) var config: KassConfig = .default
 
     /// Device- and system-level helpers (permissions, keyboard, screenshots,
-    /// backgrounding, orientation, deep links).
+    /// backgrounding, orientation, deep links). Wires `device`'s back-reference
+    /// so its `relaunch(_:)` shares this test case's launch-argument base
+    /// instead of tracking an independent snapshot — see `KassDevice.testCase`.
     @MainActor
-    public lazy var device = KassDevice(app: app, config: config)
+    public lazy var device: KassDevice = {
+        var device = KassDevice(app: app, config: config)
+        device.testCase = self
+        return device
+    }()
 
     private var reportingStarted = false
+
+    /// Snapshot of `app.launchArguments` taken on the first `launch(arguments:)`
+    /// call, so every later `launch`/`relaunch` composes its arguments against
+    /// this stable base instead of accumulating across relaunches (e.g.
+    /// `forEachLocale` followed by `runPseudolocalized` would otherwise inherit
+    /// the last locale's arguments).
+    private var baseLaunchArguments: [String]?
 
     /// `XCTestCase.setUp()` is a nonisolated override point (it's declared in
     /// Objective-C with no actor annotation), so this override stays
@@ -119,7 +132,8 @@ open class KassTestCase: XCTestCase {
         environment: [String: String] = [:]
     ) -> XCUIApplication {
         startReportingIfNeeded()
-        app.launchArguments += arguments
+        if baseLaunchArguments == nil { baseLaunchArguments = app.launchArguments }
+        app.launchArguments = (baseLaunchArguments ?? []) + arguments
         for (key, value) in environment { app.launchEnvironment[key] = value }
         if config.disableAnimations { app.launchEnvironment["KASS_DISABLE_ANIMATIONS"] = "1" }
         app.launch()

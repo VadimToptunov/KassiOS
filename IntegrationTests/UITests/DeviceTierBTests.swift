@@ -17,4 +17,25 @@ final class DeviceTierBTests: KassTestCase {
         onScreen(LoginScreen.self) { $0.email.typeText("a@b.c"); $0.signIn.tap() }
         onScreen(HomeScreen.self) { $0.locale.assertHasText("DE") }
     }
+
+    /// Regression test for launch-argument accumulation: a `device.relaunch`
+    /// into German must not leak into a later `runPseudolocalized` relaunch,
+    /// which should reset to the original launch-argument base.
+    func test_relaunch_thenPseudolocalized_doesNotInheritPriorLocale() {
+        launch()
+        onScreen(LoginScreen.self) { $0.email.typeText("a@b.c"); $0.signIn.tap() }
+        onScreen(HomeScreen.self) { $0.welcome.assertVisible() }
+
+        device.relaunch { $0.locale("de_DE").language("de") }
+        onScreen(LoginScreen.self) { $0.email.typeText("a@b.c"); $0.signIn.tap() }
+        onScreen(HomeScreen.self) { $0.locale.assertHasText("DE") }
+
+        runPseudolocalized {
+            onScreen(LoginScreen.self) { $0.email.typeText("a@b.c"); $0.signIn.tap() }
+            onScreen(HomeScreen.self) { home in
+                let locale = KassElement.textOf(home.locale.resolve())
+                XCTAssertFalse(locale.contains("DE"), "pseudolocalized relaunch inherited the prior German locale: \(locale)")
+            }
+        }
+    }
 }

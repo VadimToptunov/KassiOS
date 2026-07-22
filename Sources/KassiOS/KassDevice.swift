@@ -12,6 +12,13 @@ public struct KassDevice {
     public let app: XCUIApplication
     public let config: KassConfig
 
+    /// Back-reference set by `KassTestCase` when it creates `device`, so
+    /// `relaunch(_:)` below shares that test case's launch-argument base
+    /// instead of tracking an independent snapshot. `nil` when `KassDevice` is
+    /// constructed standalone, in which case `relaunch(_:)` falls back to
+    /// terminating/launching directly (matching prior behavior).
+    weak var testCase: KassTestCase?
+
     public init(app: XCUIApplication, config: KassConfig = .default) {
         self.app = app
         self.config = config
@@ -183,10 +190,13 @@ public struct KassDevice {
     @discardableResult
     public func relaunch(_ configure: (KassLaunchOptions) -> KassLaunchOptions) -> XCUIApplication {
         let options = configure(KassLaunchOptions())
-        app.terminate()
-        app.launchArguments += options.arguments
-        app.launch()
-        return app
+        guard let testCase else {
+            app.terminate()
+            app.launchArguments += options.arguments
+            app.launch()
+            return app
+        }
+        return testCase.relaunch(arguments: options.arguments)
     }
 }
 
