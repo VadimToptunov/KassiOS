@@ -6,6 +6,17 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- **Screen recording on failure**: opt in with `KassConfig(recordVideoOnFailure:
+  true)` and, when the Tier C host agent is reachable, KassiOS records the
+  simulator screen for the test and attaches the `.mp4` to the report **only if
+  the test fails** (a passing test discards it). Also exposed directly as
+  `device.startRecording()` / `device.stopRecording() -> Data?`. New agent
+  commands `startRecording`/`stopRecording` drive `simctl io recordVideo` and
+  return the bytes over the loopback bridge — the agent picks the output path
+  itself, preserving the fixed-argv, allowlisted posture. Best-effort and
+  simulator-only: no agent (or a real device) is a silent no-op, never a hang.
+
 ## [0.19.0] - 2026-07-22
 
 ### Added

@@ -16,6 +16,8 @@ struct AgentResponse: Codable {
     let ok: Bool
     let output: String
     let error: String?
+    /// Base64-encoded payload bytes — currently only the mp4 from `stopRecording`.
+    let data: String?
 }
 
 enum AgentCommand: Codable, Equatable {
@@ -28,4 +30,6 @@ enum AgentCommand: Codable, Equatable {
     case location(latitude: Double, longitude: Double)
     case pushNotification(bundleID: String, payloadJSON: String)
     case openURL(String)
+    case startRecording
+    case stopRecording
 }

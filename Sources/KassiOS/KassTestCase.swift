@@ -39,6 +39,10 @@ open class KassTestCase: XCTestCase {
     /// the last locale's arguments).
     private var baseLaunchArguments: [String]?
 
+    /// `nonisolated(unsafe)` for the same reason as `config` — set from
+    /// `launch()` on the main actor, read in the `nonisolated` `tearDown()`.
+    nonisolated(unsafe) var recordingActive = false
+
     /// `XCTestCase.setUp()` is a nonisolated override point (it's declared in
     /// Objective-C with no actor annotation), so this override stays
     /// `nonisolated` to match it. XCUITest only ever calls it on the main
@@ -79,6 +83,22 @@ open class KassTestCase: XCTestCase {
                 this.value.add(treeAttachment)
                 this.value.config.reporter?.attach(name: "Accessibility tree", type: "text/plain", data: Data(tree.utf8))
             }
+
+            // Screen recording: independent of `captureScreenshotOnFailure` —
+            // always stop (best-effort) to end the `recordVideo` process, but
+            // only attach the bytes when the test failed.
+            if this.value.recordingActive {
+                let video = try? this.value.device.stopRecording()
+                this.value.recordingActive = false
+                if failed, let video = video {
+                    let attachment = XCTAttachment(data: video, uniformTypeIdentifier: "public.mpeg-4")
+                    attachment.name = "Recording — \(this.value.name)"
+                    attachment.lifetime = .keepAlways
+                    this.value.add(attachment)
+                    this.value.config.reporter?.attach(name: "Recording", type: "video/mp4", data: video)
+                }
+            }
+
             // Flakiness report: actions that passed only after a retry. A green
             // test with entries here is a quarantine candidate.
             let recoveries = KassFlakyTracker.shared.drain()
@@ -137,6 +157,13 @@ open class KassTestCase: XCTestCase {
         for (key, value) in environment { app.launchEnvironment[key] = value }
         if config.disableAnimations { app.launchEnvironment["KASS_DISABLE_ANIMATIONS"] = "1" }
         app.launch()
+        // Best-effort: no agent (or a real device) means a silent no-op, never
+        // a hang or a hard failure. Guarded so `relaunch()` (which calls back
+        // into `launch()`) doesn't start a second recording on top of one
+        // already running.
+        if config.recordVideoOnFailure, !recordingActive {
+            if (try? device.startRecording()) != nil { recordingActive = true }
+        }
         return app
     }
 

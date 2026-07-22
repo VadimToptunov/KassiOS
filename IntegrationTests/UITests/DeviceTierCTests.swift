@@ -32,4 +32,22 @@ final class DeviceTierCTests: KassTestCase {
         launch()
         onScreen(LoginScreen.self) { $0.email.assertVisible() }
     }
+
+    /// Screen recording round-trips through the agent: start, a trivial
+    /// interaction, stop — the returned mp4 bytes should be non-empty. Only
+    /// runs when the agent is actually reachable; skips cleanly otherwise
+    /// (matching the rest of this file, which relies on `KassAgentClient.require()`
+    /// to `XCTSkip`, this test checks `fromEnvironment` directly since it wants
+    /// to skip before doing any recording bookkeeping).
+    func test_recording_startStop_returnsVideoBytes() throws {
+        guard KassAgentClient.fromEnvironment() != nil else {
+            throw XCTSkip("Tier C needs the host bridge — see other tests in this file for the fix.")
+        }
+        launch()
+        try device.startRecording()
+        onScreen(LoginScreen.self) { $0.email.typeText("a@b.c") }
+        let data = try device.stopRecording()
+        XCTAssertNotNil(data)
+        XCTAssertFalse(data?.isEmpty ?? true)
+    }
 }
