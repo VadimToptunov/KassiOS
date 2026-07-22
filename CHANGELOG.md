@@ -6,6 +6,15 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- **Pseudolocalization & RTL**: `KassTestCase.runPseudolocalized(rightToLeft:)`
+  relaunches with doubled localized-string lengths and uppercased non-localized
+  strings, then runs your flow — surfacing truncation/overflow and hardcoded
+  strings without a translator. New `KassLaunchOptions` toggles
+  `doubleLengthStrings()`, `showNonLocalizedStrings()`, and `rightToLeft()` map
+  to the standard Apple debug-language launch arguments, so they compose with a
+  real `locale()`/`language()` and work on simulator and real devices.
+
 ## [0.18.0] - 2026-07-22
 
 ### Added
