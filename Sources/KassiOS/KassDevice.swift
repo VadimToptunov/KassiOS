@@ -217,4 +217,22 @@ public struct KassLaunchOptions {
     public func dynamicType(_ category: String) -> KassLaunchOptions {
         adding(["-UIPreferredContentSizeCategoryName", category])
     }
+
+    /// `-NSDoubleLocalizedStrings YES`. Doubles every localized string's
+    /// length, surfacing truncation and layout overflow.
+    public func doubleLengthStrings(_ enabled: Bool = true) -> KassLaunchOptions {
+        enabled ? adding(["-NSDoubleLocalizedStrings", "YES"]) : self
+    }
+
+    /// `-NSShowNonLocalizedStrings YES`. Renders non-localized (hardcoded)
+    /// strings in uppercase so they stand out.
+    public func showNonLocalizedStrings(_ enabled: Bool = true) -> KassLaunchOptions {
+        enabled ? adding(["-NSShowNonLocalizedStrings", "YES"]) : self
+    }
+
+    /// `-AppleTextDirection YES -NSForceRightToLeftWritingDirection YES`.
+    /// Forces RTL layout regardless of language.
+    public func rightToLeft(_ enabled: Bool = true) -> KassLaunchOptions {
+        enabled ? adding(["-AppleTextDirection", "YES", "-NSForceRightToLeftWritingDirection", "YES"]) : self
+    }
 }

@@ -20,4 +20,28 @@ public extension KassTestCase {
             }
         }
     }
+
+    /// Relaunches under a pseudolocalization pass — doubled string lengths and
+    /// visible (uppercased) non-localized strings — then runs `flow`. Surfaces
+    /// truncation/overflow and hardcoded, un-localized strings without a
+    /// translator. Pass `rightToLeft: true` to also force RTL layout. Take
+    /// `device.screenshot(...)` shots inside `flow` for review. Launch-argument
+    /// based, so it works on simulator and real devices.
+    ///
+    /// Like ``forEachLocale(_:_:)``, it relaunches applying these arguments on
+    /// top of the app's existing launch arguments — call it on a fresh launch
+    /// (or standalone) so a prior relaunch's locale doesn't carry over.
+    func runPseudolocalized(rightToLeft: Bool = false, _ flow: () -> Void) {
+        // Route through `relaunch(arguments:)` (not `device.relaunch`) so the
+        // pseudolocalized launch gets the same reporting + `disableAnimations`
+        // treatment as `forEachLocale`.
+        let arguments = KassLaunchOptions()
+            .doubleLengthStrings().showNonLocalizedStrings().rightToLeft(rightToLeft)
+            .arguments
+        relaunch(arguments: arguments)
+        XCTContext.runActivity(named: "Pseudolocalized\(rightToLeft ? " (RTL)" : "")") { _ in
+            config.logger.log("🌍 Pseudolocalized\(rightToLeft ? " (RTL)" : "")")
+            flow()
+        }
+    }
 }

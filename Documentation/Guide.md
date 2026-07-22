@@ -436,6 +436,28 @@ for mode in light dark; do
 done
 ```
 
+### Pseudolocalization & RTL
+
+Find localization bugs without a translator. `runPseudolocalized` relaunches with
+doubled string lengths (surfacing truncation and layout overflow) and non-localized
+strings uppercased (surfacing hardcoded text), then runs your flow:
+
+```swift
+func test_pseudo() {
+    runPseudolocalized {
+        onScreen(HomeScreen.self) { $0.title.assertVisible() }
+        device.screenshot("home-pseudo")   // eyeball truncation/overflow
+    }
+}
+
+// Force right-to-left layout regardless of language:
+runPseudolocalized(rightToLeft: true) { … }
+```
+
+The same toggles are on the `relaunch` builder if you want them alongside a real
+locale — `device.relaunch { $0.language("de").doubleLengthStrings().rightToLeft() }`.
+All launch-argument based, so they work on the simulator and real devices.
+
 ## Synchronization backends
 
 By default KassiOS polls (via `Waiter`). Plug in a `KassSynchronizer` to also
