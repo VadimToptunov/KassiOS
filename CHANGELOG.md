@@ -6,6 +6,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.20.0] - 2026-07-22
+
 ### Added
 - **Screen recording on failure**: opt in with `KassConfig(recordVideoOnFailure:
   true)` and, when the Tier C host agent is reachable, KassiOS records the
@@ -16,6 +18,14 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   return the bytes over the loopback bridge — the agent picks the output path
   itself, preserving the fixed-argv, allowlisted posture. Best-effort and
   simulator-only: no agent (or a real device) is a silent no-op, never a hang.
+
+### Fixed
+- **Relaunch no longer accumulates launch arguments.** Every `launch`/`relaunch`
+  now composes its arguments against a stable base (captured on the first launch)
+  instead of appending to the shared `XCUIApplication.launchArguments`, so mixing
+  `forEachLocale`, `runPseudolocalized`, and `device.relaunch` in one test no
+  longer silently inherits a prior run's locale. `KassDevice.relaunch` shares the
+  test case's base rather than tracking its own.
 
 ## [0.19.0] - 2026-07-22
 
@@ -298,7 +308,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Initial DSL: `KassTestCase`, `KassScreen`, `KassElement`, implicit waits,
   flaky-safety (`Waiter`), step logging, and `onScreen`.
 
-[Unreleased]: https://github.com/VadimToptunov/KassiOS/compare/0.19.0...HEAD
+[Unreleased]: https://github.com/VadimToptunov/KassiOS/compare/0.20.0...HEAD
+[0.20.0]: https://github.com/VadimToptunov/KassiOS/compare/0.19.0...0.20.0
 [0.19.0]: https://github.com/VadimToptunov/KassiOS/compare/0.18.0...0.19.0
 [0.18.0]: https://github.com/VadimToptunov/KassiOS/compare/0.17.0...0.18.0
 [0.17.0]: https://github.com/VadimToptunov/KassiOS/compare/0.16.0...0.17.0
