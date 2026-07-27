@@ -150,10 +150,11 @@ final class ScreenVisitor: SyntaxVisitor {
         // The identifier builders take the id as an *unlabeled* argument; a
         // labelled argument at that position is a different API (`element(at:)`).
         guard argument.label == nil else { return }
-        guard !isStaticStringLiteral(argument.expression) else { return }
+        guard argument.expression.as(StringLiteralExprSyntax.self) == nil else { return }
         report(
             argument.expression, rule: .kas002,
-            message: "element identifier is not a static string literal; it can't be statically audited or enforced (KAS002)"
+            message: "element identifier is not a string literal (a bare variable or call); it can't be "
+                + "statically audited or enforced — an interpolated literal is fine (KAS002)"
         )
     }
 
@@ -168,11 +169,6 @@ final class ScreenVisitor: SyntaxVisitor {
             return (member.declName.baseName.text, onSelf)
         }
         return nil
-    }
-
-    private func isStaticStringLiteral(_ expr: ExprSyntax) -> Bool {
-        guard let literal = expr.as(StringLiteralExprSyntax.self) else { return false }
-        return literal.segments.allSatisfy { $0.is(StringSegmentSyntax.self) }
     }
 
     // MARK: - Reporting

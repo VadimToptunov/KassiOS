@@ -70,7 +70,7 @@ final class ScreenLinterTests: XCTestCase {
 
     // MARK: - KAS002
 
-    func testInterpolatedIdentifierFires() {
+    func testInterpolatedIdentifierIsAllowed() {
         let src = source(
             "class RowScreen: KassScreen {",
             "    override var onLoad: [KassElement] { [button(\"ok\")] }",
@@ -78,10 +78,7 @@ final class ScreenLinterTests: XCTestCase {
             "}"
         )
         let diagnostics = lint(source: src, filePath: "Row.swift")
-        XCTAssertEqual(diagnostics.count, 1)
-        XCTAssertEqual(diagnostics[0].rule, .kas002)
-        XCTAssertEqual(diagnostics[0].line, 3)
-        XCTAssertTrue(diagnostics[0].message.contains("KAS002"))
+        XCTAssertTrue(diagnostics.isEmpty, "an interpolated literal still reveals the id's structure, got \(diagnostics)")
     }
 
     func testVariableIdentifierFires() {
@@ -130,6 +127,17 @@ final class ScreenLinterTests: XCTestCase {
         )
         let diagnostics = lint(source: src, filePath: "Detail.swift")
         XCTAssertTrue(diagnostics.isEmpty, "expected no diagnostics, got \(diagnostics)")
+    }
+
+    func testParameterizedRowLocatorIsAllowed() {
+        let src = source(
+            "class MarketsScreen: KassScreen {",
+            "    override var onLoad: [KassElement] { [button(\"ok\")] }",
+            "    func price(_ symbol: String) -> KassElement { staticText(\"markets.asset.\\(symbol).price\") }",
+            "}"
+        )
+        let diagnostics = lint(source: src, filePath: "Markets.swift")
+        XCTAssertTrue(diagnostics.isEmpty, "a dot.camelCase parameterized row locator is legit, got \(diagnostics)")
     }
 
     func testDynamicIdentifierOutsideScreenIsIgnored() {

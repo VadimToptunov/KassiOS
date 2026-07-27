@@ -6,6 +6,18 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+- **Accessibility-identifier convention documented + examples reconciled.** A new
+  DocC guide *Accessibility identifiers* states the one convention KassiOS matches
+  on — **dot.camelCase, hierarchical** (`login.email`, `markets.asset.AAPL.price`)
+  — and the `Examples/` screens + README snippets, which mixed `snake_case`, are
+  brought in line so the docs teach a single scheme.
+- **`kassios-lint` KAS002 no longer false-flags parameterized identifiers.** It
+  now fires only when an element id isn't a string literal at all (a bare
+  variable or call); **interpolated literals** like `"markets.asset.\(symbol).price"`
+  pass (they still reveal the id's structure) — so the lint is usable on real
+  list screens.
+
 ## [0.21.0] - 2026-07-22
 
 ### Added

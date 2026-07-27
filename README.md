@@ -36,15 +36,15 @@ into every interaction, so tests read like a script.
 **Before — raw XCUITest:**
 
 ```swift
-let email = app.textFields["login_email"]
+let email = app.textFields["login.email"]
 XCTAssertTrue(email.waitForExistence(timeout: 10))
 email.tap(); email.typeText("test@example.com")
 
-let button = app.buttons["login_submit"]
+let button = app.buttons["login.submit"]
 XCTAssertTrue(button.waitForExistence(timeout: 10))
 button.tap()
 
-XCTAssertTrue(app.staticTexts["home_welcome"].waitForExistence(timeout: 10))
+XCTAssertTrue(app.staticTexts["home.welcome"].waitForExistence(timeout: 10))
 ```
 
 **After — KassiOS:**
@@ -91,9 +91,9 @@ Swift Package Manager. Add the package and link it to your **UI Test target**:
 
 ```swift
 final class LoginScreen: KassScreen {
-    lazy var email = textField("login_email")
-    lazy var password = secureTextField("login_password")
-    lazy var loginButton = button("login_submit")
+    lazy var email = textField("login.email")
+    lazy var password = secureTextField("login.password")
+    lazy var loginButton = button("login.submit")
 
     override var onLoad: [KassElement] { [email, loginButton] }
 }
