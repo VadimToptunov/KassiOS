@@ -30,6 +30,13 @@ final class HomeScreen: KassScreen {
 
     func item(_ index: Int) -> KassElement { staticText("item-\(index)") }
 
+    // Locator-ergonomics (0.23.0) coverage — see KassDemoApp's "Locator ergonomics" section.
+    /// Type-agnostic id lookup; also the id-first proof: a label-only decoy with
+    /// the same string appears earlier in the tree but must lose to this real id.
+    lazy var decoyTarget = element("decoyMatch")
+    /// Disambiguates same-id rows by their (different) labels.
+    func duplicateRow(label: String) -> KassElement { element(id: "duplicateId", label: label, type: .staticText) }
+
     override var onLoad: [KassElement] { [welcome] }
 }
 

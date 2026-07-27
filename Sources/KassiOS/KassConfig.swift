@@ -30,8 +30,8 @@ public struct KassConfig: Sendable {
 
     /// How to react when an element built from an identifier turns out to have
     /// been matched by label (i.e. the app set no `accessibilityIdentifier`).
-    /// `.ignore` (default) says nothing, `.warn` surfaces an Xcode message
-    /// without failing, `.enforce` fails the interaction.
+    /// `.warn` (default) surfaces an Xcode message without failing, `.ignore`
+    /// says nothing, `.enforce` fails the interaction.
     public var accessibilityIdentifierPolicy: KassIdentifierPolicy
 
     /// When `true` (default), a failed interaction attaches a screenshot of the
@@ -67,7 +67,7 @@ public struct KassConfig: Sendable {
         logger: KassLogger = ConsoleKassLogger(),
         reporter: KassReporter? = nil,
         synchronizer: KassSynchronizer = NoOpSynchronizer(),
-        accessibilityIdentifierPolicy: KassIdentifierPolicy = .ignore,
+        accessibilityIdentifierPolicy: KassIdentifierPolicy = .warn,
         captureScreenshotOnFailure: Bool = true,
         screenshotEachStep: Bool = false,
         interceptors: [KassInterceptor] = [KassRetryInterceptor()],

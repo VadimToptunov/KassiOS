@@ -45,16 +45,35 @@ final class MarketsScreen: KassScreen {
 
 ## How the three guardrails read the convention
 
-- **Runtime enforcement** (``KassConfig/accessibilityIdentifierPolicy``): with
-  `.enforce`, an element matched *without* a real identifier fails the test,
-  pointing at the exact `.accessibilityIdentifier("…")` to add. `.warn` only
-  surfaces an Xcode message.
+- **Runtime resolution is id-first.** Every id-based builder (`element(_:type:)`,
+  `element(_:)`, `descendant(_:_:)`) matches the real accessibility identifier
+  first; it only falls back to XCUITest's label-matching subscript when no
+  element actually carries that identifier. This makes the label-fallback case —
+  the one worth flagging — an honest, detectable event rather than a silent
+  coincidence.
+- **Runtime enforcement** (``KassConfig/accessibilityIdentifierPolicy``): the
+  **default is `.warn`** — an element matched *without* a real identifier (the
+  id-first fallback kicked in) logs an Xcode message but the test still passes.
+  `.enforce` fails the interaction instead, pointing at the exact
+  `.accessibilityIdentifier("…")` to add; `.ignore` says nothing.
 - **Runtime audit** (`auditAccessibilityIdentifiers()`): scans the current
   screen for hittable, interactive elements that carry *no* identifier at all.
 - **Static lint** (`kassios-lint`, KAS002): flags an element built from an id
   that isn't a string literal — a bare variable or a call — because those can't
   be audited without running the test. **Interpolated string literals pass**
   (`"markets.asset.\(symbol).price"` still reveals the id's structure).
+
+## Intentional label matching
+
+Some things — dialogs, toasts, rows identified only by their text, HTML content
+in a `WKWebView` — genuinely have no accessibility identifier to match. Use
+``KassScreen/staticText(containing:)`` or ``KassScreen/element(labelContains:type:)``
+for those: they match a label substring on purpose, so they carry no *expected*
+identifier and never trigger the `.warn`/`.enforce` policy.
+
+For SwiftUI's container-id propagation (a sheet's id landing on every child, so
+several elements share one identifier), disambiguate by pairing the id with the
+label: ``KassScreen/element(id:label:type:)`` / ``KassScreen/button(id:label:)``.
 
 ## For test authors and agents
 

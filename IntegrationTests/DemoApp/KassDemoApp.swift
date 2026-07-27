@@ -166,6 +166,24 @@ struct HomeView: View {
                     Text(items[index]).accessibilityIdentifier("item-\(index)")
                 }
             }
+
+            // KassiOS 0.23.0 locator-ergonomics coverage. Placed last (after
+            // "Items") so it doesn't shift earlier rows out of the initially
+            // rendered window — SwiftUI's Form/List renders lazily, so these
+            // rows themselves need a scroll to become reachable; see the tests.
+            Section("Locator ergonomics") {
+                // A label-only decoy ("decoyMatch" is its *label*, not an id) placed
+                // before the real id'd element — proves id-first resolution picks
+                // the real id over the earlier, coincidental label match.
+                Text("decoyMatch")
+                Text("Real Target").accessibilityIdentifier("decoyMatch")
+
+                // Same accessibility identifier on two rows with different labels —
+                // simulates SwiftUI's container-id propagation (e.g. a sheet's id
+                // landing on every child) that `element(id:label:)` disambiguates.
+                Text("Alpha").accessibilityIdentifier("duplicateId")
+                Text("Beta").accessibilityIdentifier("duplicateId")
+            }
         }
         .refreshable { refreshed = true }
         .accessibilityIdentifier("itemsList")
