@@ -24,28 +24,12 @@ import XCTest
 open class KassRobot {
 
     /// The test case this robot drives. Public so robot subclasses can reach
-    /// anything on `KassTestCase` (`device`, `config`, `step`, …) beyond the
-    /// forwarders below.
+    /// anything on `KassTestCase` (`device`, `config`, `onScreen`, …) beyond the
+    /// `step` forwarder below.
     public let test: KassTestCase
 
     public required init(_ test: KassTestCase) {
         self.test = test
-    }
-
-    /// Forwards to ``KassTestCase/onScreen(_:file:line:_:)`` so robot methods
-    /// read naturally without spelling out `test.` each time. Returns `self`
-    /// (not the screen) so robot methods can keep chaining other robot calls —
-    /// call `test.onScreen(_:_:)` directly when you need the screen itself
-    /// (e.g. to follow up with `navigate(to:)`).
-    @discardableResult
-    public func onScreen<S: KassScreen>(
-        _ type: S.Type,
-        file: StaticString = #filePath,
-        line: UInt = #line,
-        _ block: @MainActor (S) -> Void
-    ) -> Self {
-        test.onScreen(type, file: file, line: line, block)
-        return self
     }
 
     /// Forwards to ``KassTestCase/step(_:_:)`` so robot methods can structure
@@ -59,6 +43,7 @@ public extension KassTestCase {
 
     /// Entry point for a robot chain, e.g.
     /// `robot(LoginRobot.self).signIn("a@b.c").welcome.assertVisible()`.
+    @discardableResult
     func robot<R: KassRobot>(_ type: R.Type = R.self) -> R {
         R(self)
     }

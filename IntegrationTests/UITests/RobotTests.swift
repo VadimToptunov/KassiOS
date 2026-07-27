@@ -6,8 +6,11 @@ import XCTest
 final class LoginRobot: KassRobot {
     @discardableResult
     func signIn(_ email: String) -> HomeScreen {
-        test.onScreen(LoginScreen.self) { $0.email.typeText(email); $0.signIn.tap() }
-            .navigate(to: HomeScreen.self)
+        // Wrapped in a robot-owned `step` (also exercises the `step` forwarder).
+        step("Sign in as \(email)") {
+            _ = test.onScreen(LoginScreen.self) { $0.email.typeText(email); $0.signIn.tap() }
+        }
+        return test.onScreen(HomeScreen.self) { _ in }
     }
 }
 
