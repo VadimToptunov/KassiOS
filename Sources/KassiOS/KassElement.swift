@@ -225,6 +225,11 @@ public extension KassElement {
     /// The element's accessibility label (does not wait).
     func readLabel() -> String { resolve().label }
 
+    /// Best-effort parse of the element's value-or-label as a number,
+    /// locale-aware (strips currency symbols/grouping; honors the current
+    /// locale's decimal separator). Non-waiting, like `readValue()`.
+    func readNumber() -> Double? { KassNumberParsing.parse(Self.textOf(resolve())) }
+
     @discardableResult
     func assertPlaceholder(_ expected: String, file: StaticString = #filePath, line: UInt = #line) -> KassElement {
         perform("assertPlaceholder('\(expected)')", kind: .assert, file: file, line: line) { element in
@@ -644,14 +649,17 @@ public extension KassElement {
     }
 
     /// A one-line snapshot of the element's live state, appended to failures so
-    /// the report points precisely at the offending element.
-    private func failureDiagnostics(for element: XCUIElement) -> String {
+    /// the report points precisely at the offending element. `internal`, not
+    /// `private`: shared with `assertAppears` in `KassElementDeepAssertions.swift`.
+    internal func failureDiagnostics(for element: XCUIElement) -> String {
         guard element.exists else { return "\n  ↳ element not found in the current hierarchy" }
         return "\n  ↳ exists=true hittable=\(element.isHittable) id='\(element.identifier)' "
             + "label='\(element.label)' type=\(element.elementType.rawValue) frame=\(element.frame)"
     }
 
-    private func attachFailureScreenshot(label: String) {
+    /// `internal`, not `private`: shared with `assertAppears` in
+    /// `KassElementDeepAssertions.swift`.
+    internal func attachFailureScreenshot(label: String) {
         let screenshot = XCUIScreen.main.screenshot()
         let attachment = XCTAttachment(screenshot: screenshot)
         attachment.name = "Failure — \(label)"

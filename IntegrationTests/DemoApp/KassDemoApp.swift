@@ -112,6 +112,22 @@ struct HomeView: View {
     @StateObject private var location = LocationRequester()
     private let items = (0..<12).map { "Item \($0)" }
 
+    // KassiOS 0.24.0 "deep assertions" coverage.
+    @State private var toastVisible = false
+    @State private var duplicateRowsEnabled = false
+
+    private var dedupRows: [String] {
+        duplicateRowsEnabled ? ["Row A", "Row A", "Row C"] : ["Row A", "Row B", "Row C"]
+    }
+
+    private func showToast() {
+        toastVisible = true
+        // Long enough to survive XCUITest's own post-tap idle-settle overhead
+        // (which can itself take ~1s) and still be a "transient", not a
+        // persistent element `assertVisible` would catch just as well.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { toastVisible = false }
+    }
+
     private func fetch() {
         let url = URL(string: "https://api.example.com/user")!
         URLSession.shared.dataTask(with: url) { data, _, error in
@@ -184,10 +200,46 @@ struct HomeView: View {
                 Text("Alpha").accessibilityIdentifier("duplicateId")
                 Text("Beta").accessibilityIdentifier("duplicateId")
             }
+
+            // KassiOS 0.24.0 "deep assertions" coverage. Placed last so it
+            // doesn't shift earlier lazily-rendered rows out of the initially
+            // rendered window.
+            Section("Deep assertions") {
+                // A formatted amount — an exact string match is the wrong tool
+                // here (rounding/locale), `assertValue(closeTo:)` is the point.
+                Text("$92.50")
+                    .accessibilityIdentifier("deep.amount")
+
+                // A small row list that can be made to duplicate a label, for
+                // `assertNoDuplicates` (simulates a pagination bug).
+                ForEach(dedupRows.indices, id: \.self) { index in
+                    Text(dedupRows[index]).accessibilityIdentifier("deep.row-\(index)")
+                }
+                Button(duplicateRowsEnabled ? "Fix Duplicate Row" : "Duplicate a Row") {
+                    duplicateRowsEnabled.toggle()
+                }
+                .accessibilityIdentifier("deep.duplicateToggle")
+
+                // A transient toast — visible for ~2s — for `assertAppears`.
+                Button("Show Toast") { showToast() }
+                    .accessibilityIdentifier("deep.toast.button")
+            }
         }
         .refreshable { refreshed = true }
         .accessibilityIdentifier("itemsList")
         .navigationTitle("Home")
+        // The toast is an overlay, not a Form row: a List/Form re-layout on
+        // insert/remove is slow enough that a brief pulse can get delayed or
+        // coalesced away before it ever renders — an overlay updates immediately.
+        .overlay(alignment: .bottom) {
+            if toastVisible {
+                Text("Success!")
+                    .padding()
+                    .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 8))
+                    .accessibilityIdentifier("deep.toast")
+                    .padding(.bottom, 24)
+            }
+        }
     }
 }
 

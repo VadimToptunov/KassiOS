@@ -186,6 +186,10 @@ element.assertValueMatches("^\\d{4}$")     // regex on value-or-label
 element.assertHittable()          // .assertNotHittable()
 element.waitUntil("is selected") { $0.isSelected }
 
+// Deep assertions — beyond presence-only checks
+element.assertValue(closeTo: 92.5, tolerance: 0.01)  // numeric, locale-aware ("$92.50")
+element.assertAppears(within: 2)                     // catches a transient (toast) before it dismisses
+
 // Scoped children — resolve within an element
 row.staticText("title").assertHasText("Inbox")
 row.button("delete").tap()
@@ -239,6 +243,13 @@ screen.cells().element(at: 0).tap()
 screen.cells().containing(.staticText, "Inbox").first.tap()
 screen.staticTexts().matching(label: "Error").assertNotEmpty()
 screen.images().forEach { $0.assertExists() }
+
+// Deep assertions — catch pagination/leakage bugs a count alone misses
+screen.cells().assertNoDuplicates()                  // by label, or pass `by:` for a custom key
+screen.cells().assertEach("is money-in") { row in
+    guard row.readLabel().contains("+") else { throw KassError("expected a money-in row") }
+}
+screen.cells().within(timeout: 5).assertNotEmpty()   // per-call timeout, like KassElement.within
 ```
 
 Builders: `all(_:)`, `all(_:type:)`, `buttons()`, `staticTexts()`, `cells()`,
