@@ -6,6 +6,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.22.0] - 2026-07-22
+
 ### Changed
 - **Accessibility-identifier convention documented + examples reconciled.** A new
   DocC guide *Accessibility identifiers* states the one convention KassiOS matches
@@ -331,7 +333,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Initial DSL: `KassTestCase`, `KassScreen`, `KassElement`, implicit waits,
   flaky-safety (`Waiter`), step logging, and `onScreen`.
 
-[Unreleased]: https://github.com/VadimToptunov/KassiOS/compare/0.21.0...HEAD
+[Unreleased]: https://github.com/VadimToptunov/KassiOS/compare/0.22.0...HEAD
+[0.22.0]: https://github.com/VadimToptunov/KassiOS/compare/0.21.0...0.22.0
 [0.21.0]: https://github.com/VadimToptunov/KassiOS/compare/0.20.0...0.21.0
 [0.20.0]: https://github.com/VadimToptunov/KassiOS/compare/0.19.0...0.20.0
 [0.19.0]: https://github.com/VadimToptunov/KassiOS/compare/0.18.0...0.19.0
