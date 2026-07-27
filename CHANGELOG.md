@@ -6,6 +6,15 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- **`KassRobot` — a first-class Robot layer**: an optional base class for
+  composite, cross-screen actions ("sign in", "transfer") that sits between
+  ``KassScreen`` (locators) and ``KassScenario`` (whole journeys), replacing the
+  hand-rolled `struct XRobot { let test: KassTestCase }` boilerplate every
+  project used to write. Enter one with the new `KassTestCase.robot(_:)`, e.g.
+  `robot(LoginRobot.self).signIn("a@b.c").welcome.assertVisible()`. Fully
+  opt-in — single-screen tests keep using `onScreen` directly.
+
 ## [0.20.0] - 2026-07-22
 
 ### Added
