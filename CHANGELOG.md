@@ -6,6 +6,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.21.0] - 2026-07-22
+
 ### Added
 - **`KassRobot` — a first-class Robot layer**: an optional base class for
   composite, cross-screen actions ("sign in", "transfer") that sits between
@@ -317,7 +319,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Initial DSL: `KassTestCase`, `KassScreen`, `KassElement`, implicit waits,
   flaky-safety (`Waiter`), step logging, and `onScreen`.
 
-[Unreleased]: https://github.com/VadimToptunov/KassiOS/compare/0.20.0...HEAD
+[Unreleased]: https://github.com/VadimToptunov/KassiOS/compare/0.21.0...HEAD
+[0.21.0]: https://github.com/VadimToptunov/KassiOS/compare/0.20.0...0.21.0
 [0.20.0]: https://github.com/VadimToptunov/KassiOS/compare/0.19.0...0.20.0
 [0.19.0]: https://github.com/VadimToptunov/KassiOS/compare/0.18.0...0.19.0
 [0.18.0]: https://github.com/VadimToptunov/KassiOS/compare/0.17.0...0.18.0
