@@ -150,6 +150,14 @@ honest [when-to-use / when-not-to](Documentation/Guide.md#when-to-use-kassios--a
 Every method below is chainable, self-waiting and flaky-safe:
 
 ```swift
+// Locators — id-first: matches the real accessibility identifier when one
+// exists, only falling back to a label match when it doesn't
+element("checkout.confirm")                     // any element type, not just one
+element(id: "sheet.title", label: "Confirm")    // id AND label — for SwiftUI's
+button(id: "sheet.title", label: "Confirm")     // container-id propagation
+staticText(containing: "Welcome")               // label substring (intentional
+element(labelContains: "Welcome")               // label matching — no id warning)
+
 // Interactions
 element.tap()
 element.typeText("hello")

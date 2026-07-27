@@ -250,11 +250,12 @@ public extension KassElement {
     // MARK: - Scoped children
 
     /// Resolves `type`/`id` *within* this element — for reaching into a specific
-    /// cell/section, e.g. `cell.staticText("title")`.
+    /// cell/section, e.g. `cell.staticText("title")`. id-first, same as
+    /// `KassScreen.element(_:type:)`.
     func descendant(_ type: XCUIElement.ElementType, _ id: String) -> KassElement {
         let label = "\(description) › \(KassScreen.typeName(type)) '\(id)'"
         return KassElement(description: label, config: config, expectedIdentifier: id) { [resolve] in
-            resolve().descendants(matching: type)[id].firstMatch
+            KassScreen.idFirstMatch(resolve().descendants(matching: type), id: id)
         }
     }
 

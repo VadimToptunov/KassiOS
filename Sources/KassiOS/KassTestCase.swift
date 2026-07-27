@@ -209,8 +209,39 @@ open class KassTestCase: XCTestCase {
         line: UInt = #line,
         _ block: @MainActor (S) -> Void
     ) -> S {
+        onScreenScoped(type, config: config, file: file, line: line, block)
+    }
+
+    /// Like ``onScreen(_:file:line:_:)`` but with a one-off `timeout` for the
+    /// whole scope — for a slow screen (web view, network) without repeating
+    /// `.within(timeout:)` on every element. The screen (and every element it
+    /// builds) inherits the overridden budget.
+    @discardableResult
+    @MainActor
+    public func onScreen<S: KassScreen>(
+        _ type: S.Type,
+        timeout: TimeInterval,
+        file: StaticString = #filePath,
+        line: UInt = #line,
+        _ block: @MainActor (S) -> Void
+    ) -> S {
+        var scoped = config
+        scoped.timeout = timeout
+        return onScreenScoped(type, config: scoped, file: file, line: line, block)
+    }
+
+    /// Shared implementation behind both `onScreen` overloads.
+    @discardableResult
+    @MainActor
+    private func onScreenScoped<S: KassScreen>(
+        _ type: S.Type,
+        config screenConfig: KassConfig,
+        file: StaticString,
+        line: UInt,
+        _ block: @MainActor (S) -> Void
+    ) -> S {
         startReportingIfNeeded()
-        let screen = S(app: app, config: config)
+        let screen = S(app: app, config: screenConfig)
         XCTContext.runActivity(named: "On \(String(describing: type))") { _ in
             for element in screen.onLoad {
                 element.assertExists(file: file, line: line)

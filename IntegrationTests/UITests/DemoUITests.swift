@@ -116,6 +116,53 @@ final class DemoUITests: KassTestCase {
         }
     }
 
+    func test_idFirstResolution_prefersRealIdOverEarlierLabelMatch() {
+        launch()
+        onScreen(LoginScreen.self) { $0.email.typeText("a@b.c"); $0.signIn.tap() }
+        onScreen(HomeScreen.self) { home in
+            // "decoyMatch" is a plain label on an earlier, un-identified row; the
+            // real id'd row ("Real Target") sits after it. id-first resolution
+            // must land on the real id, not the earlier label match.
+            home.decoyTarget.scrollTo(in: home.list).assertHasText("Real Target")
+        }
+    }
+
+    func test_elementById_anyType() {
+        launch()
+        onScreen(LoginScreen.self) { $0.email.typeText("a@b.c"); $0.signIn.tap() }
+        onScreen(HomeScreen.self) { home in
+            home.element("welcome").assertHasText("Welcome")
+        }
+    }
+
+    func test_elementIdAndLabel_disambiguatesSharedIdentifier() {
+        launch()
+        onScreen(LoginScreen.self) { $0.email.typeText("a@b.c"); $0.signIn.tap() }
+        onScreen(HomeScreen.self) { home in
+            home.duplicateRow(label: "Alpha").scrollTo(in: home.list).assertHasText("Alpha")
+            home.duplicateRow(label: "Beta").scrollTo(in: home.list).assertHasText("Beta")
+        }
+    }
+
+    func test_staticTextContaining_matchesBySubstring() {
+        launch()
+        onScreen(LoginScreen.self) { $0.email.typeText("a@b.c"); $0.signIn.tap() }
+        onScreen(HomeScreen.self) { home in
+            home.staticText(containing: "elcome").assertVisible()
+        }
+    }
+
+    func test_onScreen_withTimeout_appliesToWholeScope() {
+        launch()
+        onScreen(LoginScreen.self) { $0.email.typeText("a@b.c"); $0.signIn.tap() }
+        onScreen(HomeScreen.self) { $0.openWeb.tap() }
+        // No per-element `.within(timeout:)` — the whole screen's scope inherits
+        // the overridden budget for its slow-loading web view.
+        onScreen(WebScreen.self, timeout: 30) { web in
+            web.heading.assertVisible()
+        }
+    }
+
     func test_screenshotEachStep() {
         config = KassConfig(accessibilityIdentifierPolicy: .enforce, screenshotEachStep: true)
         launch()

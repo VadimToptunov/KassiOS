@@ -6,6 +6,40 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- **`KassScreen.element(_ id:)`** — resolves by accessibility identifier
+  regardless of element type. SwiftUI exposes the same view as button/cell/other
+  depending on context, and pinning a type to a locator was the single most
+  common source of flake reported against real suites (`anyEl`-style helpers
+  appeared 51 times across surveyed test suites).
+- **`element(id:label:type:)` / `button(id:label:)`** — matches an element
+  carrying *both* an accessibility identifier and a label, for SwiftUI's
+  container-id propagation (a sheet's id landing on every child).
+- **`staticText(containing:)` / `element(labelContains:type:)`** — matches a
+  label substring (case-insensitive) for dialogs/toasts/rows identified only by
+  their text. Intentional label matching: it carries no expected identifier, so
+  it never triggers the identifier-policy warning.
+- **`KassTestCase.onScreen(_:timeout:_:)`** — a per-scope timeout override: runs
+  a screen's `onLoad` check and block with a one-off time budget (e.g. a slow
+  web view or network-bound screen) without repeating `.within(timeout:)` on
+  every element in it.
+
+### Changed
+- **Identifier resolution is now id-first.** `element(_:type:)` and
+  `descendant(_:_:)` used to resolve via XCUITest's `[id]` subscript, which
+  silently falls back to matching an element's *label* when its accessibility
+  identifier is empty — so a test author could think they matched by id while
+  actually matching a label. Both now match the real identifier first and only
+  fall back to the label subscript when no element carries that identifier.
+  Non-breaking: existing tests still resolve the same elements, they just get
+  an honest signal when a fallback happens.
+- **`KassConfig.accessibilityIdentifierPolicy` default changed from `.ignore` to
+  `.warn`.** Combined with id-first resolution above, a label-fallback match is
+  no longer silent by default — it logs a warning (`.enforce` still fails,
+  `.ignore` still mutes). Not breaking on its own: a suite whose elements
+  resolve by real identifiers (the documented convention) sees no new warnings;
+  one that relies on label-fallback now finds out about it.
+
 ## [0.22.0] - 2026-07-22
 
 ### Changed

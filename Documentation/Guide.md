@@ -74,8 +74,27 @@ final class LoginScreen: KassScreen {
 
 Element builders (by accessibility identifier): `button`, `staticText`,
 `textField`, `secureTextField`, `image`, `cell`, `switchControl`, `other`, and the
-generic `element(_:type:)`. Identifiers resolve with `firstMatch`, so an ambiguous
+generic `element(_:type:)`. Resolution is **id-first**: it matches the real
+accessibility identifier when one exists, and only falls back to XCUITest's
+label-matching subscript when it doesn't — with `firstMatch`, so an ambiguous
 id takes the first hit rather than crashing.
+
+Type-agnostic and multi-attribute builders, for the common cases a bare id
+misses:
+
+```swift
+element("checkout.confirm")                       // any element type, id-first
+element(id: "sheet.title", label: "Confirm")       // id AND label — disambiguates
+                                                    // SwiftUI's container-id propagation
+button(id: "sheet.title", label: "Confirm")        // same, scoped to .button
+
+staticText(containing: "Welcome")                  // label substring, case-insensitive
+element(labelContains: "Welcome")                  // same, any type
+```
+
+`staticText(containing:)`/`element(labelContains:)` are intentional label
+matching (dialogs/toasts/rows identified by their text), so they never trigger
+the identifier-policy warning — there's no expected id to miss.
 
 Escape hatches when identifiers aren't enough:
 
@@ -127,6 +146,12 @@ firstRow.pullToRefresh()
 
 // A one-off timeout, longer or shorter than the global config
 slowRow.within(timeout: 30).assertVisible()
+
+// The same, for a whole screen scope — every element built inside inherits it
+onScreen(SlowScreen.self, timeout: 30) { screen in
+    screen.title.assertVisible()
+    screen.content.assertVisible()
+}
 
 // Read state without waiting
 let text = field.readValue()
@@ -482,7 +507,7 @@ config = KassConfig(
     logger: ConsoleKassLogger(), // step/interaction log sink
     reporter: AllureReporter(),  // optional structured report
     synchronizer: NoOpSynchronizer(),
-    accessibilityIdentifierPolicy: .ignore,  // .warn / .enforce (see below)
+    accessibilityIdentifierPolicy: .warn,    // .ignore / .enforce (see below)
     captureScreenshotOnFailure: true         // attach a screenshot on failure
 )
 ```
@@ -494,12 +519,15 @@ so a config assigned there is already in place.
 
 ## Enforcing accessibility identifiers
 
-Tests are only as stable as the app's element identity. The identifier policy
-**pushes the app team to add real accessibility identifiers** — when an element
-is found by its visible label instead of an explicit `accessibilityIdentifier`:
+Tests are only as stable as the app's element identity. Resolution is
+**id-first** — every id-based builder matches the real accessibility identifier
+first, and only falls back to XCUITest's label-matching subscript when no
+element carries that identifier. The identifier policy governs what happens
+when that fallback fires, and **pushes the app team to add real accessibility
+identifiers**:
 
-- `.ignore` (default) — say nothing.
-- `.warn` — log a message and add an Xcode activity, but let the test pass.
+- `.warn` (default) — log a message and add an Xcode activity, but let the test pass.
+- `.ignore` — say nothing.
 - `.enforce` — fail with an actionable message (and a screenshot).
 
 ```swift
