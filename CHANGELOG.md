@@ -6,6 +6,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.23.0] - 2026-07-28
+
 ### Added
 - **`KassScreen.element(_ id:)`** — resolves by accessibility identifier
   regardless of element type. SwiftUI exposes the same view as button/cell/other
@@ -367,7 +369,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Initial DSL: `KassTestCase`, `KassScreen`, `KassElement`, implicit waits,
   flaky-safety (`Waiter`), step logging, and `onScreen`.
 
-[Unreleased]: https://github.com/VadimToptunov/KassiOS/compare/0.22.0...HEAD
+[Unreleased]: https://github.com/VadimToptunov/KassiOS/compare/0.23.0...HEAD
+[0.23.0]: https://github.com/VadimToptunov/KassiOS/compare/0.22.0...0.23.0
 [0.22.0]: https://github.com/VadimToptunov/KassiOS/compare/0.21.0...0.22.0
 [0.21.0]: https://github.com/VadimToptunov/KassiOS/compare/0.20.0...0.21.0
 [0.20.0]: https://github.com/VadimToptunov/KassiOS/compare/0.19.0...0.20.0
