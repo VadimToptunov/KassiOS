@@ -51,6 +51,7 @@ For a full prose walkthrough see the
 - ``KassSuite``
 - ``KassRunBuilder``
 - ``KassScenario``
+- ``KassRobot``
 - ``KassBranch``
 
 ### Screens & elements

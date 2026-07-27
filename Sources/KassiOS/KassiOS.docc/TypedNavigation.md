@@ -48,11 +48,12 @@ it renders. A screen with an empty `onLoad` has nothing to verify, so
 
 Separate **what** the test does from **how** a screen is driven, so scenarios
 survive UI refactors. KassiOS doesn't mandate it — layer it on the screen DSL
-when a flow is reused:
+when a flow is reused. ``KassRobot`` is the first-class home for this: subclass
+it for composite, cross-screen actions ("sign in", "transfer"), and enter one
+with ``KassTestCase/robot(_:)``:
 
 ```swift
-struct LoginRobot {
-    let test: KassTestCase
+final class LoginRobot: KassRobot {
     @discardableResult
     func signIn(_ email: String) -> HomeScreen {
         test.onScreen(LoginScreen.self) { $0.email.typeText(email); $0.signIn.tap() }
@@ -60,8 +61,10 @@ struct LoginRobot {
     }
 }
 
-// A scenario reads intent-first; the screen details live in the robot.
-LoginRobot(test: self).signIn("a@b.c").welcome.assertVisible()
+// A test reads intent-first; the screen details live in the robot.
+robot(LoginRobot.self).signIn("a@b.c").welcome.assertVisible()
 ```
 
-Reusable, cross-test flows can also be packaged as a ``KassScenario``.
+``KassScreen`` is the locators for one screen, ``KassRobot`` is the composite
+action on top of one or more screens, and ``KassScenario`` packages a whole
+reusable journey — reach for whichever layer fits the flow you're extracting.
