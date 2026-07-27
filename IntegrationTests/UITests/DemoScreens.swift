@@ -37,6 +37,15 @@ final class HomeScreen: KassScreen {
     /// Disambiguates same-id rows by their (different) labels.
     func duplicateRow(label: String) -> KassElement { element(id: "duplicateId", label: label, type: .staticText) }
 
+    // Deep-assertions (0.24.0) coverage — see KassDemoApp's "Deep assertions" section.
+    lazy var amount = staticText("deep.amount")
+    lazy var duplicateToggle = button("deep.duplicateToggle")
+    lazy var toastButton = button("deep.toast.button")
+    lazy var toast = staticText("deep.toast")
+    lazy var dedupRows = customCollection("deep rows") { [app] in
+        app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH %@", "deep.row-"))
+    }
+
     override var onLoad: [KassElement] { [welcome] }
 }
 

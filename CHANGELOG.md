@@ -6,6 +6,36 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- **`KassElement.assertValue(closeTo:tolerance:)` / `readNumber()`** — a
+  locale-aware numeric assertion for money/math, where an exact string match
+  is the wrong tool (rounding, formatting, and locale can all shift the
+  displayed text without the underlying value being wrong). `readNumber()`
+  parses via `NumberFormatter` (`.decimal` then `.currency`) and falls back to
+  stripping non-numeric characters when neither style matches.
+- **`KassElement.assertAppears(within:pollInterval:)`** — a fast-polling
+  existence check for transients (a success toast that shows then
+  auto-dismisses). Unlike `assertVisible`, which waits the full flaky-safety
+  budget for the element to be hittable *now*, this passes the instant the
+  element is first sighted and deliberately bypasses `Waiter`.
+- **`KassElementCollection.assertNoDuplicates(by:)`** — fails if two elements
+  share a key (default: label), catching duplicated rows from pagination bugs.
+  The underlying duplicate-finding is factored into
+  `KassElementCollection.duplicates(in:)` for unit testing.
+- **`KassElementCollection.assertEach(_:_:)`** — runs a check against every
+  matching element and aggregates *all* failures (not just the first) into one
+  message, catching e.g. a row that leaked into a filtered list.
+- **`KassElementCollection.within(timeout:pollInterval:)`** — a per-call
+  timeout override for collections, mirroring `KassElement.within(timeout:)`.
+  Useful for a one-off short budget on a collection assertion expected to fail
+  (e.g. asserting no duplicates against a known-broken state in a test).
+
+  These three were driven directly by a buggy-matrix experiment against
+  ChaosBank: presence-only assertions (`assertVisible`/`assertCount`) missed
+  `roundingDrift`, `paginationDup`, `filterLeaksCategory`, and
+  `successToastMissing` — each needs a numeric, dedup/per-row, or transient
+  check to catch, not another exists-check.
+
 ## [0.23.0] - 2026-07-28
 
 ### Added

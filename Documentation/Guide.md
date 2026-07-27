@@ -192,6 +192,24 @@ element.waitUntil("is selected") { $0.isSelected }
 Every assertion waits up to `config.timeout` before failing, and reports a
 readable reason (`KassiOS: button 'login_submit' — assertVisible failed: …`).
 
+### Deep assertions
+
+Presence-only checks miss real defects — a rounded/mis-formatted amount, a
+row that leaked into a filtered list, a toast that comes and goes before a
+slower poll would see it. These go past "it exists":
+
+```swift
+// Numeric closeness — for money/math where an exact string match is wrong
+// (rounding, formatting, locale: "$92.50" vs. 92.5).
+element.assertValue(closeTo: 92.5, tolerance: 0.01)
+element.readNumber()   // Double?, non-waiting, locale-aware parse of value-or-label
+
+// Transient — passes the instant the element is *ever* seen inside the
+// window, instead of waiting the full budget for it to be hittable now.
+// For a success toast that appears then auto-dismisses.
+toast.assertAppears(within: 2)
+```
+
 ---
 
 ## Collections (lists & tables)
@@ -224,7 +242,19 @@ screen.cells().elementMatching(label: "Settings").tap()
 // Iterate live matches
 screen.cells().forEach { $0.assertExists() }
 let labels = screen.staticTexts().map { $0 }
+
+// Deep assertions — a bare count misses a duplicated or leaked row
+screen.cells().assertNoDuplicates()                    // by label; pass `by:` for a custom key
+screen.cells().assertNoDuplicates(by: { $0.readValue() ?? "" })
+screen.cells().assertEach("is money-in") { row in
+    guard row.readLabel().contains("+") else { throw KassError("expected a money-in row") }
+}
+screen.cells().within(timeout: 5).assertNotEmpty()     // per-call timeout override, like `KassElement.within`
 ```
+
+`assertEach` aggregates **every** failing row into a single failure message
+instead of stopping at the first, so a coding agent (or you) sees the whole
+picture at once.
 
 Builders on `KassScreen`: `all(_:)`, `all(_:type:)`, and the shortcuts
 `buttons()`, `staticTexts()`, `cells()`, `images()`. Or wrap any query with

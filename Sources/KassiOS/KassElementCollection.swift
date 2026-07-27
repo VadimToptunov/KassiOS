@@ -54,6 +54,16 @@ public struct KassElementCollection {
         }
     }
 
+    /// Returns a copy of this collection with an overridden timeout / poll
+    /// interval, for a one-off wait longer or shorter than the global config —
+    /// mirrors `KassElement.within(timeout:pollInterval:)`.
+    public func within(timeout: TimeInterval? = nil, pollInterval: TimeInterval? = nil) -> KassElementCollection {
+        var overridden = config
+        if let timeout = timeout { overridden.timeout = timeout }
+        if let pollInterval = pollInterval { overridden.pollInterval = pollInterval }
+        return KassElementCollection(description: description, config: overridden, query: query)
+    }
+
     // MARK: - Refinement
 
     /// Narrows to elements that contain a descendant of `type` with `id`.
@@ -119,6 +129,82 @@ public struct KassElementCollection {
             }
         } catch {
             let message = "KassiOS: \(description) — assertNotEmpty failed: \(error)"
+            config.logger.log("❌ \(message)")
+            XCTFail(message, file: file, line: line)
+        }
+        return self
+    }
+
+    /// Fails if two elements share the same key (default: the element's
+    /// label). Catches duplicated rows — e.g. a pagination bug that repeats a
+    /// page and renders the same row twice.
+    @discardableResult
+    public func assertNoDuplicates(
+        by key: @escaping @MainActor (KassElement) -> String = { $0.readLabel() },
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) -> KassElementCollection {
+        do {
+            try KassInterceptorChain.run(config.interceptors, context: context("assertNoDuplicates", file: file, line: line)) {
+                config.synchronizer.waitForIdle(timeout: config.timeout)
+                let keys = (0..<query().count).map { key(element(at: $0)) }
+                let duplicateKeys = Self.duplicates(in: keys)
+                guard duplicateKeys.isEmpty else {
+                    throw KassError("found duplicate key(s): \(duplicateKeys.joined(separator: ", "))")
+                }
+            }
+        } catch {
+            let message = "KassiOS: \(description) — assertNoDuplicates failed: \(error)"
+            config.logger.log("❌ \(message)")
+            XCTFail(message, file: file, line: line)
+        }
+        return self
+    }
+
+    /// Finds keys that appear more than once in `values`, in first-duplicated
+    /// order. Factored out of ``assertNoDuplicates(by:file:line:)`` so the
+    /// duplicate-finding logic itself is unit-testable over a plain `[String]`.
+    public static func duplicates(in values: [String]) -> [String] {
+        var seen = Set<String>()
+        var duplicates: [String] = []
+        for value in values {
+            if seen.contains(value) {
+                if !duplicates.contains(value) { duplicates.append(value) }
+            } else {
+                seen.insert(value)
+            }
+        }
+        return duplicates
+    }
+
+    /// Applies `check` to every currently-matching element, aggregating **all**
+    /// failures instead of stopping at the first — for "no row should violate
+    /// this rule" checks (e.g. every row must be money-in; a leaked category
+    /// shows up as one failing index instead of silently passing).
+    @discardableResult
+    public func assertEach(
+        _ description: String,
+        file: StaticString = #filePath,
+        line: UInt = #line,
+        _ check: @escaping (KassElement) throws -> Void
+    ) -> KassElementCollection {
+        do {
+            try KassInterceptorChain.run(config.interceptors, context: context("assertEach('\(description)')", file: file, line: line)) {
+                config.synchronizer.waitForIdle(timeout: config.timeout)
+                var failures: [String] = []
+                for index in 0..<query().count {
+                    do {
+                        try check(element(at: index))
+                    } catch {
+                        failures.append("[\(index)] \(error)")
+                    }
+                }
+                guard failures.isEmpty else {
+                    throw KassError("\(failures.count) row(s) failed '\(description)': \(failures.joined(separator: "; "))")
+                }
+            }
+        } catch {
+            let message = "KassiOS: \(self.description) — assertEach('\(description)') failed: \(error)"
             config.logger.log("❌ \(message)")
             XCTFail(message, file: file, line: line)
         }
