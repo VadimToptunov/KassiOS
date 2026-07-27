@@ -215,7 +215,8 @@ open class KassTestCase: XCTestCase {
     /// Like ``onScreen(_:file:line:_:)`` but with a one-off `timeout` for the
     /// whole scope — for a slow screen (web view, network) without repeating
     /// `.within(timeout:)` on every element. The screen (and every element it
-    /// builds) inherits the overridden budget.
+    /// builds) inherits a copy of `config` with only `timeout` overridden — all
+    /// other config fields (policy, reporter, …) carry over unchanged.
     @discardableResult
     @MainActor
     public func onScreen<S: KassScreen>(

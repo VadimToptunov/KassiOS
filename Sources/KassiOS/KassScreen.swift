@@ -74,8 +74,10 @@ open class KassScreen {
             config: config,
             expectedIdentifier: id
         ) { [app] in
+            // Strict `identifier ==` (not `.matching(identifier:)`, which falls
+            // back to label) so a decoy whose *label* equals `id` can't win.
             app.descendants(matching: type)
-                .matching(identifier: id)
+                .matching(Self.identifierPredicate(id))
                 .matching(NSPredicate(format: "label == %@", label))
                 .firstMatch
         }
@@ -143,8 +145,15 @@ open class KassScreen {
     /// carries `id` as its identifier. Shared by `KassScreen.element`/
     /// `element(_:)` and `KassElement.descendant`.
     static func idFirstMatch(_ query: XCUIElementQuery, id: String) -> XCUIElement {
-        let byId = query.matching(NSPredicate(format: "identifier == %@", id)).firstMatch
+        let byId = query.matching(identifierPredicate(id)).firstMatch
         return byId.exists ? byId : query[id].firstMatch
+    }
+
+    /// A strict accessibility-identifier predicate — no label fallback, unlike
+    /// `[id]` and `.matching(identifier:)`, which match an element's label when
+    /// its identifier is empty. The single source of truth for "really by id".
+    static func identifierPredicate(_ id: String) -> NSPredicate {
+        NSPredicate(format: "identifier == %@", id)
     }
 
     static func typeName(_ type: XCUIElement.ElementType) -> String {
