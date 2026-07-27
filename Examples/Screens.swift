@@ -3,18 +3,18 @@
 import KassiOS
 
 final class LoginScreen: KassScreen {
-    lazy var email = textField("login_email")
-    lazy var password = secureTextField("login_password")
-    lazy var loginButton = button("login_submit")
-    lazy var errorLabel = staticText("login_error")
+    lazy var email = textField("login.email")
+    lazy var password = secureTextField("login.password")
+    lazy var loginButton = button("login.submit")
+    lazy var errorLabel = staticText("login.error")
 
     // The screen is "loaded" once these are on screen.
     override var onLoad: [KassElement] { [email, loginButton] }
 }
 
 final class HomeScreen: KassScreen {
-    lazy var welcome = staticText("home_welcome")
-    lazy var profileTab = button("tab_profile")
+    lazy var welcome = staticText("home.welcome")
+    lazy var profileTab = button("home.profileTab")
 
     override var onLoad: [KassElement] { [welcome] }
 }

@@ -44,6 +44,7 @@ For a full prose walkthrough see the
 - <doc:CIRecipe>
 - <doc:TypedNavigation>
 - <doc:StaticLinting>
+- <doc:AccessibilityIdentifiers>
 
 ### Writing tests
 
