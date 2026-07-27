@@ -138,6 +138,9 @@ public struct KassElementCollection {
     /// Fails if two elements share the same key (default: the element's
     /// label). Catches duplicated rows — e.g. a pagination bug that repeats a
     /// page and renders the same row twice.
+    ///
+    /// Evaluated against the **live** query, one read per row — let the list
+    /// settle before calling; a list still mutating mid-check can shift indices.
     @discardableResult
     public func assertNoDuplicates(
         by key: @escaping @MainActor (KassElement) -> String = { $0.readLabel() },
@@ -181,6 +184,9 @@ public struct KassElementCollection {
     /// failures instead of stopping at the first — for "no row should violate
     /// this rule" checks (e.g. every row must be money-in; a leaked category
     /// shows up as one failing index instead of silently passing).
+    ///
+    /// Evaluated against the **live** query — let the list settle first; a
+    /// mutating list mid-check can shift indices between reads.
     @discardableResult
     public func assertEach(
         _ description: String,

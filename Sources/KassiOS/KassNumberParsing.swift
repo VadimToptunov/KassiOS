@@ -12,6 +12,11 @@ enum KassNumberParsing {
     /// its digits, a leading minus sign, and one decimal separator (the last
     /// `.`/`,` found — earlier ones are assumed to be grouping) before handing
     /// the result to `Double.init`.
+    ///
+    /// Best-effort: the fallback's separator heuristic (a separator with exactly
+    /// three trailing digits is treated as grouping, otherwise as a decimal
+    /// point) is locale-dependent and can't disambiguate every string. For money
+    /// assertions, prefer a value the app formats under the test's actual locale.
     static func parse(_ text: String, locale: Locale = .current) -> Double? {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return nil }
@@ -32,7 +37,15 @@ enum KassNumberParsing {
     /// `.`/`,` in the string to the decimal point, dropping everything else
     /// (currency symbols, whitespace, and any earlier grouping separators).
     private static func parseByStripping(_ text: String) -> Double? {
-        let decimalIndex = text.indices.last { text[$0] == "." || text[$0] == "," }
+        var decimalIndex = text.indices.last { text[$0] == "." || text[$0] == "," }
+
+        // A separator followed by exactly three digits (e.g. `1,234`) is a
+        // thousands group, not a decimal point — treat the value as a whole
+        // number so a bare grouped integer doesn't become a ~1000× fraction.
+        if let index = decimalIndex {
+            let fractionDigits = text[text.index(after: index)...].prefix { $0.isNumber }
+            if fractionDigits.count == 3 { decimalIndex = nil }
+        }
 
         var cleaned = ""
         for index in text.indices {

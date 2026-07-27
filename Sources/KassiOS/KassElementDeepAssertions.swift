@@ -46,12 +46,16 @@ public extension KassElement {
         let deadline = Date().addingTimeInterval(seconds)
         var sighted = false
         repeat {
-            config.synchronizer.waitForIdle(timeout: pollInterval)
+            // Cap each sleep at what's left of the budget so a `pollInterval`
+            // larger than `within` can't overshoot the documented window.
+            config.synchronizer.waitForIdle(timeout: min(pollInterval, max(0, deadline.timeIntervalSinceNow)))
             if resolve().exists {
                 sighted = true
                 break
             }
-            RunLoop.current.run(until: Date().addingTimeInterval(pollInterval))
+            let remaining = deadline.timeIntervalSinceNow
+            if remaining <= 0 { break }
+            RunLoop.current.run(until: Date().addingTimeInterval(min(pollInterval, remaining)))
         } while Date() < deadline
 
         do {
