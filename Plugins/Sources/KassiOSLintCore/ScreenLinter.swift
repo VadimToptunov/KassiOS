@@ -9,14 +9,17 @@ import SwiftParser
 /// test method drowning in inline interactions.
 ///
 /// Base classes are traced across the linted file set: a class counts as a
-/// `KassScreen` (or `KassTestCase`/`KassRobot`) subclass if it inherits the
-/// root type directly, or inherits any other class already known to be one —
-/// computed as a fixpoint over every class declared in the files passed to
-/// ``lint(sources:)``, so it resolves any number of hierarchy levels. That
-/// means `final class HomeScreen: CBScreen` is recognized even when
-/// `CBScreen: KassScreen` lives in a different file. Call ``lint(sources:)``
-/// with every linted file at once to get cross-file resolution;
-/// ``lint(source:filePath:)`` only sees same-file bases.
+/// `KassScreen` (or `KassTestCase`/`KassRobot`) subclass if its own
+/// superclass — Swift requires it, if any, to be the *first* entry in the
+/// inheritance clause, so protocol conformances listed after it are ignored —
+/// is the root type directly, or is any other class already known to be one.
+/// This is computed as a fixpoint over every class declared in the files
+/// passed to ``lint(sources:)``, so it resolves any number of hierarchy
+/// levels. That means `final class HomeScreen: CBScreen` is recognized even
+/// when `CBScreen: KassScreen` lives in a different file. Call
+/// ``lint(sources:)`` with every linted file at once to get cross-file
+/// resolution; ``lint(source:filePath:)`` resolves bases within that one file
+/// only.
 public func lint(source: String, filePath: String) -> [Diagnostic] {
     lint(sources: [(source: source, filePath: filePath)])
 }
@@ -36,20 +39,34 @@ public func lint(sources: [(source: String, filePath: String)]) -> [Diagnostic] 
         return ParsedFile(filePath: entry.filePath, tree: tree, converter: SourceLocationConverter(fileName: entry.filePath, tree: tree))
     }
 
-    // className -> the type names it lists in its own inheritance clause, and
-    // className -> its own declaration node — merged across every file (a
+    // className -> its *candidate* superclass name (the first entry in its
+    // inheritance clause, unresolved), className -> its own declaration node,
+    // and every protocol name declared anywhere — merged across every file (a
     // same-named class split across files is an edge case we don't need to
     // guard against here; first declaration wins).
-    var inheritance: [String: [String]] = [:]
+    var superclassCandidates: [String: String] = [:]
     var classNodesByName: [String: ClassDeclSyntax] = [:]
+    var protocolNames: Set<String> = []
     for file in files {
         let collector = InheritanceCollector()
         collector.walk(file.tree)
-        for (className, bases) in collector.inheritance {
-            inheritance[className, default: []].append(contentsOf: bases)
+        for (className, candidate) in collector.superclassCandidates where superclassCandidates[className] == nil {
+            superclassCandidates[className] = candidate
         }
         for (className, node) in collector.classNodes where classNodesByName[className] == nil {
             classNodesByName[className] = node
+        }
+        protocolNames.formUnion(collector.protocolNames)
+    }
+
+    // Resolve each class's candidate into an actual superclass name now that
+    // every protocol declared in the linted set is known (a candidate that's
+    // really a locally-declared protocol — shadowing a well-known root's
+    // literal name — isn't a superclass at all; see `resolveSuperclass`).
+    var inheritance: [String: [String]] = [:]
+    for (className, candidate) in superclassCandidates {
+        if let resolved = resolveSuperclass(candidate, protocolNames: protocolNames) {
+            inheritance[className] = [resolved]
         }
     }
 
@@ -67,6 +84,7 @@ public func lint(sources: [(source: String, filePath: String)]) -> [Diagnostic] 
             testCaseBaseNames: testCaseBaseNames,
             robotBaseNames: robotBaseNames,
             classNodesByName: classNodesByName,
+            protocolNames: protocolNames,
             ignoredLines: ignoredLines
         )
         visitor.walk(file.tree)
@@ -75,24 +93,49 @@ public func lint(sources: [(source: String, filePath: String)]) -> [Diagnostic] 
     return diagnostics
 }
 
-/// Records, for every class declared in a file, the type names in its own
-/// inheritance clause (unresolved — just the literal text) and the
-/// declaration node itself. Feeds ``transitiveSubclasses(of:inheritance:)``
-/// and the KAS001 onLoad chain-walk.
+/// Records, for every class declared in a file, its *candidate* superclass
+/// name (the first entry in its inheritance clause, unresolved — Swift
+/// requires an actual superclass, if any, to be listed first; everything
+/// after it is protocol conformance) and the declaration node itself. Also
+/// records every protocol name declared in the file. Feeds
+/// ``resolveSuperclass(_:protocolNames:)``,
+/// ``transitiveSubclasses(of:inheritance:)``, and the KAS001 onLoad
+/// chain-walk.
 private final class InheritanceCollector: SyntaxVisitor {
-    private(set) var inheritance: [String: [String]] = [:]
+    private(set) var superclassCandidates: [String: String] = [:]
     private(set) var classNodes: [String: ClassDeclSyntax] = [:]
+    private(set) var protocolNames: Set<String> = []
 
     init() {
         super.init(viewMode: .sourceAccurate)
     }
 
     override func visit(_ node: ClassDeclSyntax) -> SyntaxVisitorContinueKind {
-        let bases = (node.inheritanceClause?.inheritedTypes).map { $0.map { $0.type.trimmedDescription } } ?? []
-        inheritance[node.name.text, default: []].append(contentsOf: bases)
+        if let candidate = node.inheritanceClause?.inheritedTypes.first?.type.trimmedDescription {
+            superclassCandidates[node.name.text] = candidate
+        }
         if classNodes[node.name.text] == nil { classNodes[node.name.text] = node }
         return .visitChildren
     }
+
+    override func visit(_ node: ProtocolDeclSyntax) -> SyntaxVisitorContinueKind {
+        protocolNames.insert(node.name.text)
+        return .visitChildren
+    }
+}
+
+/// The class's actual superclass name, if any. `candidate` is the first entry
+/// in the inheritance clause — Swift requires the superclass, when one is
+/// declared, to be listed first — but a class with no superclass at all can
+/// also have a *protocol* as its first (and only) entry, syntactically
+/// indistinguishable from a superclass reference. Cross-checking `candidate`
+/// against every protocol name declared in the linted file set catches the
+/// case where that name shadows a well-known root (e.g. a local
+/// `protocol KassRobot {}`): such a candidate is a conformance, not a base
+/// class, so it resolves to `nil`.
+func resolveSuperclass(_ candidate: String?, protocolNames: Set<String>) -> String? {
+    guard let candidate, !protocolNames.contains(candidate) else { return nil }
+    return candidate
 }
 
 /// Fixpoint closure over `inheritance`: every class name that transitively

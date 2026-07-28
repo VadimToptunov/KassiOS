@@ -33,6 +33,7 @@ final class ScreenVisitor: SyntaxVisitor {
     private let testCaseBaseNames: Set<String>
     private let robotBaseNames: Set<String>
     private let classNodesByName: [String: ClassDeclSyntax]
+    private let protocolNames: Set<String>
     private let ignoredLines: Set<Int>
     private(set) var diagnostics: [Diagnostic] = []
 
@@ -62,6 +63,7 @@ final class ScreenVisitor: SyntaxVisitor {
         testCaseBaseNames: Set<String>,
         robotBaseNames: Set<String>,
         classNodesByName: [String: ClassDeclSyntax],
+        protocolNames: Set<String>,
         ignoredLines: Set<Int>
     ) {
         self.filePath = filePath
@@ -70,15 +72,23 @@ final class ScreenVisitor: SyntaxVisitor {
         self.testCaseBaseNames = testCaseBaseNames
         self.robotBaseNames = robotBaseNames
         self.classNodesByName = classNodesByName
+        self.protocolNames = protocolNames
         self.ignoredLines = ignoredLines
         super.init(viewMode: .sourceAccurate)
     }
 
     override func visit(_ node: ClassDeclSyntax) -> SyntaxVisitorContinueKind {
-        let inherited = Set((node.inheritanceClause?.inheritedTypes).map { $0.map { $0.type.trimmedDescription } } ?? [])
-        let isScreen = !inherited.isDisjoint(with: screenBaseNames)
-        let isRobot = !inherited.isDisjoint(with: robotBaseNames)
-        let isTestCase = !inherited.isDisjoint(with: testCaseBaseNames)
+        // Only the class's own *superclass* (the inheritance clause's first
+        // entry, resolved against locally-declared protocols) counts — a
+        // protocol conformance listed after it, even one that happens to
+        // share a well-known root's literal name, never does.
+        let superclassName = resolveSuperclass(
+            node.inheritanceClause?.inheritedTypes.first?.type.trimmedDescription,
+            protocolNames: protocolNames
+        )
+        let isScreen = superclassName.map(screenBaseNames.contains) ?? false
+        let isRobot = superclassName.map(robotBaseNames.contains) ?? false
+        let isTestCase = superclassName.map(testCaseBaseNames.contains) ?? false
         classStack.append(ClassContext(isScreen: isScreen, isTestCase: isTestCase, isRobot: isRobot))
         if isScreen {
             checkOnLoad(node)
@@ -101,12 +111,19 @@ final class ScreenVisitor: SyntaxVisitor {
 
     override func visitPost(_ node: FunctionDeclSyntax) {
         let context = functionStack.removeLast()
-        guard context.countsTowardKas003, context.interactionCount >= kas003InteractionThreshold else { return }
-        report(
-            node.name, rule: .kas003,
-            message: "test method '\(node.name.text)' has \(context.interactionCount) inline interactions — "
-                + "extract a reusable flow into a KassRobot (KAS003)"
-        )
+        if context.countsTowardKas003, context.interactionCount >= kas003InteractionThreshold {
+            report(
+                node.name, rule: .kas003,
+                message: "test method '\(node.name.text)' has \(context.interactionCount) inline interactions — "
+                    + "extract a reusable flow into a KassRobot (KAS003)"
+            )
+        } else if !functionStack.isEmpty {
+            // Doesn't itself qualify (or didn't reach the threshold) — a
+            // nested `func helper() { … }` declared inside a test method is
+            // still part of that test's body, so its tally bubbles up to the
+            // enclosing function rather than being silently dropped.
+            functionStack[functionStack.count - 1].interactionCount += context.interactionCount
+        }
     }
 
     override func visit(_ node: FunctionCallExprSyntax) -> SyntaxVisitorContinueKind {
@@ -147,7 +164,10 @@ final class ScreenVisitor: SyntaxVisitor {
                 }
                 return arrayLiteral.elements.isEmpty
             }
-            guard let superclassName = current.inheritanceClause?.inheritedTypes.first?.type.trimmedDescription,
+            guard let superclassName = resolveSuperclass(
+                    current.inheritanceClause?.inheritedTypes.first?.type.trimmedDescription,
+                    protocolNames: protocolNames
+                  ),
                   let next = classNodesByName[superclassName] else {
                 return true // no onLoad anywhere in the resolvable chain
             }
