@@ -1,4 +1,4 @@
-/// One finding reported by ``lint(source:filePath:)``.
+/// One finding reported by ``lint(source:filePath:)`` / ``lint(sources:)``.
 public struct Diagnostic: Codable, Equatable, Sendable {
 
     /// The rule that fired.
@@ -7,6 +7,9 @@ public struct Diagnostic: Codable, Equatable, Sendable {
         case kas001 = "KAS001"
         /// An element-builder call whose identifier isn't a static string literal.
         case kas002 = "KAS002"
+        /// A `KassTestCase` test method with a pile of inline interactions
+        /// (tap/type/swipe/…) that should be extracted into a `KassRobot`.
+        case kas003 = "KAS003"
     }
 
     /// How strictly the CLI should treat this finding.

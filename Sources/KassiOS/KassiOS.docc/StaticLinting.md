@@ -10,18 +10,68 @@ is the compile-time twin. It parses your screen-object *source* with SwiftSyntax
 and reports the same class of problems statically, across **every** screen —
 even ones no test has exercised yet.
 
-Two rules ship today:
+Three rules ship today:
 
-- **KAS001 — empty `onLoad`.** A ``KassScreen`` subclass that never declares a
-  non-empty ``KassScreen/onLoad``. That's the "I have arrived" condition
-  `onScreen` and `navigate(to:)` wait on; without it, navigation can't verify a
-  screen actually loaded. This is the static twin of the empty-`onLoad` warning
-  `navigate(to:)` logs at runtime — but it fires for screens you haven't run.
+- **KAS001 — empty `onLoad`.** A ``KassScreen`` subclass whose *resolved*
+  `onLoad` — its own override, or (absent one) the nearest ancestor's, walking
+  up the traced base-class chain — is empty or missing. That's the "I have
+  arrived" condition `onScreen` and `navigate(to:)` wait on; without it,
+  navigation can't verify a screen actually loaded. This is the static twin of
+  the empty-`onLoad` warning `navigate(to:)` logs at runtime — but it fires for
+  screens you haven't run.
 - **KAS002 — dynamic identifier.** An element builder (`button`, `staticText`,
   `element(_:type:)`, the scoped `descendant`, …) whose identifier argument
   isn't a static string literal (an interpolation like `"row_\(i)"`, or a
   variable). Such an identifier can't be audited or enforced without running the
-  test, so the linter surfaces it up front.
+  test, so the linter surfaces it up front. A reviewed, deliberately dynamic
+  case can suppress the finding with a trailing `// kassios:ignore-id` comment
+  on the flagged call's own line — see "Suppressing a finding" below.
+- **KAS003 — interactions outside a Robot.** A ``KassTestCase`` subclass's test
+  method with 5 or more inline element interactions (`tap`, `typeText`,
+  `swipeUp`, …) — a soft nudge to extract a reusable flow into a ``KassRobot``
+  instead of inlining a long, hard-to-reuse script. It never fires inside a
+  `KassRobot` subclass's own methods, since that's exactly where those
+  interactions belong.
+
+## Base classes are traced
+
+A class counts as a `KassScreen` (or `KassTestCase`/`KassRobot`) subclass if it
+inherits the root type directly, or inherits *any other class already known to
+be one* — resolved as a fixpoint over every class declared in the files you
+lint together, so any number of hierarchy levels resolves. That means
+
+```swift
+// CBScreen.swift
+class CBScreen: KassScreen {
+    override var onLoad: [KassElement] { [staticText("logo")] }
+}
+
+// HomeScreen.swift
+final class HomeScreen: CBScreen {
+    var balance: KassElement { staticText("balance") }
+}
+```
+
+is recognized even though `HomeScreen` never mentions `KassScreen` directly,
+*and* even though the two classes live in different files — as long as both
+files are passed to the linter together (the CLI already does this; see
+"Cross-file resolution" below).
+
+## Suppressing a finding
+
+A `// kassios:ignore-id` comment on the same line as a flagged KAS002 call
+suppresses that one finding — for a reviewed, deliberately dynamic identifier
+you don't want the linter re-flagging on every run:
+
+```swift
+func row(_ id: String) -> KassElement { cell(id) } // kassios:ignore-id
+```
+
+The check is trivia-based (a real comment, not raw text), so the same phrase
+sitting inside a string-literal argument on that line does **not** suppress
+anything — only an actual `//` or `///` comment counts. Because the match is
+line-based, keep at most one flagged builder call per line, or they'll share
+the same suppression.
 
 ## Why it's a separate package
 
@@ -54,10 +104,20 @@ It's also registered as an SPM command plugin:
 swift package kassios-lint
 ```
 
+## Cross-file resolution
+
+The CLI (`main.swift`) collects every `.swift` file under the paths you pass
+and lints them together with the batch entry point,
+`lint(sources:)`, so a base class declared in one file is resolved for
+subclasses declared in any other. If you call the library directly, prefer
+`lint(sources:)` over the single-file `lint(source:filePath:)` for the same
+reason — the single-file entry point only sees same-file bases (it exists
+mainly for isolated unit testing).
+
 ## The MVP boundary
 
-To keep false positives at zero, KAS001/KAS002 only recognize a class whose own
-inheritance clause literally lists `KassScreen`; a subclass of a subclass in
-another file isn't traced. Likewise a branchy `onLoad` (an `if/else` that
-returns different arrays) is treated as clean rather than guessed at. The tool is
-a fast, high-signal guardrail — not a type checker.
+To keep false positives at zero, a branchy `onLoad` (an `if/else` that returns
+different arrays) is treated as clean rather than guessed at, and KAS003's
+threshold is deliberately conservative (5+ interactions) so a simple,
+`onScreen`-only test never trips it. The tool is a fast, high-signal
+guardrail — not a type checker.

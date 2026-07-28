@@ -1,183 +1,148 @@
 import SwiftSyntax
 import SwiftParser
 
-/// Statically twins the runtime accessibility-identifier audit: parses a Swift
-/// source file and flags `KassScreen` subclasses that skip the guardrails the
+/// Statically twins the runtime accessibility-identifier audit: parses Swift
+/// source and flags `KassScreen` subclasses that skip the guardrails the
 /// runtime can only catch on a live app (an unverifiable `onLoad`, or an
-/// element identifier that can't be seen without running the test).
+/// element identifier that can't be seen without running the test), plus a
+/// soft nudge (KAS003) toward extracting a reusable `KassRobot` out of a
+/// test method drowning in inline interactions.
 ///
-/// Limitation (MVP): only classes whose own inheritance clause literally lists
-/// `KassScreen` are recognized — a subclass of a subclass in another file
-/// (cross-file base classes) isn't resolved. That keeps false positives at
-/// zero at the cost of missing some deeper hierarchies.
+/// Base classes are traced across the linted file set: a class counts as a
+/// `KassScreen` (or `KassTestCase`/`KassRobot`) subclass if it inherits the
+/// root type directly, or inherits any other class already known to be one —
+/// computed as a fixpoint over every class declared in the files passed to
+/// ``lint(sources:)``, so it resolves any number of hierarchy levels. That
+/// means `final class HomeScreen: CBScreen` is recognized even when
+/// `CBScreen: KassScreen` lives in a different file. Call ``lint(sources:)``
+/// with every linted file at once to get cross-file resolution;
+/// ``lint(source:filePath:)`` only sees same-file bases.
 public func lint(source: String, filePath: String) -> [Diagnostic] {
-    let tree = Parser.parse(source: source)
-    let converter = SourceLocationConverter(fileName: filePath, tree: tree)
-    let visitor = ScreenVisitor(filePath: filePath, converter: converter)
-    visitor.walk(tree)
-    return visitor.diagnostics
+    lint(sources: [(source: source, filePath: filePath)])
 }
 
-/// The builder methods audited by KAS002, and which positional argument holds
-/// the identifier. `descendant` takes the element type first, so its
-/// identifier is the *second* argument; every other builder takes the
-/// identifier first.
-private let identifierArgumentIndex: [String: Int] = [
-    "button": 0, "staticText": 0, "textField": 0, "secureTextField": 0,
-    "image": 0, "cell": 0, "switchControl": 0, "link": 0, "other": 0,
-    "element": 0, "descendant": 1
-]
+/// Batch entry point: lints every file in `sources` together so base classes
+/// declared in one file are resolved for subclasses declared in another. See
+/// the type-level doc above for the resolution algorithm.
+public func lint(sources: [(source: String, filePath: String)]) -> [Diagnostic] {
+    struct ParsedFile {
+        let filePath: String
+        let tree: SourceFileSyntax
+        let converter: SourceLocationConverter
+    }
 
-final class ScreenVisitor: SyntaxVisitor {
-    private let filePath: String
-    private let converter: SourceLocationConverter
-    private(set) var diagnostics: [Diagnostic] = []
+    let files = sources.map { entry -> ParsedFile in
+        let tree = Parser.parse(source: entry.source)
+        return ParsedFile(filePath: entry.filePath, tree: tree, converter: SourceLocationConverter(fileName: entry.filePath, tree: tree))
+    }
 
-    /// Whether each enclosing class (innermost last) is a recognized
-    /// `KassScreen` subclass — element-builder calls only fire inside one.
-    private var screenStack: [Bool] = []
+    // className -> the type names it lists in its own inheritance clause, and
+    // className -> its own declaration node — merged across every file (a
+    // same-named class split across files is an edge case we don't need to
+    // guard against here; first declaration wins).
+    var inheritance: [String: [String]] = [:]
+    var classNodesByName: [String: ClassDeclSyntax] = [:]
+    for file in files {
+        let collector = InheritanceCollector()
+        collector.walk(file.tree)
+        for (className, bases) in collector.inheritance {
+            inheritance[className, default: []].append(contentsOf: bases)
+        }
+        for (className, node) in collector.classNodes where classNodesByName[className] == nil {
+            classNodesByName[className] = node
+        }
+    }
 
-    init(filePath: String, converter: SourceLocationConverter) {
-        self.filePath = filePath
-        self.converter = converter
+    let screenBaseNames = transitiveSubclasses(of: "KassScreen", inheritance: inheritance).union(["KassScreen"])
+    let testCaseBaseNames = transitiveSubclasses(of: "KassTestCase", inheritance: inheritance).union(["KassTestCase"])
+    let robotBaseNames = transitiveSubclasses(of: "KassRobot", inheritance: inheritance).union(["KassRobot"])
+
+    var diagnostics: [Diagnostic] = []
+    for file in files {
+        let ignoredLines = ignoreIdCommentLines(in: file.tree, converter: file.converter)
+        let visitor = ScreenVisitor(
+            filePath: file.filePath,
+            converter: file.converter,
+            screenBaseNames: screenBaseNames,
+            testCaseBaseNames: testCaseBaseNames,
+            robotBaseNames: robotBaseNames,
+            classNodesByName: classNodesByName,
+            ignoredLines: ignoredLines
+        )
+        visitor.walk(file.tree)
+        diagnostics.append(contentsOf: visitor.diagnostics)
+    }
+    return diagnostics
+}
+
+/// Records, for every class declared in a file, the type names in its own
+/// inheritance clause (unresolved — just the literal text) and the
+/// declaration node itself. Feeds ``transitiveSubclasses(of:inheritance:)``
+/// and the KAS001 onLoad chain-walk.
+private final class InheritanceCollector: SyntaxVisitor {
+    private(set) var inheritance: [String: [String]] = [:]
+    private(set) var classNodes: [String: ClassDeclSyntax] = [:]
+
+    init() {
         super.init(viewMode: .sourceAccurate)
     }
 
     override func visit(_ node: ClassDeclSyntax) -> SyntaxVisitorContinueKind {
-        let isScreen = inheritsKassScreen(node)
-        screenStack.append(isScreen)
-        if isScreen {
-            checkOnLoad(node)
-        }
+        let bases = (node.inheritanceClause?.inheritedTypes).map { $0.map { $0.type.trimmedDescription } } ?? []
+        inheritance[node.name.text, default: []].append(contentsOf: bases)
+        if classNodes[node.name.text] == nil { classNodes[node.name.text] = node }
         return .visitChildren
     }
+}
 
-    override func visitPost(_ node: ClassDeclSyntax) {
-        screenStack.removeLast()
-    }
-
-    override func visit(_ node: FunctionCallExprSyntax) -> SyntaxVisitorContinueKind {
-        if screenStack.last == true {
-            checkBuilderCall(node)
-        }
-        return .visitChildren
-    }
-
-    // MARK: - KAS001
-
-    private func inheritsKassScreen(_ node: ClassDeclSyntax) -> Bool {
-        guard let inheritedTypes = node.inheritanceClause?.inheritedTypes else { return false }
-        return inheritedTypes.contains { $0.type.trimmedDescription == "KassScreen" }
-    }
-
-    private func checkOnLoad(_ node: ClassDeclSyntax) {
-        guard let onLoad = onLoadBinding(in: node) else {
-            report(node.name, rule: .kas001, message: kas001Message(className: node.name.text))
-            return
-        }
-        guard let arrayLiteral = returnedArrayLiteral(in: onLoad) else {
-            // No directly-visible array literal (e.g. branches, a helper call) —
-            // lenient: assume it's a computed body that supplies elements.
-            return
-        }
-        guard !arrayLiteral.elements.isEmpty else {
-            report(node.name, rule: .kas001, message: kas001Message(className: node.name.text))
-            return
-        }
-    }
-
-    private func kas001Message(className: String) -> String {
-        "KassScreen '\(className)' has no non-empty onLoad; navigate(to:) can't verify arrival — "
-            + "declare the elements that prove this screen loaded (KAS001)"
-    }
-
-    /// Finds this class's own `onLoad` property binding, if it declares one.
-    private func onLoadBinding(in node: ClassDeclSyntax) -> PatternBindingSyntax? {
-        for member in node.memberBlock.members {
-            guard let variable = member.decl.as(VariableDeclSyntax.self) else { continue }
-            for binding in variable.bindings {
-                guard let pattern = binding.pattern.as(IdentifierPatternSyntax.self),
-                      pattern.identifier.text == "onLoad" else { continue }
-                return binding
+/// Fixpoint closure over `inheritance`: every class name that transitively
+/// inherits from `root` — directly, or via any number of intermediate bases
+/// also declared among the linted files. Runs to a stable point rather than a
+/// fixed depth, so any hierarchy depth resolves.
+private func transitiveSubclasses(of root: String, inheritance: [String: [String]]) -> Set<String> {
+    var known = Set<String>()
+    var changed = true
+    while changed {
+        changed = false
+        for (className, bases) in inheritance where !known.contains(className) {
+            if bases.contains(root) || bases.contains(where: known.contains) {
+                known.insert(className)
+                changed = true
             }
         }
-        return nil
     }
+    return known
+}
 
-    /// The array literal this property's accessor directly returns, if any —
-    /// either an implicit single-expression body (`{ [a, b] }`) or an explicit
-    /// `return [a, b]`. Nested control flow isn't traced (see type doc).
-    private func returnedArrayLiteral(in binding: PatternBindingSyntax) -> ArrayExprSyntax? {
-        guard let accessorBlock = binding.accessorBlock else { return nil }
-        let statements: CodeBlockItemListSyntax
-        switch accessorBlock.accessors {
-        case .getter(let items):
-            statements = items
-        case .accessors(let accessorDecls):
-            guard let getter = accessorDecls.first(where: { $0.accessorSpecifier.tokenKind == .keyword(.get) }),
-                  let body = getter.body else { return nil }
-            statements = body.statements
-        }
-
-        var found: ArrayExprSyntax?
-        for item in statements {
-            switch item.item {
-            case .expr(let expr):
-                if let array = expr.as(ArrayExprSyntax.self) { found = array }
-            case .stmt(let stmt):
-                if let returnStmt = stmt.as(ReturnStmtSyntax.self), let array = returnStmt.expression?.as(ArrayExprSyntax.self) {
-                    found = array
-                }
-            case .decl:
-                continue
+/// The set of source lines carrying a real `// kassios:ignore-id` (or `///`)
+/// comment, found by walking every token's trivia once — so a marker sitting
+/// inside a string-literal argument never counts, only an actual comment.
+private func ignoreIdCommentLines(in tree: SourceFileSyntax, converter: SourceLocationConverter) -> Set<Int> {
+    var lines: Set<Int> = []
+    for token in tree.tokens(viewMode: .sourceAccurate) {
+        var position = token.position
+        for piece in token.leadingTrivia {
+            if isIgnoreIdComment(piece) {
+                lines.insert(converter.location(for: position).line)
             }
+            position += piece.sourceLength
         }
-        return found
-    }
-
-    // MARK: - KAS002
-
-    private func checkBuilderCall(_ node: FunctionCallExprSyntax) {
-        guard let callee = builderCallee(node), let index = identifierArgumentIndex[callee.name] else { return }
-        // `descendant` is a scoped child on any `KassElement`; every other
-        // builder is one of `KassScreen`'s own, so only an unqualified call or
-        // one on `self` is ours — not a same-named method on another type
-        // (e.g. `cells().element(at:)` or `alert.button(title)`).
-        guard callee.name == "descendant" || callee.onSelf else { return }
-        let arguments = Array(node.arguments)
-        guard index < arguments.count else { return }
-        let argument = arguments[index]
-        // The identifier builders take the id as an *unlabeled* argument; a
-        // labelled argument at that position is a different API (`element(at:)`).
-        guard argument.label == nil else { return }
-        guard argument.expression.as(StringLiteralExprSyntax.self) == nil else { return }
-        report(
-            argument.expression, rule: .kas002,
-            message: "element identifier is not a string literal (a bare variable or call); it can't be "
-                + "statically audited or enforced — an interpolated literal is fine (KAS002)"
-        )
-    }
-
-    /// The bare method name of a call and whether it targets `self` — either an
-    /// unqualified call (`button("id")`) or an explicit `self.button("id")`.
-    private func builderCallee(_ node: FunctionCallExprSyntax) -> (name: String, onSelf: Bool)? {
-        if let identifier = node.calledExpression.as(DeclReferenceExprSyntax.self) {
-            return (identifier.baseName.text, true)
+        position = token.endPositionBeforeTrailingTrivia
+        for piece in token.trailingTrivia {
+            if isIgnoreIdComment(piece) {
+                lines.insert(converter.location(for: position).line)
+            }
+            position += piece.sourceLength
         }
-        if let member = node.calledExpression.as(MemberAccessExprSyntax.self) {
-            let onSelf = member.base?.as(DeclReferenceExprSyntax.self)?.baseName.tokenKind == .keyword(.self)
-            return (member.declName.baseName.text, onSelf)
-        }
-        return nil
     }
+    return lines
+}
 
-    // MARK: - Reporting
-
-    private func report(_ node: some SyntaxProtocol, rule: Diagnostic.Rule, message: String) {
-        let location = converter.location(for: node.positionAfterSkippingLeadingTrivia)
-        diagnostics.append(Diagnostic(
-            file: filePath, line: location.line, column: location.column,
-            rule: rule, severity: .warning, message: message
-        ))
+private func isIgnoreIdComment(_ piece: TriviaPiece) -> Bool {
+    switch piece {
+    case .lineComment(let text), .docLineComment(let text):
+        return text.contains("kassios:ignore-id")
+    default:
+        return false
     }
 }

@@ -29,13 +29,17 @@ func swiftFiles(under path: String) -> [String] {
     return files
 }
 
-var diagnostics: [Diagnostic] = []
+// Collected once across every path and passed to the batch API in a single
+// call, so a base class declared in one file (e.g. a shared `CBScreen:
+// KassScreen`) is resolved for subclasses declared in any other.
+var sources: [(source: String, filePath: String)] = []
 for path in paths {
     for file in swiftFiles(under: path) {
         guard let source = try? String(contentsOfFile: file, encoding: .utf8) else { continue }
-        diagnostics.append(contentsOf: lint(source: source, filePath: file))
+        sources.append((source: source, filePath: file))
     }
 }
+let diagnostics = lint(sources: sources)
 
 for diagnostic in diagnostics.sorted(by: { $0.file == $1.file ? $0.line < $1.line : $0.file < $1.file }) {
     print("\(diagnostic.file):\(diagnostic.line):\(diagnostic.column): \(diagnostic.severity.rawValue): "
