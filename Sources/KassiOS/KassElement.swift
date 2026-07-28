@@ -511,10 +511,11 @@ public extension KassElement {
             config.reporter?.stepFinished(status: .passed, message: nil)
         } catch {
             config.reporter?.stepFinished(status: .failed, message: "\(error)")
-            let message = "KassiOS: \(description) — scrollTo failed: \(error)"
+            let failed = resolve()   // one snapshot shared by both diagnostics
+            let message = "KassiOS: \(description) — scrollTo failed: \(error)" + similarIdentifierSuggestion(for: failed)
             config.logger.log("❌ \(message)")
             attachDiagnostic(makeDiagnostic(
-                action: "scrollTo(\(direction))", kind: .scroll, error: error, file: file, line: line, element: resolve()
+                action: "scrollTo(\(direction))", kind: .scroll, error: error, file: file, line: line, element: failed
             ))
             XCTFail(message, file: file, line: line)
         }
@@ -568,10 +569,11 @@ public extension KassElement {
             config.reporter?.stepFinished(status: .passed, message: nil)
         } catch {
             config.reporter?.stepFinished(status: .failed, message: "\(error)")
-            let message = "KassiOS: \(description) — softScrollTo failed: \(error)"
+            let failed = resolve()   // one snapshot shared by both diagnostics
+            let message = "KassiOS: \(description) — softScrollTo failed: \(error)" + similarIdentifierSuggestion(for: failed)
             config.logger.log("❌ \(message)")
             attachDiagnostic(makeDiagnostic(
-                action: "softScrollTo(\(direction))", kind: .scroll, error: error, file: file, line: line, element: resolve()
+                action: "softScrollTo(\(direction))", kind: .scroll, error: error, file: file, line: line, element: failed
             ))
             XCTFail(message, file: file, line: line)
         }
@@ -614,7 +616,8 @@ public extension KassElement {
             config.reporter?.stepFinished(status: .passed, message: nil)
         } catch {
             let failed = resolve()   // one snapshot shared by both diagnostics
-            let message = "KassiOS: \(description) — \(name) failed: \(error)\(failureDiagnostics(for: failed))"
+            let message = "KassiOS: \(description) — \(name) failed: \(error)"
+                + failureDiagnostics(for: failed) + similarIdentifierSuggestion(for: failed)
             config.logger.log("❌ \(message)")
             if config.captureScreenshotOnFailure {
                 attachFailureScreenshot(label: "\(name) — \(description)")

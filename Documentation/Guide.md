@@ -601,6 +601,25 @@ you how many are still missing (pairs with strict mode).
 `KassScaffold.generate(for:screenName:)` returns the string if you'd rather write
 it to a file.
 
+## Identifier inventory (discovery)
+
+`device.dumpIdentifiers(includingUnidentified:)` walks the current screen once
+(bounded to 400 elements) and returns every element's identity as a `Codable`
+`KassIdentifierInfo { identifier, type, label, isHittable }` — the same shape a
+coding agent needs to scaffold `KassScreen` objects, or to discover what's
+actually on screen instead of guessing at ids:
+
+```swift
+let inventory = device.dumpIdentifiers()               // real accessibility ids only
+device.dumpIdentifiers(includingUnidentified: true)     // + label-only elements too
+device.attachIdentifierInventory()                      // same, + pretty JSON on the report
+```
+
+`attachIdentifierInventory` hands the inventory to the report as
+pretty-printed, sorted-key JSON (`JSONEncoder().outputFormatting =
+[.prettyPrinted, .sortedKeys]`) — attach it whenever you want an artifact an
+agent can read back to scaffold or fix a suite.
+
 ## Accessibility audit
 
 Run Apple's automated accessibility audit (iOS 17+) — contrast, hit-region size,
@@ -623,6 +642,27 @@ of failure to the report. The message names the exact element, so a red run
 points straight at the problem. A failing test also attaches the full
 accessibility tree (`app.debugDescription`) in `tearDown` — invaluable when an
 element wasn't where you expected.
+
+### Did you mean? — similar-identifier suggestions
+
+When a locator built from an accessibility identifier (`button("home.welcom")`,
+say) fails because the element genuinely doesn't exist, the failure message
+appends the closest actual identifiers/labels found on screen — a self-correct
+for a wrong-id guess, the kind an AI author makes constantly:
+
+```
+KassiOS: text 'welcom' — assertVisible failed: does not exist
+  ↳ element not found in the current hierarchy
+  ↳ did you mean: 'welcome', 'Welcome!'?
+```
+
+The candidates come from one bounded walk of the current screen (same 400-
+element cap as the identifier inventory above); ranking is case-insensitive
+Levenshtein distance via `KassIdentifierSuggestions.nearest(to:among:)`, capped
+so an unrelated element on screen never gets suggested. Wired into
+`KassElement.perform`, `scrollTo` and `softScrollTo`; gate it off with
+`KassConfig(suggestSimilarIdentifiersOnFailure: false)` if you'd rather not pay
+even the once-per-failure walk.
 
 ## Network stubs
 
