@@ -6,6 +6,28 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- **`kassios-lint` base-class tracing** — `inheritsKassScreen` (and the
+  equivalent check for `KassTestCase`/`KassRobot`) now resolves any number of
+  hierarchy levels, computed as a fixpoint over every class declared in the
+  linted file set, so `final class HomeScreen: CBScreen` is recognized even
+  when `CBScreen: KassScreen` lives in another file. A new batch entry point,
+  `lint(sources:)`, lints every file together so cross-file bases resolve; the
+  CLI (`kassios-lint`) now calls it once over every collected file instead of
+  linting file-by-file. `lint(source:filePath:)` still works for a single file
+  (only same-file bases resolve there).
+- **KAS003 — actions outside a Robot.** A new conservative rule: a
+  `KassTestCase` subclass's test method with 5+ inline element interactions
+  (`tap`, `typeText`, `swipeUp`, …) gets a warning nudging toward extracting a
+  reusable `KassRobot`. Never fires inside a `KassRobot` subclass's own
+  methods.
+- **`// kassios:ignore-id` suppression for KAS002** — a real trailing comment
+  (found via the parsed comment trivia, not raw line text) on a flagged
+  builder call's own line suppresses that finding, for a reviewed,
+  deliberately dynamic identifier. The same phrase sitting inside a
+  string-literal argument on that line does *not* suppress anything — only an
+  actual comment counts.
+
 ## [0.24.0] - 2026-07-28
 
 ### Added
