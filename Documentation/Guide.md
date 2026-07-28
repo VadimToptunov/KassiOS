@@ -685,7 +685,7 @@ Share one configuration across a group of tests with `KassSuite`:
 ```swift
 class CheckoutSuite: KassSuite {
     override func configure() -> KassConfig {
-        KassConfig(timeout: 20, reporter: AllureReporter(), requireAccessibilityIdentifiers: true)
+        KassConfig(timeout: 20, reporter: AllureReporter(), accessibilityIdentifierPolicy: .enforce)
     }
 }
 
