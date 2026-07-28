@@ -102,14 +102,14 @@ public struct KassAlert {
     let config: KassConfig
 
     private func button(_ title: String) -> KassElement {
-        KassElement(description: "alert button '\(title)'", config: config) { [app] in
+        KassElement(description: "alert button '\(title)'", config: config, app: app) { [app] in
             app.alerts.buttons[title].firstMatch
         }
     }
 
     @discardableResult
     public func assertExists(file: StaticString = #filePath, line: UInt = #line) -> KassAlert {
-        KassElement(description: "alert", config: config) { [app] in app.alerts.firstMatch }
+        KassElement(description: "alert", config: config, app: app) { [app] in app.alerts.firstMatch }
             .assertExists(file: file, line: line)
         return self
     }

@@ -40,8 +40,14 @@ public extension KassDevice {
         let inventory = dumpIdentifiers(includingUnidentified: includingUnidentified)
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        let data = (try? encoder.encode(inventory)) ?? Data()
-        attachText("Identifier inventory", String(data: data, encoding: .utf8) ?? "[]")
+        do {
+            let data = try encoder.encode(inventory)
+            attachText("Identifier inventory", String(data: data, encoding: .utf8) ?? "[]")
+        } catch {
+            // Loud on purpose: silently attaching "[]" would look like an empty
+            // screen instead of an encoding failure.
+            config.logger.log("⚠️ KassiOS: could not encode the identifier inventory: \(error)")
+        }
         return inventory
     }
 }

@@ -17,15 +17,24 @@ public struct KassElement {
     /// strict mode to verify the app actually set an accessibility identifier.
     let expectedIdentifier: String?
 
+    /// The app this element was built against — threaded from `KassScreen`
+    /// (which always holds one) through every builder, so a whole-tree walk
+    /// (the "did you mean?" suggestions) queries the *same* app a locator
+    /// resolves against, not a hardcoded default that could be the wrong
+    /// process for a secondary-bundle-id screen.
+    let app: XCUIApplication
+
     init(
         description: String,
         config: KassConfig,
         expectedIdentifier: String? = nil,
+        app: XCUIApplication,
         resolve: @escaping () -> XCUIElement
     ) {
         self.description = description
         self.config = config
         self.expectedIdentifier = expectedIdentifier
+        self.app = app
         self.resolve = resolve
     }
 }
@@ -249,7 +258,7 @@ public extension KassElement {
         var overridden = config
         if let timeout = timeout { overridden.timeout = timeout }
         if let pollInterval = pollInterval { overridden.pollInterval = pollInterval }
-        return KassElement(description: description, config: overridden, expectedIdentifier: expectedIdentifier, resolve: resolve)
+        return KassElement(description: description, config: overridden, expectedIdentifier: expectedIdentifier, app: app, resolve: resolve)
     }
 
     // MARK: - Scoped children
@@ -259,7 +268,7 @@ public extension KassElement {
     /// `KassScreen.element(_:type:)`.
     func descendant(_ type: XCUIElement.ElementType, _ id: String) -> KassElement {
         let label = "\(description) › \(KassScreen.typeName(type)) '\(id)'"
-        return KassElement(description: label, config: config, expectedIdentifier: id) { [resolve] in
+        return KassElement(description: label, config: config, expectedIdentifier: id, app: app) { [resolve] in
             KassScreen.idFirstMatch(resolve().descendants(matching: type), id: id)
         }
     }

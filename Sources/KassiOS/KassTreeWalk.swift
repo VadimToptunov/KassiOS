@@ -24,10 +24,27 @@ enum KassTreeWalk {
     }
 
     /// Walks every descendant of `app`, bounded to ``elementCap`` elements.
+    ///
+    /// Deliberately **not** `query.allElementsBoundByIndex.prefix(elementCap)`:
+    /// `allElementsBoundByIndex` resolves and snapshots the *entire* matching
+    /// set before a `.prefix` ever gets to trim it — exactly wrong for a walk
+    /// that only runs once something has already failed (the hierarchy may be
+    /// huge, mid-transition, or hung right then). Instead, resolve one index at
+    /// a time via `element(boundBy:)` and stop the moment it stops existing, so
+    /// the query itself never touches more than ``elementCap`` elements and a
+    /// small tree finishes in well under that.
     @MainActor
     static func walk(_ app: XCUIApplication) -> [Visited] {
-        app.descendants(matching: .any).allElementsBoundByIndex.prefix(elementCap).map {
-            Visited(identifier: $0.identifier, label: $0.label, type: $0.elementType, isHittable: $0.isHittable)
+        let query = app.descendants(matching: .any)
+        var visited: [Visited] = []
+        visited.reserveCapacity(elementCap)
+        for index in 0..<elementCap {
+            let element = query.element(boundBy: index)
+            guard element.exists else { break }
+            visited.append(
+                Visited(identifier: element.identifier, label: element.label, type: element.elementType, isHittable: element.isHittable)
+            )
         }
+        return visited
     }
 }

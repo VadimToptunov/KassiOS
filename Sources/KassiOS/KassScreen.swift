@@ -34,7 +34,7 @@ open class KassScreen {
     /// The frontmost web view (`WKWebView`). Its contents are reachable with the
     /// usual builders (`staticText`, `link`, `button`, …) once loaded.
     public func webView() -> KassElement {
-        KassElement(description: "webView", config: config) { [app] in
+        KassElement(description: "webView", config: config, app: app) { [app] in
             app.webViews.firstMatch
         }
     }
@@ -52,7 +52,7 @@ open class KassScreen {
     /// appears elsewhere in the tree) resolves to the first hit rather than
     /// throwing "Multiple matching elements found".
     public func element(_ id: String, type: XCUIElement.ElementType) -> KassElement {
-        KassElement(description: "\(Self.typeName(type)) '\(id)'", config: config, expectedIdentifier: id) { [app] in
+        KassElement(description: "\(Self.typeName(type)) '\(id)'", config: config, expectedIdentifier: id, app: app) { [app] in
             Self.idFirstMatch(app.descendants(matching: type), id: id)
         }
     }
@@ -61,7 +61,7 @@ open class KassScreen {
     /// exposes one view as button/cell/other by context, and pinning a type is a
     /// common source of flake. id-first, same as `element(_:type:)`.
     public func element(_ id: String) -> KassElement {
-        KassElement(description: "'\(id)'", config: config, expectedIdentifier: id) { [app] in
+        KassElement(description: "'\(id)'", config: config, expectedIdentifier: id, app: app) { [app] in
             Self.idFirstMatch(app.descendants(matching: .any), id: id)
         }
     }
@@ -72,7 +72,8 @@ open class KassScreen {
         KassElement(
             description: "\(Self.typeName(type)) '\(id)' labeled '\(label)'",
             config: config,
-            expectedIdentifier: id
+            expectedIdentifier: id,
+            app: app
         ) { [app] in
             // Strict `identifier ==` (not `.matching(identifier:)`, which falls
             // back to label) so a decoy whose *label* equals `id` can't win.
@@ -96,7 +97,7 @@ open class KassScreen {
     /// Matches by a label substring (case-insensitive), any type by default.
     /// Intentional label matching — does NOT warn under the identifier policy.
     public func element(labelContains substring: String, type: XCUIElement.ElementType = .any) -> KassElement {
-        KassElement(description: "\(Self.typeName(type)) label contains '\(substring)'", config: config) { [app] in
+        KassElement(description: "\(Self.typeName(type)) label contains '\(substring)'", config: config, app: app) { [app] in
             app.descendants(matching: type)
                 .matching(NSPredicate(format: "label CONTAINS[c] %@", substring))
                 .firstMatch
@@ -105,12 +106,12 @@ open class KassScreen {
 
     /// Escape hatch: wrap an arbitrary query when identifiers aren't enough.
     public func custom(_ description: String, _ resolve: @escaping () -> XCUIElement) -> KassElement {
-        KassElement(description: description, config: config, resolve: resolve)
+        KassElement(description: description, config: config, app: app, resolve: resolve)
     }
 
     /// Escape hatch for collections: wrap an arbitrary query.
     public func customCollection(_ description: String, _ query: @escaping () -> XCUIElementQuery) -> KassElementCollection {
-        KassElementCollection(description: description, config: config, query: query)
+        KassElementCollection(description: description, config: config, app: app, query: query)
     }
 
     // MARK: - Collection builders (lists, tables, grids)
@@ -122,14 +123,14 @@ open class KassScreen {
 
     /// Every element of `type` in the tree.
     public func all(_ type: XCUIElement.ElementType) -> KassElementCollection {
-        KassElementCollection(description: "all \(Self.typeName(type))s", config: config) { [app] in
+        KassElementCollection(description: "all \(Self.typeName(type))s", config: config, app: app) { [app] in
             app.descendants(matching: type)
         }
     }
 
     /// Every element of `type` sharing accessibility identifier `id`.
     public func all(_ id: String, type: XCUIElement.ElementType) -> KassElementCollection {
-        KassElementCollection(description: "\(Self.typeName(type))s '\(id)'", config: config) { [app] in
+        KassElementCollection(description: "\(Self.typeName(type))s '\(id)'", config: config, app: app) { [app] in
             app.descendants(matching: type).matching(identifier: id)
         }
     }

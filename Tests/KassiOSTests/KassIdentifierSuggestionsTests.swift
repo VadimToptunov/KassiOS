@@ -79,4 +79,32 @@ final class KassIdentifierSuggestionsTests: XCTestCase {
         )
         XCTAssertEqual(result, [])
     }
+
+    /// A ~40-char, realistic identifier among several equally verbose but
+    /// genuinely unrelated ones (different screens/domains, no shared
+    /// structure). The default cap is a *ratio* of the target's length
+    /// (`target.count / 2`), which sounds generous for a long id — this proves
+    /// it still degrades to "nothing" rather than surfacing distant noise: for
+    /// strings this long, two unrelated identifiers differ in most of their
+    /// characters, so their distance lands far above even a generous ratio cap.
+    func test_nearest_longIdentifier_dropsUnrelatedVerboseNoise() {
+        let target = "checkout.payment.creditCard.expiryMonth"
+        let unrelated = [
+            "settings.notifications.pushToggleSwitchControl",
+            "profile.editAvatar.uploadProgressIndicator",
+            "onboarding.welcomeCarousel.pageControlDots",
+            "search.filters.priceRangeSliderThumbHandle",
+            "cart.summary.discountCodeApplyButtonLabel"
+        ]
+        XCTAssertEqual(KassIdentifierSuggestions.nearest(to: target, among: unrelated), [])
+    }
+
+    /// The same long target still surfaces a genuinely close sibling — proves
+    /// the previous test isn't passing merely because the cap is too tight to
+    /// suggest anything at that length.
+    func test_nearest_longIdentifier_stillSurfacesACloseSibling() {
+        let target = "checkout.payment.creditCard.expiryMonth"
+        let result = KassIdentifierSuggestions.nearest(to: target, among: ["checkout.payment.creditCard.expiryYear"])
+        XCTAssertEqual(result, ["checkout.payment.creditCard.expiryYear"])
+    }
 }

@@ -68,17 +68,21 @@ public enum KassIdentifierSuggestions {
 extension KassElement {
 
     /// "Did you mean?" — when the locator's target genuinely doesn't exist,
-    /// walks the app tree once (bounded, see ``KassTreeWalk``) and suggests the
-    /// closest actual identifiers/labels found on screen, so a wrong-id guess
-    /// (common from an AI author) self-corrects. Returns `""` when the element
-    /// exists, carries no `expectedIdentifier`,
+    /// walks this element's own app tree once (bounded, see ``KassTreeWalk``)
+    /// and suggests the closest actual identifiers/labels found on screen, so
+    /// a wrong-id guess (common from an AI author) self-corrects. Returns `""`
+    /// when the element exists, carries no `expectedIdentifier`,
     /// `config.suggestSimilarIdentifiersOnFailure` is off, or nothing on screen
     /// is close enough to be worth suggesting.
     func similarIdentifierSuggestion(for element: XCUIElement) -> String {
         guard config.suggestSimilarIdentifiersOnFailure, !element.exists, let expected = expectedIdentifier else {
             return ""
         }
-        let candidates = KassTreeWalk.walk(XCUIApplication()).flatMap { visited -> [String] in
+        // Best-effort settle before the diagnostic read, like every other wait
+        // path — a mid-transition snapshot shouldn't suggest a label that's
+        // about to disappear.
+        config.synchronizer.waitForIdle(timeout: config.timeout)
+        let candidates = KassTreeWalk.walk(app).flatMap { visited -> [String] in
             [visited.identifier, visited.label].filter { !$0.isEmpty }
         }
         let suggestions = KassIdentifierSuggestions.nearest(to: expected, among: candidates)
