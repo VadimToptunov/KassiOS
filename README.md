@@ -208,6 +208,26 @@ element.rotate(.pi / 4, velocity: 1)
 element.twoFingerTap()
 ```
 
+### Failure diagnostics: "did you mean?"
+
+A not-found failure appends a one-line snapshot of the element (`exists`,
+`hittable`, `id`, `label`, `type`, `frame`) plus, when the locator was built
+from an accessibility identifier that genuinely doesn't exist, the closest
+matching identifiers/labels actually on screen — so a wrong-id guess (common
+from an AI author) self-corrects instead of a second round trip:
+
+```
+KassiOS: text 'welcom' — assertVisible failed: does not exist
+  ↳ element not found in the current hierarchy
+  ↳ did you mean: 'welcome', 'Welcome!'?
+```
+
+Ranked by case-insensitive Levenshtein distance
+(`KassIdentifierSuggestions.nearest(to:among:)`), bounded to a 400-element walk
+of the current screen, and gated behind
+`KassConfig.suggestSimilarIdentifiersOnFailure` (on by default — the walk only
+runs once an assertion has already failed).
+
 ## Flow primitives (Kaspresso-style)
 
 Compose custom conditions out of throwing checks (`requireExists`,
@@ -289,6 +309,22 @@ device.open(url: "https://example.com")     // deep link via Safari (iOS)
 device.waitForIdle()                         // via the configured synchronizer
 let springboard = device.springboard         // home screen / system alerts host
 ```
+
+### Discovery: `dumpIdentifiers`
+
+An agent-facing inventory of the current screen — every element's identifier,
+type, label and hittability — for scaffolding `KassScreen` objects or a quick
+discovery pass without eyeballing `debugDescription`:
+
+```swift
+let inventory = device.dumpIdentifiers()               // only real accessibility ids
+device.dumpIdentifiers(includingUnidentified: true)     // + everything else, for discovery
+device.attachIdentifierInventory()                      // same, + pretty JSON attached to the report
+```
+
+Each entry is a `Codable` `KassIdentifierInfo { identifier, type, label,
+isHittable }`; the walk is bounded (400 elements), same as the "did you mean?"
+suggestions above.
 
 ### Tier B — relaunch with locale / language / Dynamic Type
 
@@ -539,7 +575,9 @@ element collections, scoped child elements, **web content**
 flow primitives, parameterized tests, `KassSuite` + structured
 `before`/`after`/`run`, an **accessibility-identifier policy**
 (`ignore`/`warn`/`enforce`) + **accessibility audit** + **screen-object codegen**
-(`KassScaffold`), precise failure diagnostics (+ accessibility-tree dump),
+(`KassScaffold`), precise failure diagnostics (+ accessibility-tree dump +
+**"did you mean?" identifier suggestions**), an **identifier inventory**
+(`device.dumpIdentifiers`) for agent-driven discovery/scaffolding,
 device/permission/deep-link/stub helpers + a `kass-simctl` CI toolkit, localized
 screenshot runs, reusable scenarios, **Allure + JUnit** reporters, zero-dep
 snapshot regression, and a synchronizer applied to every wait. Real UI coverage

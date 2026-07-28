@@ -45,6 +45,7 @@ For a full prose walkthrough see the
 - <doc:TypedNavigation>
 - <doc:StaticLinting>
 - <doc:AccessibilityIdentifiers>
+- <doc:AgentDiscovery>
 
 ### Writing tests
 
@@ -71,6 +72,7 @@ For a full prose walkthrough see the
 - ``KassStatusBar``
 - ``KassLocation``
 - ``KassAppearance``
+- ``KassIdentifierInfo``
 
 ### Accessibility
 
@@ -114,6 +116,7 @@ For a full prose walkthrough see the
 - ``KassDiagnostic``
 - ``KassFlakyTracker``
 - ``KassFlakyRecovery``
+- ``KassIdentifierSuggestions``
 
 ### Errors
 

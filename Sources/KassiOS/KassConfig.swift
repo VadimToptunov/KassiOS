@@ -42,6 +42,14 @@ public struct KassConfig: Sendable {
     /// Off by default — handy for building a visual trail of a whole test.
     public var screenshotEachStep: Bool
 
+    /// When `true` (default), a not-found failure with an `expectedIdentifier`
+    /// walks the current screen once (bounded — see `KassTreeWalk`) and appends
+    /// the closest actual identifiers/labels found on screen to the failure
+    /// message: `↳ did you mean: 'a', 'b', 'c'?`. Lets a wrong-id guess (common
+    /// from an AI author) self-correct. The walk only runs once an assertion has
+    /// already failed, so the cost is paid at most once per failure.
+    public var suggestSimilarIdentifiersOnFailure: Bool
+
     /// The chain every waiting DSL action flows through, outermost first.
     /// Defaults to a single ``KassRetryInterceptor`` — the built-in flaky-safety,
     /// now a reorderable link. Add your own around it: before the retry to run
@@ -72,7 +80,8 @@ public struct KassConfig: Sendable {
         screenshotEachStep: Bool = false,
         interceptors: [KassInterceptor] = [KassRetryInterceptor()],
         disableAnimations: Bool = false,
-        recordVideoOnFailure: Bool = false
+        recordVideoOnFailure: Bool = false,
+        suggestSimilarIdentifiersOnFailure: Bool = true
     ) {
         self.timeout = timeout
         self.pollInterval = pollInterval
@@ -86,6 +95,7 @@ public struct KassConfig: Sendable {
         self.interceptors = interceptors
         self.disableAnimations = disableAnimations
         self.recordVideoOnFailure = recordVideoOnFailure
+        self.suggestSimilarIdentifiersOnFailure = suggestSimilarIdentifiersOnFailure
     }
 
     public static let `default` = KassConfig()

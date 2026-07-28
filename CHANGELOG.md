@@ -6,6 +6,26 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- **"Did you mean?" suggestions on a not-found failure** — when a locator's
+  target has an `expectedIdentifier` and it genuinely doesn't exist, the
+  failure message now walks the current screen once (bounded to 400 elements)
+  and appends the closest actual identifiers/labels on screen, ranked by
+  case-insensitive Levenshtein distance: `↳ did you mean: 'welcome',
+  'Welcome!'?`. Lets a wrong-id guess (common from an AI author) self-correct
+  without a second round trip. New pure, unit-tested API:
+  `KassIdentifierSuggestions.nearest(to:among:max:maxDistance:)`. Gated behind
+  a new `KassConfig.suggestSimilarIdentifiersOnFailure` flag (default `true` —
+  the walk only runs once an assertion has already failed). Wired into
+  `KassElement.perform`, `scrollTo` and `softScrollTo`.
+- **`device.dumpIdentifiers(includingUnidentified:)` / `attachIdentifierInventory(includingUnidentified:)`**
+  — an agent-facing inventory of the current screen: every element's
+  `{ identifier, type, label, isHittable }` as `Codable` `KassIdentifierInfo`
+  values, feeding a coding agent's screen-object scaffold or a discovery pass.
+  Bounded to the same 400-element walk as the suggestions above; `attach…`
+  additionally attaches the inventory as pretty-printed, sorted-key JSON to
+  the report.
+
 ## [0.25.0] - 2026-07-28
 
 ### Added

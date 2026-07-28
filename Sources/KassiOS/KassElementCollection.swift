@@ -10,9 +10,15 @@ public struct KassElementCollection {
     let description: String
     let config: KassConfig
 
-    init(description: String, config: KassConfig, query: @escaping () -> XCUIElementQuery) {
+    /// The app this collection was built against — threaded through to every
+    /// `KassElement` it produces (`element(at:)`, `first`, `last`, …), same
+    /// reasoning as `KassElement.app`.
+    let app: XCUIApplication
+
+    init(description: String, config: KassConfig, app: XCUIApplication, query: @escaping () -> XCUIElementQuery) {
         self.description = description
         self.config = config
+        self.app = app
         self.query = query
     }
 
@@ -36,19 +42,19 @@ public struct KassElementCollection {
 
     /// The element at `index` (by position in the query).
     public func element(at index: Int) -> KassElement {
-        KassElement(description: "\(description)[\(index)]", config: config) { [query] in
+        KassElement(description: "\(description)[\(index)]", config: config, app: app) { [query] in
             query().element(boundBy: index)
         }
     }
 
     public var first: KassElement {
-        KassElement(description: "\(description).first", config: config) { [query] in
+        KassElement(description: "\(description).first", config: config, app: app) { [query] in
             query().firstMatch
         }
     }
 
     public var last: KassElement {
-        KassElement(description: "\(description).last", config: config) { [query] in
+        KassElement(description: "\(description).last", config: config, app: app) { [query] in
             let resolved = query()
             return resolved.element(boundBy: max(0, resolved.count - 1))
         }
@@ -61,14 +67,14 @@ public struct KassElementCollection {
         var overridden = config
         if let timeout = timeout { overridden.timeout = timeout }
         if let pollInterval = pollInterval { overridden.pollInterval = pollInterval }
-        return KassElementCollection(description: description, config: overridden, query: query)
+        return KassElementCollection(description: description, config: overridden, app: app, query: query)
     }
 
     // MARK: - Refinement
 
     /// Narrows to elements that contain a descendant of `type` with `id`.
     public func containing(_ type: XCUIElement.ElementType, _ id: String) -> KassElementCollection {
-        KassElementCollection(description: "\(description) containing \(id)", config: config) { [query] in
+        KassElementCollection(description: "\(description) containing \(id)", config: config, app: app) { [query] in
             query().containing(type, identifier: id)
         }
     }
@@ -76,14 +82,14 @@ public struct KassElementCollection {
     /// Narrows to elements whose label contains `text`.
     public func matching(label text: String) -> KassElementCollection {
         let predicate = NSPredicate(format: "label CONTAINS %@", text)
-        return KassElementCollection(description: "\(description) matching '\(text)'", config: config) { [query] in
+        return KassElementCollection(description: "\(description) matching '\(text)'", config: config, app: app) { [query] in
             query().matching(predicate)
         }
     }
 
     /// The first element whose label contains `text`.
     public func elementMatching(label text: String) -> KassElement {
-        KassElement(description: "\(description) with label '\(text)'", config: config) { [query] in
+        KassElement(description: "\(description) with label '\(text)'", config: config, app: app) { [query] in
             query().matching(NSPredicate(format: "label CONTAINS %@", text)).firstMatch
         }
     }
