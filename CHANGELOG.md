@@ -6,6 +6,18 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-07-28
+
+### Stabilized
+- **First stable release — the public API is now frozen under semantic
+  versioning.** KassiOS has been dogfooded against two real apps (a fintech app
+  and a game) and a buggy-matrix suite that catches planted defects, which drove
+  six evidence-based releases (0.21–0.26). The whole public surface — screen /
+  robot / scenario objects, id-first locators, deep assertions, the device tiers,
+  snapshot / localization / video, the `kassios-lint` plugin, and agent-discovery
+  (did-you-mean + identifier inventory) — is considered stable. Breaking changes
+  will bump the major version from here.
+
 ## [0.26.0] - 2026-07-28
 
 ### Added
@@ -447,7 +459,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Initial DSL: `KassTestCase`, `KassScreen`, `KassElement`, implicit waits,
   flaky-safety (`Waiter`), step logging, and `onScreen`.
 
-[Unreleased]: https://github.com/VadimToptunov/KassiOS/compare/0.26.0...HEAD
+[Unreleased]: https://github.com/VadimToptunov/KassiOS/compare/1.0.0...HEAD
+[1.0.0]: https://github.com/VadimToptunov/KassiOS/compare/0.26.0...1.0.0
 [0.26.0]: https://github.com/VadimToptunov/KassiOS/compare/0.25.0...0.26.0
 [0.25.0]: https://github.com/VadimToptunov/KassiOS/compare/0.24.0...0.25.0
 [0.24.0]: https://github.com/VadimToptunov/KassiOS/compare/0.23.0...0.24.0
