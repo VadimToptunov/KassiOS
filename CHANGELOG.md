@@ -6,6 +6,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.25.0] - 2026-07-28
+
 ### Added
 - **`kassios-lint` base-class tracing** — `inheritsKassScreen` (and the
   equivalent check for `KassTestCase`/`KassRobot`) now resolves any number of
@@ -423,7 +425,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Initial DSL: `KassTestCase`, `KassScreen`, `KassElement`, implicit waits,
   flaky-safety (`Waiter`), step logging, and `onScreen`.
 
-[Unreleased]: https://github.com/VadimToptunov/KassiOS/compare/0.24.0...HEAD
+[Unreleased]: https://github.com/VadimToptunov/KassiOS/compare/0.25.0...HEAD
+[0.25.0]: https://github.com/VadimToptunov/KassiOS/compare/0.24.0...0.25.0
 [0.24.0]: https://github.com/VadimToptunov/KassiOS/compare/0.23.0...0.24.0
 [0.23.0]: https://github.com/VadimToptunov/KassiOS/compare/0.22.0...0.23.0
 [0.22.0]: https://github.com/VadimToptunov/KassiOS/compare/0.21.0...0.22.0
