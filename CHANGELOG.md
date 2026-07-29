@@ -6,6 +6,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-07-29
+
 ### Added
 - **API ergonomics — additive readability smoothing, no breaking changes.**
   - `KassElement.assertTextContains(_:)` — a clearer-named twin of
@@ -475,7 +477,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Initial DSL: `KassTestCase`, `KassScreen`, `KassElement`, implicit waits,
   flaky-safety (`Waiter`), step logging, and `onScreen`.
 
-[Unreleased]: https://github.com/VadimToptunov/KassiOS/compare/1.0.0...HEAD
+[Unreleased]: https://github.com/VadimToptunov/KassiOS/compare/1.1.0...HEAD
+[1.1.0]: https://github.com/VadimToptunov/KassiOS/compare/1.0.0...1.1.0
 [1.0.0]: https://github.com/VadimToptunov/KassiOS/compare/0.26.0...1.0.0
 [0.26.0]: https://github.com/VadimToptunov/KassiOS/compare/0.25.0...0.26.0
 [0.25.0]: https://github.com/VadimToptunov/KassiOS/compare/0.24.0...0.25.0
