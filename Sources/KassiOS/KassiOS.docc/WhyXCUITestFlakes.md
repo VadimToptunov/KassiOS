@@ -36,10 +36,10 @@ Naive retry helpers give each nested wait its own timeout, so a three-level chec
 can blow out to 3× the budget — the suite gets slower *and* flakier.
 
 KassiOS shares **one** budget across an interaction's retries (``Waiter``). A
-custom multi-step condition uses the same guarantee via `flakySafely`:
+custom multi-step condition uses the same guarantee via `eventually`:
 
 ```swift
-flakySafely { try someCompoundCondition() }   // one budget, not one-per-step
+eventually { try someCompoundCondition() }   // one budget, not one-per-step
 ```
 
 ## 4. Matching the wrong element by label

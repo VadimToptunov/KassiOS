@@ -292,13 +292,13 @@ inside them, use the single-shot throwing checks (`requireExists`,
 
 ```swift
 // Retry a multi-step condition until it holds (or the budget elapses).
-flakySafely { try banner.requireVisible(); try dismiss.requireHittable() }
+eventually { try banner.requireVisible(); try dismiss.requireHittable() }
 
 // Assert something stays true for a duration (inverse of flaky-safety).
 continuously(during: 1.0) { try spinner.requireExists() }
 
 // Pass if the UI is in any one of several valid states.
-compose(
+anyOf(
     KassBranch("logged in") { try home.requireVisible() },
     KassBranch("needs 2FA") { try otp.requireVisible() }
 )
@@ -306,7 +306,7 @@ compose(
 // Attempts-bounded retry.
 retry(times: 3) { try list.requireExists() }
 
-pressBack()   // taps the leading navigation-bar button
+device.pressBack()   // taps the leading navigation-bar button
 
 // Wait for any / all, and mid-test screen checkpoints
 let which = waitForAny([home.welcome, login.error])   // index of the first to appear
@@ -318,11 +318,11 @@ home.showAlert.tap()
 alert().assertExists().tap("OK")
 ```
 
-`flakySafely` / `retry` return the block's value (as an optional, `nil` on
+`eventually` / `retry` return the block's value (as an optional, `nil` on
 failure), so they compose:
 
 ```swift
-let count = flakySafely { screen.cells().count } ?? 0
+let count = eventually { screen.cells().count } ?? 0
 ```
 
 ---
@@ -746,7 +746,7 @@ KassiOS is a thin, opinionated layer, not a silver bullet. An honest take:
 
 **Reach for it when**
 - You write a lot of UI tests and want Kaspresso-parity ergonomics out of the box:
-  steps, scenarios, `compose`/`continuously`, flaky-safety with a shared budget,
+  steps, scenarios, `anyOf`/`continuously`, flaky-safety with a shared budget,
   Allure export, parameterized cases.
 - Your team comes from Android/Kaspresso and wants familiar structure.
 

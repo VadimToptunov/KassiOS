@@ -4,7 +4,7 @@ import Foundation
 ///
 /// These operate on `() throws -> …` blocks: inside them you use throwing checks
 /// (e.g. `KassElement.require*`) or raw `XCUIElement` assertions. The wrappers on
-/// `KassTestCase` (`flakySafely`, `continuously`, `compose`, `retry`) add the
+/// `KassTestCase` (`eventually`, `continuously`, `anyOf`, `retry`) add the
 /// config defaults and turn a thrown error into an `XCTFail`.
 enum KassFlow {
 

@@ -352,7 +352,7 @@ public extension KassElement {
     // MARK: - Throwing checks (for composition inside flow primitives)
 
     /// Single-shot, non-failing checks — they `throw` instead of calling
-    /// `XCTFail`, so they compose inside `flakySafely`/`continuously`/`compose`/
+    /// `XCTFail`, so they compose inside `eventually`/`continuously`/`anyOf`/
     /// `retry`. Unlike `assert*`, they do not retry on their own.
 
     func requireExists() throws {

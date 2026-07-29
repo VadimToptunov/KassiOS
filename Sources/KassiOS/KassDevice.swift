@@ -131,6 +131,25 @@ public struct KassDevice {
     }
     #endif
 
+    /// Taps the leading navigation-bar button (typically Back).
+    @MainActor
+    public func pressBack(file: StaticString = #filePath, line: UInt = #line) {
+        do {
+            try Waiter.retry(
+                timeout: config.timeout,
+                pollInterval: config.pollInterval,
+                enabled: config.flakySafetyEnabled
+            ) {
+                let back = app.navigationBars.buttons.element(boundBy: 0)
+                guard back.exists, back.isHittable else { throw KassError("no back button available") }
+                back.tap()
+            }
+        } catch {
+            config.logger.log("❌ pressBack failed: \(error)")
+            XCTFail("pressBack failed: \(error)", file: file, line: line)
+        }
+    }
+
     /// Sends the app to the background for `seconds`, then reactivates it.
     public func sendToBackground(for seconds: TimeInterval = 1) {
         #if os(iOS)

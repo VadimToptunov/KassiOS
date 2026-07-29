@@ -47,7 +47,7 @@ and KassiOS can coexist in the same test.
    script and screenshots-on-failure land automatically.
 
 5. **Adopt the extras as needed** — collections, flow primitives
-   (`flakySafely`/`compose`), Allure export, strict accessibility identifiers.
+   (`eventually`/`anyOf`), Allure export, strict accessibility identifiers.
 
 ## Coexistence
 
