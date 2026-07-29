@@ -22,7 +22,7 @@ final class SystemAlertTests: KassTestCase {
             home.requestLocation.tap()
             // The permission dialog appears asynchronously; the interceptor
             // dismisses it on a retry of this assertion, then the status updates.
-            home.locationStatus.within(timeout: 30).assertHasText("authorized")
+            home.locationStatus.within(timeout: 30).assertTextContains("authorized")
         }
     }
 }

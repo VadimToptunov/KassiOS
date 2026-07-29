@@ -46,6 +46,9 @@ final class HomeScreen: KassScreen {
         app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH %@", "deep.row-"))
     }
 
+    // API-ergonomics (1.1.0) coverage — see KassDemoApp's "API ergonomics" section.
+    lazy var ergonomicsToggle = switchControl("ergonomics.toggle")
+
     override var onLoad: [KassElement] { [welcome] }
 }
 

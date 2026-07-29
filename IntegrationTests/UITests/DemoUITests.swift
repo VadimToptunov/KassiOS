@@ -20,7 +20,7 @@ final class DemoUITests: KassTestCase {
         }
         onScreen(HomeScreen.self) { home in
             home.welcome.assertVisible()
-            home.welcome.assertHasText("Welcome")
+            home.welcome.assertTextContains("Welcome")
             home.notifications.setSwitch(on: true)
             home.notifications.assertHasValue("1")
         }
@@ -123,7 +123,7 @@ final class DemoUITests: KassTestCase {
             // "decoyMatch" is a plain label on an earlier, un-identified row; the
             // real id'd row ("Real Target") sits after it. id-first resolution
             // must land on the real id, not the earlier label match.
-            home.decoyTarget.scrollTo(in: home.list).assertHasText("Real Target")
+            home.decoyTarget.scrollTo(in: home.list).assertTextContains("Real Target")
         }
     }
 
@@ -131,7 +131,7 @@ final class DemoUITests: KassTestCase {
         launch()
         onScreen(LoginScreen.self) { $0.email.typeText("a@b.c"); $0.signIn.tap() }
         onScreen(HomeScreen.self) { home in
-            home.element("welcome").assertHasText("Welcome")
+            home.element("welcome").assertTextContains("Welcome")
         }
     }
 
@@ -139,8 +139,8 @@ final class DemoUITests: KassTestCase {
         launch()
         onScreen(LoginScreen.self) { $0.email.typeText("a@b.c"); $0.signIn.tap() }
         onScreen(HomeScreen.self) { home in
-            home.duplicateRow(label: "Alpha").scrollTo(in: home.list).assertHasText("Alpha")
-            home.duplicateRow(label: "Beta").scrollTo(in: home.list).assertHasText("Beta")
+            home.duplicateRow(label: "Alpha").scrollTo(in: home.list).assertTextContains("Alpha")
+            home.duplicateRow(label: "Beta").scrollTo(in: home.list).assertTextContains("Beta")
         }
     }
 

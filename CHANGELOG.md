@@ -6,6 +6,22 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- **API ergonomics — additive readability smoothing, no breaking changes.**
+  - `KassElement.assertTextContains(_:)` — a clearer-named twin of
+    `assertHasText(_:)` (same substring-of-value-or-label behavior; the old
+    name read like an exact match, confusable with the exact `assertHasValue`).
+  - `KassElement.toggle()` — flips a switch unconditionally, complementing
+    `setSwitch(on:)` (which only taps when the state differs).
+  - `KassScreen.button(containing:)` — the button counterpart of
+    `staticText(containing:)`, for resolving a button by a label substring.
+
+### Deprecated
+- `KassElement.assertHasText(_:)` → use `assertTextContains(_:)`.
+- `KassElementCollection.elementMatching(label:)` → use `matching(label:).first`.
+  Both deprecated methods still work identically; they're kept for source
+  compatibility and will not be removed before the next major version.
+
 ## [1.0.0] - 2026-07-28
 
 ### Stabilized

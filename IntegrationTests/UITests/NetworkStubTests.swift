@@ -10,7 +10,7 @@ final class NetworkStubTests: KassTestCase {
         onScreen(LoginScreen.self) { $0.email.typeText("a@b.c"); $0.signIn.tap() }
         onScreen(HomeScreen.self) { home in
             home.fetchButton.tap()
-            home.fetchResult.assertHasText("Alex")   // came from the stub, not the network
+            home.fetchResult.assertTextContains("Alex")   // came from the stub, not the network
         }
     }
 
@@ -19,7 +19,7 @@ final class NetworkStubTests: KassTestCase {
         onScreen(LoginScreen.self) { $0.email.typeText("a@b.c"); $0.signIn.tap() }
         onScreen(HomeScreen.self) { home in
             home.fetchButton.tap()
-            home.fetchResult.assertHasText("offline")   // URLError.notConnectedToInternet
+            home.fetchResult.assertTextContains("offline")   // URLError.notConnectedToInternet
         }
     }
 }
