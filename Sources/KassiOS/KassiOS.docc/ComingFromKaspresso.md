@@ -18,9 +18,9 @@ were chosen to match.
 | Shared `BaseTestCase` config | ``KassSuite`` | Override `configure()` once per suite. |
 | `Screen` (Kakao) | ``KassScreen`` | `onLoad` lists the elements that prove the screen loaded. |
 | `KView` / matched view | ``KassElement`` | Re-resolves each attempt — no stale references. |
-| `flakySafely { }` | `flakySafely { }` | Same name; one shared time budget. |
+| `flakySafely { }` | `eventually { }` | One shared time budget; renamed for readability (`flakySafely` still works, deprecated). |
 | `continuously { }` | `continuously(during:)` | Asserts a condition holds for a duration. |
-| `compose { }` | `compose(_:)` | Passes if any branch succeeds. |
+| `compose { }` | `anyOf(_:)` | Passes if any branch succeeds (`compose` still works, deprecated). |
 | `step("…") { }` | `step("…") { }` | Groups actions in the report. |
 | `scenario(…)` | ``KassScenario`` | Reusable, named flows. |
 | `device` facade | ``KassDevice`` (`device`) | Permissions, keyboard, screenshots, deep links. |

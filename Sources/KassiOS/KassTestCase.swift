@@ -289,7 +289,7 @@ open class KassTestCase: XCTestCase {
     /// already flaky-safe on their own.
     @discardableResult
     @MainActor
-    public func flakySafely<T>(
+    public func eventually<T>(
         timeout: TimeInterval? = nil,
         pollInterval: TimeInterval? = nil,
         file: StaticString = #filePath,
@@ -304,14 +304,29 @@ open class KassTestCase: XCTestCase {
                 action: block
             )
         } catch {
-            config.logger.log("❌ flakySafely failed: \(error)")
-            XCTFail("flakySafely failed: \(error)", file: file, line: line)
+            config.logger.log("❌ eventually failed: \(error)")
+            XCTFail("eventually failed: \(error)", file: file, line: line)
             return nil
         }
     }
 
+    /// - Note: renamed to ``eventually(timeout:pollInterval:file:line:_:)`` for
+    ///   readability ("eventually this passes"). Behavior is unchanged.
+    @available(*, deprecated, renamed: "eventually(timeout:pollInterval:file:line:_:)")
+    @discardableResult
+    @MainActor
+    public func flakySafely<T>(
+        timeout: TimeInterval? = nil,
+        pollInterval: TimeInterval? = nil,
+        file: StaticString = #filePath,
+        line: UInt = #line,
+        _ block: @MainActor () throws -> T
+    ) -> T? {
+        eventually(timeout: timeout, pollInterval: pollInterval, file: file, line: line, block)
+    }
+
     /// Asserts `block` keeps succeeding for the whole `duration` — fails the
-    /// instant it throws. The inverse of `flakySafely`.
+    /// instant it throws. The inverse of `eventually`.
     @MainActor
     public func continuously(
         during duration: TimeInterval,
@@ -331,16 +346,34 @@ open class KassTestCase: XCTestCase {
     /// Passes if at least one branch succeeds; fails only if all do not. Use
     /// when the UI may legitimately be in one of several states.
     @MainActor
+    public func anyOf(
+        file: StaticString = #filePath,
+        line: UInt = #line,
+        _ branches: KassBranch...
+    ) {
+        runAnyOf(branches, file: file, line: line)
+    }
+
+    /// - Note: renamed to ``anyOf(file:line:_:)`` for readability ("any of these
+    ///   branches"). Behavior is unchanged.
+    @available(*, deprecated, renamed: "anyOf(file:line:_:)")
+    @MainActor
     public func compose(
         file: StaticString = #filePath,
         line: UInt = #line,
         _ branches: KassBranch...
     ) {
+        runAnyOf(branches, file: file, line: line)
+    }
+
+    /// Shared implementation behind `anyOf` and the deprecated `compose`.
+    @MainActor
+    private func runAnyOf(_ branches: [KassBranch], file: StaticString, line: UInt) {
         do {
             try KassFlow.compose(branches.map { ($0.name, $0.action) })
         } catch {
-            config.logger.log("❌ compose failed: \(error)")
-            XCTFail("compose failed: \(error)", file: file, line: line)
+            config.logger.log("❌ anyOf failed: \(error)")
+            XCTFail("anyOf failed: \(error)", file: file, line: line)
         }
     }
 
@@ -416,14 +449,12 @@ open class KassTestCase: XCTestCase {
         return launch(arguments: arguments, environment: environment)
     }
 
-    /// Taps the leading navigation-bar button (typically Back).
+    /// - Note: moved to ``KassDevice/pressBack(file:line:)`` — device-level
+    ///   navigation belongs next to `device.pressHome()`. Behavior is unchanged.
+    @available(*, deprecated, message: "use device.pressBack()")
     @MainActor
     public func pressBack(file: StaticString = #filePath, line: UInt = #line) {
-        flakySafely(file: file, line: line) {
-            let back = self.app.navigationBars.buttons.element(boundBy: 0)
-            guard back.exists, back.isHittable else { throw KassError("no back button available") }
-            back.tap()
-        }
+        device.pressBack(file: file, line: line)
     }
 
     // MARK: - Accessibility audit
@@ -453,7 +484,7 @@ open class KassTestCase: XCTestCase {
     }
 }
 
-/// A named branch for `KassTestCase.compose`.
+/// A named branch for `KassTestCase.anyOf`.
 public struct KassBranch {
     let name: String
     let action: @MainActor () throws -> Void

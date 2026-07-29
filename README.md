@@ -132,7 +132,7 @@ final class LoginFlowUITests: KassTestCase {
 | Implicit waits / flaky-safety | manual `waitForExistence` | idling resources | **built-in, one shared budget** |
 | Stale-safe (re-resolve each attempt) | no | n/a | **yes** |
 | Screen-object DSL | roll your own | none | **`KassScreen`** |
-| Flow primitives (`compose`/`continuously`) | no | partial | **yes** |
+| Flow primitives (`anyOf`/`continuously`) | no | partial | **yes** |
 | Parameterized (data-driven) tests | no | no | **yes** |
 | Reporting | `.xcresult` only | none | **Allure + JUnit** |
 | Accessibility-id enforcement + audit | no | no | **yes** |
@@ -237,13 +237,13 @@ Compose custom conditions out of throwing checks (`requireExists`,
 
 ```swift
 // Retry a multi-step condition until it holds (or the budget elapses).
-flakySafely { try banner.requireVisible(); try dismiss.requireHittable() }
+eventually { try banner.requireVisible(); try dismiss.requireHittable() }
 
 // Assert something stays true for a duration (the inverse of flaky-safety).
 continuously(during: 1.0) { try spinner.requireExists() }
 
 // Pass if the UI is in any one of several valid states.
-compose(
+anyOf(
     KassBranch("logged in")  { try home.requireVisible() },
     KassBranch("needs 2FA")  { try otpField.requireVisible() }
 )
@@ -251,7 +251,7 @@ compose(
 // Attempts-bounded retry.
 retry(times: 3) { try list.requireExists() }
 
-pressBack()   // taps the leading navigation-bar button
+device.pressBack()   // taps the leading navigation-bar button
 ```
 
 ## Collections (lists & tables)

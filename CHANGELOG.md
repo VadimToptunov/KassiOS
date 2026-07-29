@@ -6,6 +6,28 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- **Clearer flow-primitive names (1.2.0) — additive readability renames, no
+  breaking changes.**
+  - `KassTestCase.eventually(timeout:pollInterval:file:line:_:)` — a
+    clearer-named twin of `flakySafely(...)` (same "retry until it stops
+    throwing or the budget elapses" behavior; the new name reads as the
+    classic "eventually this passes" without borrowing the word "flaky").
+  - `KassTestCase.anyOf(file:line:_:)` — a clearer-named twin of `compose(...)`
+    (same "pass if at least one `KassBranch` succeeds" behavior; the new name
+    says what the check does instead of what it's built from).
+  - `KassDevice.pressBack(file:line:)` — device-level navigation now lives
+    next to `device.pressHome()` instead of on `KassTestCase` (same "tap the
+    leading navigation-bar button" behavior).
+
+### Deprecated
+- `KassTestCase.flakySafely(...)` → use `eventually(...)`.
+- `KassTestCase.compose(...)` → use `anyOf(...)`.
+- `KassTestCase.pressBack(...)` → use `device.pressBack(...)`.
+  All three deprecated methods still work identically (thin forwarders); they
+  are kept for source compatibility and will not be removed before the next
+  major version.
+
 ## [1.1.0] - 2026-07-29
 
 ### Added
