@@ -116,6 +116,9 @@ struct HomeView: View {
     @State private var toastVisible = false
     @State private var duplicateRowsEnabled = false
 
+    // KassiOS 1.1.0 "API ergonomics" coverage.
+    @State private var ergonomicsToggleOn = false
+
     private var dedupRows: [String] {
         duplicateRowsEnabled ? ["Row A", "Row A", "Row C"] : ["Row A", "Row B", "Row C"]
     }
@@ -223,6 +226,16 @@ struct HomeView: View {
                 // A transient toast — visible for ~2s — for `assertAppears`.
                 Button("Show Toast") { showToast() }
                     .accessibilityIdentifier("deep.toast.button")
+            }
+
+            // KassiOS 1.1.0 "API ergonomics" coverage. Placed last so it
+            // doesn't shift earlier lazily-rendered rows out of the initially
+            // rendered window.
+            Section("API ergonomics") {
+                Toggle("Ergonomics Toggle", isOn: $ergonomicsToggleOn)
+                    .accessibilityIdentifier("ergonomics.toggle")
+                Button("Ergonomics Button") {}
+                    .accessibilityIdentifier("ergonomics.button")
             }
         }
         .refreshable { refreshed = true }

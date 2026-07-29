@@ -18,7 +18,7 @@ final class DeviceTierCTests: KassTestCase {
         onScreen(LoginScreen.self) { $0.email.typeText("a@b.c"); $0.signIn.tap() }
         onScreen(HomeScreen.self) { home in
             home.requestLocation.tap()
-            home.locationStatus.assertHasText("authorized")
+            home.locationStatus.assertTextContains("authorized")
         }
         // Leave location un-granted so SystemAlertTests (which runs after this,
         // alphabetically) still gets a real permission dialog to handle.

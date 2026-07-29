@@ -89,12 +89,14 @@ element(id: "sheet.title", label: "Confirm")       // id AND label — disambigu
 button(id: "sheet.title", label: "Confirm")        // same, scoped to .button
 
 staticText(containing: "Welcome")                  // label substring, case-insensitive
+button(containing: "Sign In")                      // same, scoped to .button
 element(labelContains: "Welcome")                  // same, any type
 ```
 
-`staticText(containing:)`/`element(labelContains:)` are intentional label
-matching (dialogs/toasts/rows identified by their text), so they never trigger
-the identifier-policy warning — there's no expected id to miss.
+`staticText(containing:)`/`button(containing:)`/`element(labelContains:)` are
+intentional label matching (dialogs/toasts/rows identified by their text), so
+they never trigger the identifier-policy warning — there's no expected id to
+miss.
 
 Escape hatches when identifiers aren't enough:
 
@@ -105,7 +107,7 @@ lazy var banner = custom("promo banner") { app.otherElements["promo"].firstMatch
 Reach *into* an element with scoped children:
 
 ```swift
-row.staticText("title").assertHasText("Inbox")   // resolves within `row`
+row.staticText("title").assertTextContains("Inbox")   // resolves within `row`
 row.button("delete").tap()
 ```
 
@@ -126,6 +128,7 @@ element.longPress(forDuration: 1.5)
 element.swipeUp()                       // .swipeDown/.swipeLeft/.swipeRight
 
 element.setSwitch(on: true)             // toggles only if needed
+element.toggle()                        // flips unconditionally, regardless of current state
 element.adjustSlider(toNormalizedPosition: 0.75)   // iOS
 element.adjustPicker(toValue: "March")             // iOS
 
@@ -179,7 +182,7 @@ element.assertNotExists()               // or .waitUntilGone()
 element.assertEnabled()                 // .assertDisabled()
 element.assertSelected(true)
 element.assertHittable()                // .assertNotHittable()
-element.assertHasText("partial")        // substring of value-or-label
+element.assertTextContains("partial")   // substring of value-or-label (was `assertHasText`, now deprecated)
 element.assertHasValue("exact")         // exact match on .value
 element.assertLabel("exact")
 element.assertLabelContains("part")
@@ -237,7 +240,7 @@ screen.staticTexts()
     .matching(label: "Error")
     .assertNotEmpty()
 
-screen.cells().elementMatching(label: "Settings").tap()
+screen.cells().matching(label: "Settings").first.tap()   // was `elementMatching(label:)`, now deprecated
 
 // Iterate live matches
 screen.cells().forEach { $0.assertExists() }

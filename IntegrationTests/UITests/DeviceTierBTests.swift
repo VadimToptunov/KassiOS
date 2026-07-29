@@ -15,7 +15,7 @@ final class DeviceTierBTests: KassTestCase {
 
         // Relaunch resets to login; sign in again and check the locale label.
         onScreen(LoginScreen.self) { $0.email.typeText("a@b.c"); $0.signIn.tap() }
-        onScreen(HomeScreen.self) { $0.locale.assertHasText("DE") }
+        onScreen(HomeScreen.self) { $0.locale.assertTextContains("DE") }
     }
 
     /// Regression test for launch-argument accumulation: a `device.relaunch`
@@ -28,7 +28,7 @@ final class DeviceTierBTests: KassTestCase {
 
         device.relaunch { $0.locale("de_DE").language("de") }
         onScreen(LoginScreen.self) { $0.email.typeText("a@b.c"); $0.signIn.tap() }
-        onScreen(HomeScreen.self) { $0.locale.assertHasText("DE") }
+        onScreen(HomeScreen.self) { $0.locale.assertTextContains("DE") }
 
         runPseudolocalized {
             onScreen(LoginScreen.self) { $0.email.typeText("a@b.c"); $0.signIn.tap() }

@@ -88,6 +88,7 @@ public struct KassElementCollection {
     }
 
     /// The first element whose label contains `text`.
+    @available(*, deprecated, message: "use matching(label:).first")
     public func elementMatching(label text: String) -> KassElement {
         KassElement(description: "\(description) with label '\(text)'", config: config, app: app) { [query] in
             query().matching(NSPredicate(format: "label CONTAINS %@", text)).firstMatch

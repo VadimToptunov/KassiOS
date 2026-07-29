@@ -156,7 +156,8 @@ element("checkout.confirm")                     // any element type, not just on
 element(id: "sheet.title", label: "Confirm")    // id AND label — for SwiftUI's
 button(id: "sheet.title", label: "Confirm")     // container-id propagation
 staticText(containing: "Welcome")               // label substring (intentional
-element(labelContains: "Welcome")               // label matching — no id warning)
+button(containing: "Sign In")                   // label matching — no id warning)
+element(labelContains: "Welcome")               // — any type, same intent
 
 // Interactions
 element.tap()
@@ -178,7 +179,7 @@ element.assertExists()
 element.assertNotExists()        // or .waitUntilGone()
 element.assertEnabled()          // .assertDisabled()
 element.assertSelected(true)
-element.assertHasText("partial") // substring of value-or-label
+element.assertTextContains("partial") // substring of value-or-label (was `assertHasText`, now deprecated)
 element.assertHasValue("exact")  // exact match on .value
 element.assertLabel("exact")
 element.assertLabelContains("part")
@@ -191,11 +192,12 @@ element.assertValue(closeTo: 92.5, tolerance: 0.01)  // numeric, locale-aware ("
 element.assertAppears(within: 2)                     // catches a transient (toast) before it dismisses
 
 // Scoped children — resolve within an element
-row.staticText("title").assertHasText("Inbox")
+row.staticText("title").assertTextContains("Inbox")
 row.button("delete").tap()
 
 // Controls
 element.setSwitch(on: true)                 // toggles only if needed
+element.toggle()                            // flips unconditionally, regardless of current state
 element.adjustSlider(toNormalizedPosition: 0.75)   // iOS
 element.adjustPicker(toValue: "March")             // iOS
 

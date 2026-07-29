@@ -115,15 +115,23 @@ public extension KassElement {
         }
     }
 
+    /// Substring match against the element's value-or-label (see `textOf`).
+    /// Renamed from `assertHasText`, which read like an exact match.
     @discardableResult
-    func assertHasText(_ expected: String, file: StaticString = #filePath, line: UInt = #line) -> KassElement {
-        perform("assertHasText('\(expected)')", kind: .assert, file: file, line: line) { element in
+    func assertTextContains(_ substring: String, file: StaticString = #filePath, line: UInt = #line) -> KassElement {
+        perform("assertTextContains('\(substring)')", kind: .assert, file: file, line: line) { element in
             guard element.exists else { throw KassError("does not exist") }
             let actual = Self.textOf(element)
-            guard actual.contains(expected) else {
-                throw KassError("expected text containing '\(expected)' but found '\(actual)'")
+            guard actual.contains(substring) else {
+                throw KassError("expected text containing '\(substring)' but found '\(actual)'")
             }
         }
+    }
+
+    @available(*, deprecated, renamed: "assertTextContains(_:file:line:)")
+    @discardableResult
+    func assertHasText(_ expected: String, file: StaticString = #filePath, line: UInt = #line) -> KassElement {
+        assertTextContains(expected, file: file, line: line)
     }
 
     /// The element's text for matching: its `value` if non-empty, else its
@@ -160,8 +168,8 @@ public extension KassElement {
         }
     }
 
-    /// Exact-match on the element's `value` (unlike `assertHasText`, which is a
-    /// substring match against value-or-label). Useful for toggles/sliders/fields.
+    /// Exact-match on the element's `value` (unlike `assertTextContains`, which is
+    /// a substring match against value-or-label). Useful for toggles/sliders/fields.
     @discardableResult
     func assertHasValue(_ expected: String, file: StaticString = #filePath, line: UInt = #line) -> KassElement {
         perform("assertHasValue('\(expected)')", kind: .assert, file: file, line: line) { element in
@@ -291,6 +299,16 @@ public extension KassElement {
         perform("setSwitch(on: \(on))", kind: .control, file: file, line: line) { element in
             guard element.exists else { throw KassError("does not exist") }
             guard (element.value as? String) != (on ? "1" : "0") else { return }
+            let control = element.switches.firstMatch
+            (control.exists ? control : element).tap()
+        }
+    }
+
+    /// Flips a switch unconditionally (unlike `setSwitch(on:)`, which only taps when the state differs).
+    @discardableResult
+    func toggle(file: StaticString = #filePath, line: UInt = #line) -> KassElement {
+        perform("toggle", kind: .control, file: file, line: line) { element in
+            guard element.exists else { throw KassError("does not exist") }
             let control = element.switches.firstMatch
             (control.exists ? control : element).tap()
         }
@@ -679,9 +697,4 @@ public extension KassElement {
         XCTContext.runActivity(named: "❌ \(label)") { $0.add(attachment) }
         config.reporter?.attach(name: "Failure — \(label)", type: "image/png", data: screenshot.pngRepresentation)
     }
-}
-
-/// Direction for swipes and `scrollTo`.
-public enum KassScrollDirection {
-    case up, down, left, right
 }

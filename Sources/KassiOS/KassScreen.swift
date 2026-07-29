@@ -94,6 +94,13 @@ open class KassScreen {
         element(labelContains: substring, type: .staticText)
     }
 
+    /// Matches a button by a label substring (case-insensitive) — the button
+    /// counterpart of `staticText(containing:)`. Intentional label matching, so
+    /// it does NOT warn under the identifier policy.
+    public func button(containing substring: String) -> KassElement {
+        element(labelContains: substring, type: .button)
+    }
+
     /// Matches by a label substring (case-insensitive), any type by default.
     /// Intentional label matching — does NOT warn under the identifier policy.
     public func element(labelContains substring: String, type: XCUIElement.ElementType = .any) -> KassElement {
@@ -167,4 +174,9 @@ open class KassScreen {
         ]
         return names[type] ?? "element"
     }
+}
+
+/// Direction for swipes and `scrollTo`.
+public enum KassScrollDirection {
+    case up, down, left, right
 }

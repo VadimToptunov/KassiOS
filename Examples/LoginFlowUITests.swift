@@ -32,7 +32,7 @@ final class LoginFlowUITests: KassTestCase {
                 login.loginButton.tap()
             }
             step("Error is shown") {
-                login.errorLabel.assertHasText("Invalid credentials")
+                login.errorLabel.assertTextContains("Invalid credentials")
             }
         }
     }
