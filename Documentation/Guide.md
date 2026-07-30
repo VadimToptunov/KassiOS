@@ -553,6 +553,29 @@ config = KassConfig(synchronizer: EarlGreySynchronizer())
 The core ships `NoOpSynchronizer` and stays dependency-free; an EarlGrey-backed
 adapter is an opt-in reference in `Examples/EarlGreySynchronizer.swift`.
 
+### `StabilizingSynchronizer` — built-in idle waiting, no EarlGrey
+
+`StabilizingSynchronizer` settles on a quiet accessibility tree without any
+external dependency: it polls a cheap signature of the tree and returns once
+the signature has held steady for `stableFor`, or `timeout` elapses:
+
+```swift
+config = KassConfig(synchronizer: StabilizingSynchronizer(
+    stableFor: 0.1,      // must be unchanged this long to count as settled
+    pollInterval: 0.05   // delay between polls
+))
+```
+
+Reach for it when:
+- You want stronger flaky-safety than pure polling but can't/don't want to
+  link EarlGrey.
+- Your screens animate or reflow between an action and the next assertion.
+
+Stick with `NoOpSynchronizer` (the default) when your screens are simple and
+`Waiter`'s retrying already covers you — the extra polling has a small cost.
+Reach for `EarlGreySynchronizer` instead when you already depend on EarlGrey
+and want its in-process run-loop draining rather than tree-diffing.
+
 ---
 
 ## Configuration reference
