@@ -6,6 +6,18 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- **Soft assertions (1.3.0) — additive, non-breaking.**
+  - `KassTestCase.verifyAll(_:file:line:_:)` — the standard QA "soft
+    assertion"/"verify-all" pattern for a screen-state check: runs `block`
+    with `continueAfterFailure` enabled for its scope, so every KassiOS
+    assertion inside still records its failure but the block runs to the
+    end — one run reports *all* the mismatches on a screen instead of
+    stopping at the first. Restores the prior `continueAfterFailure` setting
+    afterward and groups the checks under a named step in the report. The
+    whole-screen counterpart to `KassElementCollection.assertEach(_:_:)`,
+    which is the same soft-aggregate idea scoped to a collection's rows.
+
 ## [1.2.0] - 2026-07-29
 
 ### Added
