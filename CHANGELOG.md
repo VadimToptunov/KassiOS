@@ -6,6 +6,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-07-30
+
 ### Added
 - **Soft assertions (1.3.0) — additive, non-breaking.**
   - `KassTestCase.verifyAll(_:file:line:_:)` — the standard QA "soft
@@ -513,7 +515,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Initial DSL: `KassTestCase`, `KassScreen`, `KassElement`, implicit waits,
   flaky-safety (`Waiter`), step logging, and `onScreen`.
 
-[Unreleased]: https://github.com/VadimToptunov/KassiOS/compare/1.2.0...HEAD
+[Unreleased]: https://github.com/VadimToptunov/KassiOS/compare/1.3.0...HEAD
+[1.3.0]: https://github.com/VadimToptunov/KassiOS/compare/1.2.0...1.3.0
 [1.2.0]: https://github.com/VadimToptunov/KassiOS/compare/1.1.0...1.2.0
 [1.1.0]: https://github.com/VadimToptunov/KassiOS/compare/1.0.0...1.1.0
 [1.0.0]: https://github.com/VadimToptunov/KassiOS/compare/0.26.0...1.0.0
