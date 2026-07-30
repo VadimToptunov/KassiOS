@@ -213,6 +213,31 @@ element.readNumber()   // Double?, non-waiting, locale-aware parse of value-or-l
 toast.assertAppears(within: 2)
 ```
 
+### Soft assertions: `verifyAll`
+
+By default a test is fail-fast — `continueAfterFailure = false` — so the first
+failed assertion stops the method and a red run only ever surfaces *one*
+mismatch. `KassTestCase.verifyAll(_:_:)` is the standard QA "soft assertion" /
+"verify-all" pattern: it flips `continueAfterFailure` on for its scope, runs
+`block` to completion, then restores the prior setting — so one run reports
+*every* mismatch on a screen instead of stopping at the first:
+
+```swift
+verifyAll("account summary") {
+    onScreen(AccountScreen.self) { screen in
+        screen.balance.assertHasValue("$100.00")
+        screen.name.assertLabel("Jane Doe")
+        screen.avatar.assertVisible()
+    }
+}
+```
+
+If the balance and the avatar are both wrong, the test still reports both
+failures — the name check in between still ran too. Contrast this with the
+default fail-fast behavior (everywhere else) and with `assertEach` below,
+which is the same soft-aggregate idea but scoped to a collection's rows;
+`verifyAll` is the whole-screen equivalent.
+
 ---
 
 ## Collections (lists & tables)

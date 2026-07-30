@@ -230,6 +230,30 @@ of the current screen, and gated behind
 `KassConfig.suggestSimilarIdentifiersOnFailure` (on by default — the walk only
 runs once an assertion has already failed).
 
+### Soft assertions: `verifyAll`
+
+A test defaults to fail-fast: the first failed assertion stops the method, so
+a red run only ever tells you about *one* mismatch. `verifyAll` is the
+standard QA "soft assertion" / "verify-all" pattern for a screen-state check —
+it runs every assertion in its scope to completion, so one run reports *all*
+the mismatches at once:
+
+```swift
+verifyAll("account summary") {
+    onScreen(AccountScreen.self) { screen in
+        screen.balance.assertHasValue("$100.00")
+        screen.name.assertLabel("Jane Doe")
+        screen.avatar.assertVisible()
+    }
+}
+```
+
+If two of those three fail, the test still reports both — not just the first.
+`verifyAll` restores the prior fail-fast setting once its scope ends, so
+everything outside (or after) it is fail-fast again. It's the whole-screen
+counterpart to `assertEach` below, which is the same soft-aggregate idea
+scoped to a collection's rows.
+
 ## Flow primitives (Kaspresso-style)
 
 Compose custom conditions out of throwing checks (`requireExists`,

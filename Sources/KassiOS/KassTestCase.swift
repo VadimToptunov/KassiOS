@@ -272,6 +272,49 @@ open class KassTestCase: XCTestCase {
         config.reporter?.stepFinished(status: .passed, message: nil)
     }
 
+    /// Soft assertions: runs `block` with continue-after-failure enabled for its
+    /// scope, so every assertion inside records its failure but the block still runs
+    /// to the end — one run reports *all* the mismatches on a screen, not just the
+    /// first. Restores the prior continue-after-failure setting afterward. Groups
+    /// the checks under a named step in the report.
+    ///
+    /// Contrast with the default fail-fast behavior (the test stops at the first
+    /// failure) and with ``KassElementCollection/assertEach(_:file:line:_:)``,
+    /// which is the equivalent soft aggregate scoped to a collection's rows.
+    ///
+    /// ```swift
+    /// verifyAll("account summary") {
+    ///     onScreen(AccountScreen.self) { screen in
+    ///         screen.balance.assertHasValue("$100.00")
+    ///         screen.name.assertLabel("Jane Doe")
+    ///         screen.avatar.assertVisible()
+    ///     }
+    /// }
+    /// ```
+    @MainActor
+    public func verifyAll(
+        _ description: String,
+        file: StaticString = #filePath,
+        line: UInt = #line,
+        _ block: @MainActor () -> Void
+    ) {
+        startReportingIfNeeded()
+        let previousContinue = continueAfterFailure
+        continueAfterFailure = true
+        defer { continueAfterFailure = previousContinue }
+
+        let before = testRun?.failureCount ?? 0
+        config.reporter?.stepStarted("verifyAll: \(description)")
+        XCTContext.runActivity(named: "verifyAll: \(description)") { _ in
+            block()
+        }
+        let failed = (testRun?.failureCount ?? 0) - before
+        config.reporter?.stepFinished(status: failed > 0 ? .failed : .passed, message: failed > 0 ? "\(failed) check(s) failed" : nil)
+        if failed > 0 {
+            config.logger.log("❌ verifyAll '\(description)': \(failed) check(s) failed")
+        }
+    }
+
     /// Runs a reusable `KassScenario` against this test case, grouped in the
     /// report under the scenario's name.
     @MainActor
