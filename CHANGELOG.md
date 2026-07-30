@@ -6,6 +6,21 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- **`StabilizingSynchronizer` (1.4.0) — additive, non-breaking.**
+  - A built-in, dependency-free `KassSynchronizer` that settles the app before
+    each interaction attempt without an EarlGrey backend: it polls a cheap
+    signature of the accessibility tree (`XCUIApplication().debugDescription`)
+    and returns once that signature has held unchanged for `stableFor`
+    (default `0.1s`), or `timeout` elapses — whichever comes first. The
+    classic "wait until the UI stops changing" idle heuristic, in pure
+    Foundation/XCTest.
+  - Tunable via `stableFor`/`pollInterval` (default `0.05s` between polls —
+    kept small but non-zero since `debugDescription` is relatively expensive
+    to compute on every poll).
+  - Fully opt-in: `KassConfig(synchronizer: StabilizingSynchronizer())`. The
+    default remains `NoOpSynchronizer`, so existing suites are unaffected.
+
 ## [1.3.0] - 2026-07-30
 
 ### Added

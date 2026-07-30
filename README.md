@@ -494,6 +494,9 @@ config = KassConfig(synchronizer: EarlGreySynchronizer())
 The core ships `NoOpSynchronizer` and stays dependency-free; an EarlGrey-backed
 adapter is provided as an opt-in reference in
 [Examples/EarlGreySynchronizer.swift](Examples/EarlGreySynchronizer.swift).
+For built-in idle waiting without EarlGrey, use `StabilizingSynchronizer`,
+which settles once the accessibility tree stops changing — see
+[Documentation/Guide.md](Documentation/Guide.md#synchronization-backends).
 
 ## Strict identifiers, suites & structured runs
 
