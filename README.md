@@ -18,16 +18,6 @@ accessibility-identifier enforcement, parameterized runs, and zero-dependency
 snapshot regression. **Zero external dependencies**, one-line SPM install,
 **Swift 6** ready.
 
-> Types use a short `Kass` prefix (`KassScreen`, `KassElement`, `KassTestCase`, `KassConfig`). Change with one find-replace if you prefer another.
-
-📖 **Full [documentation guide](Documentation/Guide.md)** — every feature, plus an
-honest [when-to-use / when-not-to](Documentation/Guide.md#when-to-use-kassios--and-when-not-to).
-Guides in the [DocC reference](https://vadimtoptunov.github.io/KassiOS/documentation/kassios/):
-**Coming from Kaspresso**, **Why your XCUITest suite flakes**, **Parameterized UI
-tests**, and a **CI recipe**. Migrating an existing suite?
-[Migration guide](Documentation/Migration.md). Release notes:
-[CHANGELOG.md](CHANGELOG.md).
-
 ## Why
 
 Raw XCUITest makes you manage timing by hand. KassiOS bakes waiting and retries
@@ -76,6 +66,16 @@ Swift Testing and KassiOS are complementary, not competitors:
 
 Use Swift Testing for your model and view-model logic; use KassiOS for the flows
 a user actually taps through. They live in different targets and never collide.
+
+> Types use a short `Kass` prefix (`KassScreen`, `KassElement`, `KassTestCase`, `KassConfig`). Change with one find-replace if you prefer another.
+
+📖 **Full [documentation guide](Documentation/Guide.md)** — every feature, plus an
+honest [when-to-use / when-not-to](Documentation/Guide.md#when-to-use-kassios--and-when-not-to).
+Guides in the [DocC reference](https://vadimtoptunov.github.io/KassiOS/documentation/kassios/):
+**Coming from Kaspresso**, **Why your XCUITest suite flakes**, **Parameterized UI
+tests**, and a **CI recipe**. Migrating an existing suite?
+[Migration guide](Documentation/Migration.md). Release notes:
+[CHANGELOG.md](CHANGELOG.md).
 
 ## Install
 
@@ -364,73 +364,26 @@ device.relaunch { $0.dynamicType("UICTContentSizeCategoryAccessibilityXL") }
 
 ## Device control: `kassios-agent` (Tier C)
 
-The UI test runs **inside** the simulator, but `xcrun simctl` is a **host-side**
-command — a test can't exec it directly. `kassios-agent` bridges that gap: a tiny
-Mac process the in-simulator test talks to over `localhost`, so you can grant
-permissions, freeze the status bar, set location, push, and flip appearance from
-your test.
+Some things a test can't reach from inside the simulator — granting permissions
+without a dialog, freezing the status bar, setting location, pushing a
+notification, flipping appearance, recording video on failure — because
+`xcrun simctl` is a **host-side** command the XCUITest process can't exec.
+`kassios-agent` bridges that gap: a tiny, loopback-only, token-authenticated Mac
+process the in-simulator test talks to over `localhost`.
 
 ```swift
-try device.permissions.grant(.location, for: "com.example.App")
-try device.statusBar.freeze(time: "9:41", battery: 100, cellularBars: 4) // deterministic screenshots
+try device.statusBar.freeze(time: "9:41", battery: 100, cellularBars: 4)
 try device.location.set(latitude: 34.7071, longitude: 33.0226)
 try device.appearance(.dark)
-try device.push(payloadJSON: #"{"aps":{"alert":"Hi"}}"#, to: "com.example.App")
+config = KassConfig(recordVideoOnFailure: true)   // .mp4 attached only on failure
 ```
 
 Each call **`XCTSkip`s with an actionable message** — never hangs — when no agent
 is running or on a real device, so a suite without the agent still goes green.
-
-### Video on failure
-
-With the agent running, opt into a **screen recording** that attaches to the
-report only when a test fails — the artifact you actually want when a CI-only
-flake needs debugging:
-
-```swift
-config = KassConfig(recordVideoOnFailure: true)
-```
-
-KassiOS records the simulator screen for the test (via the agent's
-`simctl io recordVideo`) and, on failure, attaches the `.mp4` to the `.xcresult`;
-a passing test discards it. Drive it by hand with `try device.startRecording()` /
-`let mp4 = try device.stopRecording()` if you want a clip of a specific stretch.
-Best-effort and simulator-only — no agent means a silent no-op, never a hang.
-
-### Security posture
-
-The agent shells out to the host, so it's built to be treated like it:
-
-- **Loopback only.** Binds `127.0.0.1`, never `0.0.0.0`.
-- **Token-authenticated.** A per-run token is required on every request (checked
-  in constant time); unauthorized requests are refused before anything runs.
-- **Allowlisted.** It maps a fixed command set to `simctl` and **never** forwards
-  arbitrary argv or runs through a shell. Screen recording is no exception — the
-  agent picks the output path itself; the client never supplies a filename.
-- **Per-device.** Every command carries the target `SIMULATOR_UDID`, so parallel
-  runs across simulators don't cross wires.
-- **Bounded.** Each connection has a receive timeout; it can't be stalled by an
-  unauthenticated peer.
-
-On startup the agent writes its port + token to `~/.kassios-agent.json` (mode
-`0600`); the in-simulator test discovers it via `$SIMULATOR_HOST_HOME` — the one
-channel that actually reaches the XCUITest runner process.
-
-### Running it in CI
-
-Build and start the agent before the UI-test step; nothing else to wire up:
-
-```bash
-swift build --product kassios-agent
-KASSIOS_AGENT_TOKEN="$(uuidgen)" KASSIOS_AGENT_PORT=8437 \
-  nohup .build/debug/kassios-agent >agent.log 2>&1 &
-sleep 2
-
-xcodebuild test -scheme MyAppUITests -destination '…'
-```
-
-The agent is a **separate product** — the core library depends on nothing new,
-and test targets that don't want the bridge don't build it.
+The full API, the **security posture** (loopback-only, per-run token auth,
+allowlisted `simctl` mapping — never arbitrary argv), **video-on-failure**, and
+the **CI setup** live in the
+[Guide](Documentation/Guide.md#device-control-kassios-agent-tier-c).
 
 ## Reusable flows (scenarios)
 
