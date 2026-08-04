@@ -1,0 +1,5 @@
+# Canonical author identity — collapses the two commit-name spellings
+# ("vadimtoptunov" from the CLI, "Vadim Toptunov" from GitHub-side merge
+# commits) into one person, so contributor views (GitHub, Swift Package Index,
+# `git shortlog`) show a single author instead of two.
+Vadim Toptunov <vtoptunov88@gmail.com> vadimtoptunov <vtoptunov88@gmail.com>
