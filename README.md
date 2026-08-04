@@ -595,21 +595,28 @@ Pages with the "GitHub Actions" source in repo settings).
 
 ## Status
 
-v0.10 — core DSL, waits, flaky-safety, step logging, gestures + scroll-to +
+**1.4.0 — stable. The public API is frozen under [semantic versioning](https://semver.org)
+since 1.0.0**; releases since are additive (see the [changelog](CHANGELOG.md)).
+
+Core DSL, waits, flaky-safety, step logging, gestures + scroll-to +
 multitouch + coordinate/drag + pull-to-refresh, slider/switch/picker controls,
 rich assertions (strict `assertVisible` vs. soft `assertPresent`,
-label-contains/value-regex/placeholder/`waitUntil`), per-call `within(timeout:)`,
-element collections, scoped child elements, **web content**
+label-contains/value-regex/placeholder/`waitUntil`), **soft assertions**
+(`verifyAll` — run the whole block, report *every* mismatch), per-call
+`within(timeout:)`, element collections, scoped child elements, **web content**
 (`webView`/`link`/`links`), wait-combinators + app-alert DSL, Kaspresso-style
-flow primitives, parameterized tests, `KassSuite` + structured
-`before`/`after`/`run`, an **accessibility-identifier policy**
+flow primitives, **page objects, robots & scenarios**
+(`KassScreen`/`KassRobot`/`KassScenario`), parameterized tests, `KassSuite` +
+structured `before`/`after`/`run`, an **accessibility-identifier policy**
 (`ignore`/`warn`/`enforce`) + **accessibility audit** + **screen-object codegen**
 (`KassScaffold`), precise failure diagnostics (+ accessibility-tree dump +
 **"did you mean?" identifier suggestions**), an **identifier inventory**
 (`device.dumpIdentifiers`) for agent-driven discovery/scaffolding,
 device/permission/deep-link/stub helpers + a `kass-simctl` CI toolkit, localized
-screenshot runs, reusable scenarios, **Allure + JUnit** reporters, zero-dep
-snapshot regression, and a synchronizer applied to every wait. Real UI coverage
+screenshot runs, reusable scenarios, **Allure + JUnit** reporters, **video-on-failure**,
+zero-dep snapshot regression, the `kassios-lint` compile-time linter, and a
+pluggable synchronizer applied to every wait — including a built-in, dependency-free
+**`StabilizingSynchronizer`** (idle-waiting without EarlGrey). Real UI coverage
 runs on the simulator in CI (SwiftLint + unit + UI), with DocC auto-published to
 Pages. See the [full guide](Documentation/Guide.md).
 
