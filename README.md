@@ -77,6 +77,13 @@ tests**, and a **CI recipe**. Migrating an existing suite?
 [Migration guide](Documentation/Migration.md). Release notes:
 [CHANGELOG.md](CHANGELOG.md).
 
+🧪 **See a real suite:** [ChaosBank ⨯ KassiOS](https://github.com/VadimToptunov/ChaosBank-KassiOS-Tests)
+is a complete, hand-written KassiOS suite driving
+[ChaosBank](https://github.com/VadimToptunov/ChaosBank-iOS) — a deliberately-buggy
+fintech app — end to end (WKWebView login, live market feed, money flows). It
+passes on the clean build and turns **red** on each injected defect, so you can
+read real screen objects and tests instead of toy snippets.
+
 ## Install
 
 Swift Package Manager. Add the package and link it to your **UI Test target**:
@@ -576,7 +583,11 @@ Pages. See the [full guide](Documentation/Guide.md).
 Verified end-to-end against Apple's open-source
 [Food Truck](https://github.com/apple/sample-food-truck) app on the iOS
 Simulator — multi-screen navigation, flow primitives, screenshots and Allure
-export all green.
+export all green. It's also dogfooded against
+[ChaosBank](https://github.com/VadimToptunov/ChaosBank-iOS), a purpose-built
+buggy fintech app: the full [ChaosBank ⨯ KassiOS](https://github.com/VadimToptunov/ChaosBank-KassiOS-Tests)
+suite passes the clean build and goes red on each planted defect — a complete,
+worked example you can read.
 
 ## License
 
