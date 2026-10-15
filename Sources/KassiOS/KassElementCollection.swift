@@ -115,7 +115,7 @@ public struct KassElementCollection {
     public func assertCount(_ expected: Int, file: StaticString = #filePath, line: UInt = #line) -> KassElementCollection {
         do {
             try KassInterceptorChain.run(config.interceptors, context: context("assertCount(\(expected))", file: file, line: line)) {
-                config.synchronizer.waitForIdle(timeout: config.timeout)
+                config.settle()
                 let actual = query().count
                 guard actual == expected else { throw KassError("expected \(expected) but found \(actual)") }
             }
@@ -131,7 +131,7 @@ public struct KassElementCollection {
     public func assertNotEmpty(file: StaticString = #filePath, line: UInt = #line) -> KassElementCollection {
         do {
             try KassInterceptorChain.run(config.interceptors, context: context("assertNotEmpty", file: file, line: line)) {
-                config.synchronizer.waitForIdle(timeout: config.timeout)
+                config.settle()
                 guard query().count > 0 else { throw KassError("collection is empty") }
             }
         } catch {
@@ -156,7 +156,7 @@ public struct KassElementCollection {
     ) -> KassElementCollection {
         do {
             try KassInterceptorChain.run(config.interceptors, context: context("assertNoDuplicates", file: file, line: line)) {
-                config.synchronizer.waitForIdle(timeout: config.timeout)
+                config.settle()
                 let keys = (0..<query().count).map { key(element(at: $0)) }
                 let duplicateKeys = Self.duplicates(in: keys)
                 guard duplicateKeys.isEmpty else {
@@ -203,7 +203,7 @@ public struct KassElementCollection {
     ) -> KassElementCollection {
         do {
             try KassInterceptorChain.run(config.interceptors, context: context("assertEach('\(description)')", file: file, line: line)) {
-                config.synchronizer.waitForIdle(timeout: config.timeout)
+                config.settle()
                 var failures: [String] = []
                 for index in 0..<query().count {
                     do {

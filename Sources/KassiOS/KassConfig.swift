@@ -153,3 +153,19 @@ public struct ConsoleKassLogger: KassLogger {
         print("☕️ [KassiOS] \(message)")
     }
 }
+
+extension KassConfig {
+    /// Settles the app before a single interaction or assertion attempt by asking
+    /// the configured `synchronizer` to wait for idle.
+    ///
+    /// Every retry-wrapped wait funnels through here, so the idle-wait's time bound
+    /// lives in one place. It currently passes the full `timeout`
+    /// (behaviour-preserving). The known follow-up (see REVIEW.md, P0-2) is to
+    /// bound it to the *remaining* retry budget, so a never-settling tree can't let
+    /// one `waitForIdle` consume the whole budget before the action is attempted —
+    /// a change that needs runtime validation because it interacts with
+    /// `StabilizingSynchronizer.stableFor`.
+    func settle() {
+        synchronizer.waitForIdle(timeout: timeout)
+    }
+}

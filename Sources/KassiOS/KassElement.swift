@@ -520,7 +520,7 @@ public extension KassElement {
         )
         do {
             try KassInterceptorChain.run(config.interceptors, context: context) {
-                config.synchronizer.waitForIdle(timeout: config.timeout)
+                config.settle()
                 let target = resolve()
                 if target.exists && target.isHittable { return }
                 let scroll = container.resolve()
@@ -574,7 +574,7 @@ public extension KassElement {
         )
         do {
             try KassInterceptorChain.run(config.interceptors, context: context) {
-                config.synchronizer.waitForIdle(timeout: config.timeout)
+                config.settle()
                 let target = resolve()
                 if target.exists && target.isHittable { return }
                 let scroll = container.resolve()
@@ -634,7 +634,7 @@ public extension KassElement {
             // retry lives in it (see `config.interceptors`). The terminal is a
             // single attempt — the chain re-runs it as its members decide.
             try KassInterceptorChain.run(config.interceptors, context: context) {
-                config.synchronizer.waitForIdle(timeout: config.timeout)
+                config.settle()
                 try body(resolve())
             }
             // Strict mode: verify the element carried a real accessibility id.
