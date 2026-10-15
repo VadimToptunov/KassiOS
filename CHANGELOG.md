@@ -6,6 +6,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-10-15
+
 ### Fixed
 - `KassSystemAlertInterceptor` now waits briefly for asynchronously-presented
   system dialogs after a triggering action, instead of a single instantaneous
@@ -539,7 +541,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Initial DSL: `KassTestCase`, `KassScreen`, `KassElement`, implicit waits,
   flaky-safety (`Waiter`), step logging, and `onScreen`.
 
-[Unreleased]: https://github.com/VadimToptunov/KassiOS/compare/1.4.0...HEAD
+[Unreleased]: https://github.com/VadimToptunov/KassiOS/compare/1.5.0...HEAD
+[1.5.0]: https://github.com/VadimToptunov/KassiOS/compare/1.4.0...1.5.0
 [1.4.0]: https://github.com/VadimToptunov/KassiOS/compare/1.3.0...1.4.0
 [1.3.0]: https://github.com/VadimToptunov/KassiOS/compare/1.2.0...1.3.0
 [1.2.0]: https://github.com/VadimToptunov/KassiOS/compare/1.1.0...1.2.0
