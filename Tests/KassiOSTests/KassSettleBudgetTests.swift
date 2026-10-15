@@ -1,6 +1,13 @@
 import XCTest
 @testable import KassiOS
 
+/// Records the timeout it was asked to settle with, to prove `settle()` bounds the
+/// idle-wait to `pollInterval` rather than the full `timeout`.
+private final class RecordingSynchronizer: KassSynchronizer, @unchecked Sendable {
+    var lastTimeout: TimeInterval?
+    func waitForIdle(timeout: TimeInterval) { lastTimeout = timeout }
+}
+
 /// Characterizes `StabilizingSynchronizer.waitForIdle` timing — the reason the
 /// retry-wrapped call sites now funnel through `KassConfig.settle()`. Passing the
 /// full `timeout` there means a never-settling tree blocks for the whole budget,
@@ -30,6 +37,16 @@ final class KassSettleBudgetTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(
             Date().timeIntervalSince(start), 0.25,
             "a never-settling tree should consume ~the whole timeout"
+        )
+    }
+
+    func test_settle_boundsToPollIntervalNotTimeout() {
+        let sync = RecordingSynchronizer()
+        let config = KassConfig(timeout: 30, pollInterval: 0.25, synchronizer: sync)
+        config.settle()
+        XCTAssertEqual(
+            sync.lastTimeout, 0.25,
+            "settle() must bound the idle-wait to pollInterval, not the full timeout"
         )
     }
 }
