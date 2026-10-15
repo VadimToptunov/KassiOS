@@ -53,46 +53,47 @@ public struct KassHardwareFixture: Codable, Sendable, Equatable {
         }
     }
 
+    /// The scripted Bluetooth environment a scan "discovers".
     public struct BluetoothScript: Codable, Sendable, Equatable {
-        public var peripherals: [Peripheral]
+        public var peripherals: [BluetoothPeripheral]
 
-        public init(peripherals: [Peripheral] = []) {
+        public init(peripherals: [BluetoothPeripheral] = []) {
             self.peripherals = peripherals
         }
+    }
 
-        public struct Peripheral: Codable, Sendable, Equatable {
-            public var id: String
-            public var name: String
-            public var services: [String]
-            public var autoConnect: Bool
-            public var notifications: [Notification]
+    public struct BluetoothPeripheral: Codable, Sendable, Equatable {
+        public var id: String
+        public var name: String
+        public var services: [String]
+        public var autoConnect: Bool
+        public var notifications: [BluetoothNotification]
 
-            public init(
-                id: String,
-                name: String,
-                services: [String] = [],
-                autoConnect: Bool = true,
-                notifications: [Notification] = []
-            ) {
-                self.id = id
-                self.name = name
-                self.services = services
-                self.autoConnect = autoConnect
-                self.notifications = notifications
-            }
+        public init(
+            id: String,
+            name: String,
+            services: [String] = [],
+            autoConnect: Bool = true,
+            notifications: [BluetoothNotification] = []
+        ) {
+            self.id = id
+            self.name = name
+            self.services = services
+            self.autoConnect = autoConnect
+            self.notifications = notifications
         }
+    }
 
-        /// A canned characteristic value, delivered `afterMs` after connection.
-        public struct Notification: Codable, Sendable, Equatable {
-            public var characteristic: String
-            public var valueHex: String
-            public var afterMs: Int
+    /// A canned characteristic value, delivered `afterMs` after connection.
+    public struct BluetoothNotification: Codable, Sendable, Equatable {
+        public var characteristic: String
+        public var valueHex: String
+        public var afterMs: Int
 
-            public init(characteristic: String, valueHex: String, afterMs: Int = 0) {
-                self.characteristic = characteristic
-                self.valueHex = valueHex
-                self.afterMs = afterMs
-            }
+        public init(characteristic: String, valueHex: String, afterMs: Int = 0) {
+            self.characteristic = characteristic
+            self.valueHex = valueHex
+            self.afterMs = afterMs
         }
     }
 

@@ -31,21 +31,21 @@ public struct KassHardwareFixtureDefinition: Codable {
     }
 
     public struct BluetoothScript: Codable {
-        public let peripherals: [Peripheral]
+        public let peripherals: [BluetoothPeripheral]
+    }
 
-        public struct Peripheral: Codable {
-            public let id: String
-            public let name: String
-            public let services: [String]
-            public let autoConnect: Bool
-            public let notifications: [Notification]
-        }
+    public struct BluetoothPeripheral: Codable {
+        public let id: String
+        public let name: String
+        public let services: [String]
+        public let autoConnect: Bool
+        public let notifications: [BluetoothNotification]
+    }
 
-        public struct Notification: Codable {
-            public let characteristic: String
-            public let valueHex: String
-            public let afterMs: Int
-        }
+    public struct BluetoothNotification: Codable {
+        public let characteristic: String
+        public let valueHex: String
+        public let afterMs: Int
     }
 
     public struct NFCTag: Codable {
@@ -89,14 +89,14 @@ public final class KassScannerStub {
 /// Replays a scripted Bluetooth environment: the peripherals a scan "discovers"
 /// and their scheduled characteristic notifications.
 public final class KassBLEStub {
-    public let peripherals: [KassHardwareFixtureDefinition.BluetoothScript.Peripheral]
+    public let peripherals: [KassHardwareFixtureDefinition.BluetoothPeripheral]
 
     public init(_ script: KassHardwareFixtureDefinition.BluetoothScript?) {
         self.peripherals = script?.peripherals ?? []
     }
 
     /// Peripherals a scripted scan discovers.
-    public func discovered() -> [KassHardwareFixtureDefinition.BluetoothScript.Peripheral] {
+    public func discovered() -> [KassHardwareFixtureDefinition.BluetoothPeripheral] {
         peripherals
     }
 

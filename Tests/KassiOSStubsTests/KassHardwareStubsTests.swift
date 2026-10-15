@@ -36,7 +36,23 @@ final class KassHardwareStubsTests: XCTestCase {
 
     func test_bleStub_discoversAndMapsNotifications() {
         let json = #"""
-        {"scanner":[],"bluetooth":{"peripherals":[{"id":"p1","name":"Sensor","services":["180d"],"autoConnect":true,"notifications":[{"characteristic":"2a37","valueHex":"0a1b","afterMs":100}]}]},"nfc":[]}
+        {
+          "scanner": [],
+          "bluetooth": {
+            "peripherals": [
+              {
+                "id": "p1",
+                "name": "Sensor",
+                "services": ["180d"],
+                "autoConnect": true,
+                "notifications": [
+                  {"characteristic": "2a37", "valueHex": "0a1b", "afterMs": 100}
+                ]
+              }
+            ]
+          },
+          "nfc": []
+        }
         """#
         let fixture = KassiOSStubs.hardwareFixture(["KASS_HARDWARE_JSON": json])
         let ble = KassBLEStub(fixture?.bluetooth)
