@@ -6,6 +6,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- Hardware stubbing (`KassHardwareFixture` + `KassTestCase.launch(hardware:)`, with
+  `KassScannerStub` / `KassBLEStub` / `KassNFCStub` in `KassiOSStubs`): replay canned
+  scanner, Bluetooth and NFC results through app-side seams the simulator cannot
+  drive. Static launch-environment tier; see `Documentation/HardwareStubbing.md`.
+
 ### Changed
 - The configured synchronizer's per-attempt idle-wait is now bounded to
   `pollInterval` instead of the full `timeout`, so a non-`NoOp` synchronizer on a
