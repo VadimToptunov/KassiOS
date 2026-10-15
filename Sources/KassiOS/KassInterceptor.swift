@@ -2,7 +2,7 @@ import Foundation
 
 /// The category of a DSL action, so an interceptor can react to some kinds and
 /// pass others straight through (e.g. handle system dialogs only around taps).
-public enum KassActionKind: Sendable {
+public enum KassActionKind: Sendable, Hashable {
     case tap
     case type
     case clear

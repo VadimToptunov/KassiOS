@@ -59,4 +59,26 @@ final class KassBuiltinInterceptorsTests: XCTestCase {
             )
         )
     }
+
+    func test_shouldSettle_falseForNonTriggeringKinds() {
+        for kind in [KassActionKind.assert, .wait, .scroll, .type, .clear, .gesture] {
+            XCTAssertFalse(KassSystemAlertInterceptor.shouldSettle(
+                for: kind, settleTimeout: 0.5,
+                triggeringKinds: KassSystemAlertInterceptor.defaultTriggeringKinds))
+        }
+    }
+
+    func test_shouldSettle_trueForTriggeringKinds() {
+        for kind in [KassActionKind.tap, .control, .custom] {
+            XCTAssertTrue(KassSystemAlertInterceptor.shouldSettle(
+                for: kind, settleTimeout: 0.5,
+                triggeringKinds: KassSystemAlertInterceptor.defaultTriggeringKinds))
+        }
+    }
+
+    func test_shouldSettle_zeroTimeoutDisablesWait() {
+        XCTAssertFalse(KassSystemAlertInterceptor.shouldSettle(
+            for: .tap, settleTimeout: 0,
+            triggeringKinds: KassSystemAlertInterceptor.defaultTriggeringKinds))
+    }
 }

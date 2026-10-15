@@ -40,6 +40,14 @@ public enum KassSystemAlertAction: Sendable {
 /// the action itself triggered one. Place it **after** ``KassRetryInterceptor``
 /// so it runs on every attempt.
 ///
+/// ### Async dialogs
+/// A system dialog appears a beat *after* the action that triggers it (the OS
+/// takes 100–500 ms between the permission request and springboard showing the
+/// prompt). So the after-action check waits up to `settleTimeout` for the dialog
+/// to appear — but only for action kinds that can actually raise one
+/// (`triggeringKinds`), so an `assert`/`scroll`/`type` never pays the wait.
+/// Set `settleTimeout` to `0` to restore the old instantaneous check.
+///
 /// ```swift
 /// config.interceptors = [KassRetryInterceptor(), KassSystemAlertInterceptor(.accept)]
 /// ```
@@ -47,12 +55,23 @@ public struct KassSystemAlertInterceptor: KassInterceptor {
     let action: KassSystemAlertAction
     let acceptButtons: [String]
     let dismissButtons: [String]
+    let settleTimeout: TimeInterval
+    let triggeringKinds: Set<KassActionKind>
     let logger: KassLogger
+
+    /// Action kinds that can plausibly raise a *new* system permission dialog,
+    /// and so warrant a short wait for it to appear afterwards. Asserts, waits,
+    /// scrolls, typing and clears never trigger a fresh prompt.
+    public static let defaultTriggeringKinds: Set<KassActionKind> = [.tap, .control, .custom]
 
     /// - Parameters:
     ///   - action: whether to accept or dismiss dialogs (default `.accept`).
     ///   - accept / dismiss: button titles to try, in order. The defaults cover
     ///     the common iOS permission prompts; override for localized runs.
+    ///   - settleTimeout: how long the after-action check waits for a just-
+    ///     triggered dialog to appear, for triggering kinds only. Default `0.5`s;
+    ///     `0` disables the wait (instantaneous check, as before).
+    ///   - triggeringKinds: which action kinds get the settle wait.
     ///   - logger: where a "present but unhandled" diagnostic is written.
     public init(
         _ action: KassSystemAlertAction = .accept,
@@ -63,21 +82,42 @@ public struct KassSystemAlertInterceptor: KassInterceptor {
         dismiss: [String] = [
             "Don't Allow", "Ask App Not to Track", "Not Now", "Cancel"
         ],
+        settleTimeout: TimeInterval = 0.5,
+        triggeringKinds: Set<KassActionKind> = KassSystemAlertInterceptor.defaultTriggeringKinds,
         logger: KassLogger = ConsoleKassLogger()
     ) {
         self.action = action
         self.acceptButtons = accept
         self.dismissButtons = dismiss
+        self.settleTimeout = settleTimeout
+        self.triggeringKinds = triggeringKinds
         self.logger = logger
     }
 
     @MainActor
     public func intercept(_ context: KassActionContext, proceed: () throws -> Void) throws {
-        handlePendingAlert()
-        // Handle an alert the action itself raised, even if it then threw, so the
-        // next retry attempt starts from a clean state.
-        defer { handlePendingAlert() }
+        // Before: clear a dialog left over from a previous action. It is already
+        // on screen if present, so no wait — an instantaneous check.
+        handlePendingAlert(settle: 0)
+        // After: a dialog this action raises appears asynchronously, so give it a
+        // bounded moment to show — but only for kinds that can raise one, so we
+        // don't pay the wait on every assert/scroll/type. Runs even if `proceed`
+        // threw, so the next retry attempt starts from a clean, unblocked screen.
+        let settle = Self.shouldSettle(
+            for: context.kind, settleTimeout: settleTimeout, triggeringKinds: triggeringKinds
+        ) ? settleTimeout : 0
+        defer { handlePendingAlert(settle: settle) }
         try proceed()
+    }
+
+    /// Pure decision rule for whether the after-action check should wait for a
+    /// dialog to appear. Factored out so it is unit-testable without a simulator.
+    static func shouldSettle(
+        for kind: KassActionKind,
+        settleTimeout: TimeInterval,
+        triggeringKinds: Set<KassActionKind>
+    ) -> Bool {
+        settleTimeout > 0 && triggeringKinds.contains(kind)
     }
 
     /// The first candidate title that is present — the pure selection rule,
@@ -87,10 +127,14 @@ public struct KassSystemAlertInterceptor: KassInterceptor {
     }
 
     /// Taps the first matching button on the frontmost springboard alert, if any.
+    /// When `settle > 0`, first waits up to `settle` for an alert to appear.
     @MainActor
-    private func handlePendingAlert() {
+    private func handlePendingAlert(settle: TimeInterval) {
         let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
         let alert = springboard.alerts.firstMatch
+        if settle > 0 {
+            _ = alert.waitForExistence(timeout: settle)
+        }
         guard alert.exists else { return }
         let titles = action == .accept ? acceptButtons : dismissButtons
         if let match = Self.firstMatchingTitle(in: titles, exists: { alert.buttons[$0].exists }) {
