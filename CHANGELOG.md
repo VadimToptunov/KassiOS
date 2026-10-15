@@ -6,6 +6,13 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+- `KassSystemAlertInterceptor` now waits briefly for asynchronously-presented
+  system dialogs after a triggering action, instead of a single instantaneous
+  check that could miss a dialog the OS had not yet shown. Gated by action kind
+  (`.tap`/`.control`/`.custom`) and a new `settleTimeout` (default `0.5s`; `0`
+  restores the previous instantaneous check). `KassActionKind` is now `Hashable`.
+
 ## [1.4.0] - 2026-07-30
 
 ### Added
