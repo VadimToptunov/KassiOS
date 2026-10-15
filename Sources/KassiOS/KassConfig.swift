@@ -153,3 +153,25 @@ public struct ConsoleKassLogger: KassLogger {
         print("☕️ [KassiOS] \(message)")
     }
 }
+
+extension KassConfig {
+    /// Settles the app before a single interaction or assertion attempt by asking
+    /// the configured `synchronizer` to wait for idle, bounded to one `pollInterval`.
+    ///
+    /// Every retry-wrapped wait funnels through here. The bound is `pollInterval`,
+    /// **not** the full `timeout`: inside a retry loop the loop itself (bounded by
+    /// `timeout`) provides the overall patience, so a never-settling tree — a
+    /// persistent spinner or animation, exactly where a synchronizer is wanted —
+    /// can no longer let one `waitForIdle` consume the whole budget before the
+    /// action is attempted even once. This matches the per-iteration cap
+    /// `assertAppears` already uses.
+    ///
+    /// Idle detection needs `pollInterval >= StabilizingSynchronizer.stableFor`
+    /// (defaults 0.5s vs 0.1s — fine); a much smaller `pollInterval` degrades the
+    /// settle to a bounded delay and lets retry carry the rest. With the default
+    /// `NoOpSynchronizer`, `timeout` is ignored entirely, so this is a no-op unless
+    /// a real synchronizer is configured.
+    func settle() {
+        synchronizer.waitForIdle(timeout: pollInterval)
+    }
+}

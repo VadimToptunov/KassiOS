@@ -12,6 +12,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   scanner, Bluetooth and NFC results through app-side seams the simulator cannot
   drive. Static launch-environment tier; see `Documentation/HardwareStubbing.md`.
 
+### Changed
+- The configured synchronizer's per-attempt idle-wait is now bounded to
+  `pollInterval` instead of the full `timeout`, so a non-`NoOp` synchronizer on a
+  never-settling tree can no longer consume the whole retry budget in a single
+  wait. No effect with the default `NoOpSynchronizer`.
+
 ## [1.5.0] - 2026-10-15
 
 ### Fixed

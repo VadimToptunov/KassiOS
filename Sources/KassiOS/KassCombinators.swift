@@ -33,7 +33,7 @@ public extension KassTestCase {
                 config.interceptors,
                 context: combinatorContext("waitForAny(\(elements.count))", timeout: timeout, file: file, line: line)
             ) {
-                self.config.synchronizer.waitForIdle(timeout: self.config.timeout)
+                self.config.settle()
                 for (index, element) in elements.enumerated() where element.resolve().exists {
                     found = index
                     return
@@ -60,7 +60,7 @@ public extension KassTestCase {
                 config.interceptors,
                 context: combinatorContext("waitForAll(\(elements.count))", timeout: timeout, file: file, line: line)
             ) {
-                self.config.synchronizer.waitForIdle(timeout: self.config.timeout)
+                self.config.settle()
                 for element in elements where !element.resolve().exists {
                     throw KassError("\(element.description) not present yet")
                 }
