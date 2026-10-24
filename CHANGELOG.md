@@ -6,6 +6,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-10-24
+
 ### Fixed
 - Not-found failures no longer stall on large screens. The "did you mean?"
   suggestion walk (and `KassDevice.dumpIdentifiers`) now reads the tree from a
@@ -570,7 +572,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Initial DSL: `KassTestCase`, `KassScreen`, `KassElement`, implicit waits,
   flaky-safety (`Waiter`), step logging, and `onScreen`.
 
-[Unreleased]: https://github.com/VadimToptunov/KassiOS/compare/1.6.0...HEAD
+[Unreleased]: https://github.com/VadimToptunov/KassiOS/compare/1.7.0...HEAD
+[1.7.0]: https://github.com/VadimToptunov/KassiOS/compare/1.6.0...1.7.0
 [1.6.0]: https://github.com/VadimToptunov/KassiOS/compare/1.4.0...1.6.0
 [1.5.0]: https://github.com/VadimToptunov/KassiOS/compare/1.4.0...1.5.0
 [1.4.0]: https://github.com/VadimToptunov/KassiOS/compare/1.3.0...1.4.0
