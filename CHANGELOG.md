@@ -6,6 +6,21 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+- Not-found failures no longer stall on large screens. The "did you mean?"
+  suggestion walk (and `KassDevice.dumpIdentifiers`) now reads the tree from a
+  single `XCUIElement.snapshot()` instead of resolving every descendant one
+  index at a time, which cost several IPC round-trips per element — ~60 s on a
+  ~150-element screen, after the check itself had already failed. Still bounded
+  to 400 elements; if the snapshot throws, it falls back to the per-index walk
+  capped at 50 elements.
+
+### Changed
+- `KassIdentifierInfo.isHittable` from `dumpIdentifiers` now means "has a
+  non-empty frame that intersects the app's frame" (a snapshot carries no
+  `isHittable`). It differs from XCUITest's `isHittable` only for elements
+  occluded by an overlay. The per-index fallback still reports the real value.
+
 ## [1.6.0] - 2026-10-15
 
 ### Added
