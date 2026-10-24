@@ -5,6 +5,8 @@ public struct KassIdentifierInfo: Codable, Sendable, Equatable {
     public let identifier: String
     public let type: String          // KassScreen.typeName(...)
     public let label: String
+    /// On screen: a non-empty frame intersecting the app's frame (read from one
+    /// tree snapshot, so it doesn't account for occlusion by an overlay).
     public let isHittable: Bool
 }
 

@@ -356,8 +356,9 @@ device.attachIdentifierInventory()                      // same, + pretty JSON a
 ```
 
 Each entry is a `Codable` `KassIdentifierInfo { identifier, type, label,
-isHittable }`; the walk is bounded (400 elements), same as the "did you mean?"
-suggestions above.
+isHittable }`, read from one accessibility snapshot of the app (so `isHittable`
+here means "on screen", not occlusion-aware); the walk is bounded (400 elements),
+same as the "did you mean?" suggestions above.
 
 ### Tier B — relaunch with locale / language / Dynamic Type
 
