@@ -89,7 +89,7 @@ read real screen objects and tests instead of toy snippets.
 Swift Package Manager. Add the package and link it to your **UI Test target**:
 
 ```swift
-.package(url: "https://github.com/VadimToptunov/KassiOS.git", from: "1.6.0")
+.package(url: "https://github.com/VadimToptunov/KassiOS.git", from: "1.7.0")
 ```
 
 ## Use
@@ -556,7 +556,7 @@ Pages with the "GitHub Actions" source in repo settings).
 
 ## Status
 
-**1.6.0 — stable. The public API is frozen under [semantic versioning](https://semver.org)
+**1.7.0 — stable. The public API is frozen under [semantic versioning](https://semver.org)
 since 1.0.0**; releases since are additive (see the [changelog](CHANGELOG.md)).
 
 Core DSL, waits, flaky-safety, step logging, gestures + scroll-to +
