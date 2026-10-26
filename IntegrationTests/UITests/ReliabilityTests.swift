@@ -4,6 +4,7 @@ final class ReliabilityScreen: KassScreen {
     lazy var liveSwitch = switchControl("rel.liveSwitch")
     lazy var deadSwitch = switchControl("rel.deadSwitch")
     lazy var name = textField("rel.name")
+    lazy var price = textField("rel.price")
     lazy var lossy = textField("rel.lossy")
     lazy var ticker = staticText("rel.ticker")
     lazy var steady = staticText("rel.steady")
@@ -56,6 +57,15 @@ final class ReliabilityTests: KassTestCase {
             XCTExpectFailure("the field keeps only three characters") {
                 screen.lossy.within(timeout: 4).replaceText("12345")
             }
+        }
+    }
+
+    func test_replaceText_replacesAPrefilledRightAlignedValue() {
+        open()
+        onScreen(ReliabilityScreen.self) { screen in
+            screen.price.replaceText("179.00").assertHasValue("179.00")
+            screen.price.clearText()
+            screen.price.replaceText("5").assertHasValue("5")
         }
     }
 

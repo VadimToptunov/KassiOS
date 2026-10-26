@@ -60,19 +60,22 @@ public extension KassElement {
         }
     }
 
-    /// Clears the field by sending one delete per character of the current
-    /// `value`. Known limitation: for secure fields and formatted inputs (phone,
-    /// card, currency) the `value` length may not equal the number of deletes
-    /// needed, so clearing can be incomplete — verify with `assertHasValue("")`
-    /// or clear it in the app for those.
+    /// Clears the field: puts the cursor after the text, sends one delete per
+    /// character, then tries the clear button if anything is left. Unless
+    /// `verifyActionOutcome` is off, a field that still isn't empty fails the
+    /// action (secure fields aren't checked: their value is masked).
     @discardableResult
     func clearText(file: StaticString = #filePath, line: UInt = #line) -> KassElement {
         perform("clearText", kind: .clear, file: file, line: line) { element in
             guard element.exists else { throw KassError("does not exist") }
-            guard let value = element.value as? String else { throw KassError("has no text value to clear") }
-            element.tap()
-            let deletes = String(repeating: XCUIKeyboardKey.delete.rawValue, count: value.count)
-            element.typeText(deletes)
+            guard element.value is String else { throw KassError("has no text value to clear") }
+            try makeHittable(element)
+            emptyField(element)
+            guard config.verifyActionOutcome, element.elementType != .secureTextField else { return }
+            let empty = kassPoll(within: kassOutcomeWindow) {
+                Self.isEmptyFieldValue(element.value as? String ?? "", of: element)
+            }
+            guard empty else { throw KassError("was cleared but still reads '\(element.value as? String ?? "")'") }
         }
     }
 
@@ -372,10 +375,7 @@ public extension KassElement {
     func replaceText(_ text: String, file: StaticString = #filePath, line: UInt = #line) -> KassElement {
         perform("replaceText('\(text)')", kind: .type, file: file, line: line) { element in
             try makeHittable(element)
-            element.tap()
-            if let value = element.value as? String, !value.isEmpty {
-                element.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: value.count))
-            }
+            emptyField(element)
             element.typeText(text)
             guard config.verifyActionOutcome, element.elementType != .secureTextField else { return }
             guard kassPoll(within: kassOutcomeWindow, { KassTextMatch.matches(Self.textOf(element), typed: text) }) else {

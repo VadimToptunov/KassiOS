@@ -74,6 +74,25 @@ extension KassElement {
         element.value as? String
     }
 
+    /// Focuses a text field with the cursor after its text and deletes it. A tap
+    /// at the centre can land the cursor mid-text (right-aligned or long values),
+    /// and the deletes then only remove what's left of it, so this taps the
+    /// trailing edge. If text is still left, the field's clear button is tried.
+    func emptyField(_ element: XCUIElement) {
+        element.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).tap()
+        guard let value = element.value as? String, !Self.isEmptyFieldValue(value, of: element) else { return }
+        element.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: value.count))
+        if let left = element.value as? String, !Self.isEmptyFieldValue(left, of: element) {
+            let clear = element.buttons.firstMatch
+            if clear.exists, clear.isHittable { clear.tap() }
+        }
+    }
+
+    /// An empty field reports its placeholder as its value.
+    static func isEmptyFieldValue(_ value: String, of element: XCUIElement) -> Bool {
+        value.isEmpty || value == element.placeholderValue
+    }
+
     /// Taps the switch and, if `flipped` doesn't come true, taps its trailing edge
     /// once more. Throws if it still hasn't flipped (only when verifying outcomes).
     func flipSwitch(_ element: XCUIElement, flipped: () -> Bool) throws {
@@ -166,17 +185,24 @@ enum KassAutoScroll {
             .max { $0.frame.width * $0.frame.height < $1.frame.width * $1.frame.height }
     }
 
-    /// A slow swipe: it moves the content without a long fling, so the next tap
-    /// isn't spent stopping the scroll.
-    @MainActor
+    /// A drag across half the container that holds still at the end, so the
+    /// content moves a predictable distance with no fling and the next frame
+    /// check sees where it stopped. Much quicker than a slow swipe.
     static func swipe(_ container: XCUIElement, _ direction: KassScrollDirection) {
         #if os(iOS)
+        let (from, to): (CGVector, CGVector)
         switch direction {
-        case .up: container.swipeUp(velocity: .slow)
-        case .down: container.swipeDown(velocity: .slow)
-        case .left: container.swipeLeft(velocity: .slow)
-        case .right: container.swipeRight(velocity: .slow)
+        case .up: (from, to) = (CGVector(dx: 0.5, dy: 0.75), CGVector(dx: 0.5, dy: 0.25))
+        case .down: (from, to) = (CGVector(dx: 0.5, dy: 0.25), CGVector(dx: 0.5, dy: 0.75))
+        case .left: (from, to) = (CGVector(dx: 0.75, dy: 0.5), CGVector(dx: 0.25, dy: 0.5))
+        case .right: (from, to) = (CGVector(dx: 0.25, dy: 0.5), CGVector(dx: 0.75, dy: 0.5))
         }
+        container.coordinate(withNormalizedOffset: from).press(
+            forDuration: 0.05,
+            thenDragTo: container.coordinate(withNormalizedOffset: to),
+            withVelocity: .fast,
+            thenHoldForDuration: 0.15
+        )
         #else
         switch direction {
         case .up: container.swipeUp()

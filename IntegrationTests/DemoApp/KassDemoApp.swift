@@ -72,6 +72,7 @@ struct RootView: View {
 struct ReliabilityView: View {
     @State private var liveSwitch = false
     @State private var name = ""
+    @State private var price = "189.07"
     @State private var lossy = ""
     @State private var ticks = 0
     @State private var taps = 0
@@ -90,6 +91,10 @@ struct ReliabilityView: View {
                 Toggle("Dead switch", isOn: .constant(false)).accessibilityIdentifier("rel.deadSwitch")
 
                 TextField("Name", text: $name).accessibilityIdentifier("rel.name")
+                TextField("Price", text: $price)
+                    .multilineTextAlignment(.trailing)
+                    .keyboardType(.decimalPad)
+                    .accessibilityIdentifier("rel.price")
                 // Keeps only the first three characters, so typing more never "takes".
                 TextField("Lossy", text: $lossy)
                     .onChange(of: lossy) { value in if value.count > 3 { lossy = String(value.prefix(3)) } }
