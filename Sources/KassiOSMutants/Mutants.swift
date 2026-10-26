@@ -37,12 +37,12 @@ public struct MutantManifest: Decodable, Sendable, Equatable {
     private enum CodingKeys: String, CodingKey { case xcodebuild, inject, mutants, action }
 
     public init(from decoder: Decoder) throws {
-        let c = try decoder.container(keyedBy: CodingKeys.self)
+        let keys = try decoder.container(keyedBy: CodingKeys.self)
         self.init(
-            xcodebuild: try c.decode([String].self, forKey: .xcodebuild),
-            inject: try c.decode(String.self, forKey: .inject),
-            mutants: try c.decode([String: [String]].self, forKey: .mutants),
-            action: try c.decodeIfPresent(String.self, forKey: .action) ?? "test"
+            xcodebuild: try keys.decode([String].self, forKey: .xcodebuild),
+            inject: try keys.decode(String.self, forKey: .inject),
+            mutants: try keys.decode([String: [String]].self, forKey: .mutants),
+            action: try keys.decodeIfPresent(String.self, forKey: .action) ?? "test"
         )
     }
 
