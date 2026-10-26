@@ -45,15 +45,12 @@ extension KassElement {
             KassKeyboard.dismiss(in: app)
             if element.isHittable { return }
         }
-        if config.autoScroll, let direction = KassAutoScroll.direction(toward: element.frame, in: app.frame),
-           let container = KassAutoScroll.container(in: app) {
-            switch direction {
-            case .up: container.swipeUp()
-            case .down: container.swipeDown()
-            case .left: container.swipeLeft()
-            case .right: container.swipeRight()
-            }
-            throw KassError("is off screen; scrolled \(direction) toward it")
+        if config.autoScroll,
+           let direction = KassAutoScroll.direction(toward: element.frame, in: app.frame)
+            ?? KassAutoScroll.directionOutFromUnder(element.frame, in: app.frame),
+           let container = KassAutoScroll.container(for: element.frame, in: app) {
+            KassAutoScroll.swipe(container, direction)
+            throw KassError("is off screen or under a bar; scrolled \(direction) toward it")
         }
         throw KassError("exists but is not hittable")
     }
@@ -65,15 +62,10 @@ extension KassElement {
         guard element.exists else { throw KassError("does not exist") }
         guard config.autoScroll, !element.isHittable,
               let direction = KassAutoScroll.direction(toward: element.frame, in: app.frame),
-              let container = KassAutoScroll.container(in: app),
+              let container = KassAutoScroll.container(for: element.frame, in: app),
               container.frame != element.frame
         else { return }
-        switch direction {
-        case .up: container.swipeUp()
-        case .down: container.swipeDown()
-        case .left: container.swipeLeft()
-        case .right: container.swipeRight()
-        }
+        KassAutoScroll.swipe(container, direction)
         throw KassError("is off screen; scrolled \(direction) toward it")
     }
 
@@ -145,13 +137,54 @@ enum KassAutoScroll {
         return nil
     }
 
-    /// The screen's main scroll container: the largest visible scroll view,
-    /// table or collection view.
+    /// For an element that is on screen but can't be hit near the top or bottom
+    /// edge (under a floating tab bar, a toolbar, a navigation bar): which way to
+    /// scroll it toward the middle. Nil in the middle band, where something other
+    /// than a bar is in the way. Pure.
+    static func directionOutFromUnder(_ frame: CGRect, in screen: CGRect) -> KassScrollDirection? {
+        guard !frame.isEmpty, frame.intersects(screen) else { return nil }
+        if frame.midY > screen.minY + screen.height * 0.75 { return .up }
+        if frame.midY < screen.minY + screen.height * 0.15 { return .down }
+        return nil
+    }
+
+    /// The scroll container to swipe for content at `frame`: among the scroll views,
+    /// tables and collection views that can be touched right now (one behind a
+    /// sheet can't), the largest that spans the element horizontally.
     @MainActor
-    static func container(in app: XCUIApplication) -> XCUIElement? {
-        let candidates = [app.collectionViews.firstMatch, app.tables.firstMatch, app.scrollViews.firstMatch]
-            .filter { $0.exists && !$0.frame.isEmpty }
-        return candidates.max { $0.frame.width * $0.frame.height < $1.frame.width * $1.frame.height }
+    static func container(for frame: CGRect, in app: XCUIApplication) -> XCUIElement? {
+        var candidates: [XCUIElement] = []
+        for query in [app.collectionViews, app.tables, app.scrollViews] {
+            for index in 0..<6 {
+                let element = query.element(boundBy: index)
+                guard element.exists else { break }
+                candidates.append(element)
+            }
+        }
+        return candidates
+            .filter { !$0.frame.isEmpty && $0.isHittable && $0.frame.minX <= frame.midX && frame.midX <= $0.frame.maxX }
+            .max { $0.frame.width * $0.frame.height < $1.frame.width * $1.frame.height }
+    }
+
+    /// A slow swipe: it moves the content without a long fling, so the next tap
+    /// isn't spent stopping the scroll.
+    @MainActor
+    static func swipe(_ container: XCUIElement, _ direction: KassScrollDirection) {
+        #if os(iOS)
+        switch direction {
+        case .up: container.swipeUp(velocity: .slow)
+        case .down: container.swipeDown(velocity: .slow)
+        case .left: container.swipeLeft(velocity: .slow)
+        case .right: container.swipeRight(velocity: .slow)
+        }
+        #else
+        switch direction {
+        case .up: container.swipeUp()
+        case .down: container.swipeDown()
+        case .left: container.swipeLeft()
+        case .right: container.swipeRight()
+        }
+        #endif
     }
 }
 

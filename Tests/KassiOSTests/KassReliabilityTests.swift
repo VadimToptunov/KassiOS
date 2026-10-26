@@ -39,6 +39,15 @@ final class KassReliabilityTests: XCTestCase {
         XCTAssertNil(KassAutoScroll.direction(toward: .zero, in: screen))
     }
 
+    func testAnElementUnderABarScrollsTowardTheMiddle() {
+        let screen = CGRect(x: 0, y: 0, width: 400, height: 800)
+        XCTAssertEqual(KassAutoScroll.directionOutFromUnder(CGRect(x: 0, y: 740, width: 100, height: 40), in: screen), .up)
+        XCTAssertEqual(KassAutoScroll.directionOutFromUnder(CGRect(x: 0, y: 40, width: 100, height: 40), in: screen), .down)
+        XCTAssertNil(KassAutoScroll.directionOutFromUnder(CGRect(x: 0, y: 400, width: 100, height: 40), in: screen))
+        let offScreen = CGRect(x: 0, y: 900, width: 100, height: 40)
+        XCTAssertNil(KassAutoScroll.directionOutFromUnder(offScreen, in: screen), "off screen is the other rule")
+    }
+
     // MARK: Keyboard
 
     func testTheKeyboardCoversWhatReachesItsAccessoryBar() {
