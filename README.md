@@ -575,6 +575,9 @@ defect that leaves its tests green is a hole in the suite.
 swift run kassios-mutants mutants.json --clean
 ```
 
+Add `"action": "test-without-building"` and run `xcodebuild build-for-testing` once
+first, so the defects don't each rebuild the project.
+
 `--clean` first runs every listed test without a defect; they must pass, or a
 "kill" proves nothing. Each defect then runs its tests with `inject` set to the
 defect's id. The report lists survivors first, and the exit code is non-zero if

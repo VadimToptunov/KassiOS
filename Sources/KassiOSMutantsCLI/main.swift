@@ -42,7 +42,7 @@ do {
 @MainActor func run(_ tests: [String], defect: String?, logName: String) -> [TestOutcome] {
     let process = Process()
     process.executableURL = URL(fileURLWithPath: "/usr/bin/xcrun")
-    process.arguments = ["xcodebuild", "test"] + manifest.xcodebuild + tests.map { "-only-testing:\($0)" }
+    process.arguments = ["xcodebuild", manifest.action] + manifest.xcodebuild + tests.map { "-only-testing:\($0)" }
     var environment = ProcessInfo.processInfo.environment
     if let defect { environment[manifest.inject] = defect } else { environment.removeValue(forKey: manifest.inject) }
     process.environment = environment

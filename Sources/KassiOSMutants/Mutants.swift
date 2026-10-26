@@ -19,15 +19,31 @@ import Foundation
 ///
 /// `inject` is the environment variable set to the mutant's id for the run (with
 /// xcodebuild, a `TEST_RUNNER_` prefix reaches the test runner without it).
+/// `action` is the xcodebuild action, `test` by default; use `test-without-building`
+/// after one `build-for-testing` so the runs don't each rebuild.
 public struct MutantManifest: Decodable, Sendable, Equatable {
     public let xcodebuild: [String]
     public let inject: String
     public let mutants: [String: [String]]
+    public let action: String
 
-    public init(xcodebuild: [String], inject: String, mutants: [String: [String]]) {
+    public init(xcodebuild: [String], inject: String, mutants: [String: [String]], action: String = "test") {
         self.xcodebuild = xcodebuild
         self.inject = inject
         self.mutants = mutants
+        self.action = action
+    }
+
+    private enum CodingKeys: String, CodingKey { case xcodebuild, inject, mutants, action }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            xcodebuild: try c.decode([String].self, forKey: .xcodebuild),
+            inject: try c.decode(String.self, forKey: .inject),
+            mutants: try c.decode([String: [String]].self, forKey: .mutants),
+            action: try c.decodeIfPresent(String.self, forKey: .action) ?? "test"
+        )
     }
 
     public static func load(_ data: Data) throws -> MutantManifest {

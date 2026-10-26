@@ -50,6 +50,9 @@ final class MutantsTests: XCTestCase {
         let good = #"{"xcodebuild":["-scheme","S"],"inject":"TEST_RUNNER_X","mutants":{"a":["T/C/m"],"b":["T/C/n","T/D/m"]}}"#
         let manifest = try MutantManifest.load(Data(good.utf8))
         XCTAssertEqual(manifest.allTests, ["T/C/m", "T/C/n", "T/D/m"])
+        XCTAssertEqual(manifest.action, "test", "the default action")
+        let prebuilt = #"{"action":"test-without-building","xcodebuild":[],"inject":"X","mutants":{"a":["T/C/m"]}}"#
+        XCTAssertEqual(try MutantManifest.load(Data(prebuilt.utf8)).action, "test-without-building")
         XCTAssertThrowsError(try MutantManifest.load(Data(#"{"xcodebuild":[],"inject":"X","mutants":{"a":[]}}"#.utf8)))
         XCTAssertThrowsError(try MutantManifest.load(Data(#"{"xcodebuild":[],"inject":"X","mutants":{"a":["C/m"]}}"#.utf8)))
     }
