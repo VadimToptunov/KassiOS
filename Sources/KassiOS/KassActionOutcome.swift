@@ -45,11 +45,8 @@ extension KassElement {
             KassKeyboard.dismiss(in: app)
             if element.isHittable { return }
         }
-        if config.autoScroll,
-           let direction = KassAutoScroll.direction(toward: element.frame, in: app.frame)
-            ?? KassAutoScroll.directionOutFromUnder(element.frame, in: app.frame),
-           let container = KassAutoScroll.container(for: element.frame, in: app) {
-            KassAutoScroll.swipe(container, direction)
+        if config.autoScroll, let direction = scrollToward(element, outFromUnder: true) {
+            if element.isHittable { return }
             throw KassError("is off screen or under a bar; scrolled \(direction) toward it")
         }
         throw KassError("exists but is not hittable")
@@ -61,12 +58,30 @@ extension KassElement {
     func revealIfOffscreen(_ element: XCUIElement) throws {
         guard element.exists else { throw KassError("does not exist") }
         guard config.autoScroll, !element.isHittable,
-              let direction = KassAutoScroll.direction(toward: element.frame, in: app.frame),
-              let container = KassAutoScroll.container(for: element.frame, in: app),
-              container.frame != element.frame
+              let direction = scrollToward(element, outFromUnder: false)
         else { return }
-        KassAutoScroll.swipe(container, direction)
+        if element.isHittable { return }
         throw KassError("is off screen; scrolled \(direction) toward it")
+    }
+
+    /// Drags the scroll container toward `element` until it's hittable, the
+    /// content stops moving, or `KassAutoScroll.maxDrags` drags. Several drags per
+    /// attempt, so a far target doesn't spend a whole retry on each one. Returns
+    /// the last direction, or nil if there was nothing to scroll.
+    private func scrollToward(_ element: XCUIElement, outFromUnder: Bool) -> KassScrollDirection? {
+        var scrolled: KassScrollDirection?
+        for _ in 0..<KassAutoScroll.maxDrags {
+            let frame = element.frame
+            guard let direction = KassAutoScroll.direction(toward: frame, in: app.frame)
+                    ?? (outFromUnder ? KassAutoScroll.directionOutFromUnder(frame, in: app.frame) : nil),
+                  let container = KassAutoScroll.container(for: frame, in: app),
+                  container.frame != frame
+            else { break }
+            KassAutoScroll.swipe(container, direction)
+            scrolled = direction
+            if element.isHittable || element.frame == frame { break }
+        }
+        return scrolled
     }
 
     /// The switch-like value of `element` ("1"/"0"), if it has one.
@@ -146,6 +161,9 @@ public extension KassElement {
 
 /// Scrolling toward an off-screen element.
 enum KassAutoScroll {
+
+    /// The most drags one attempt makes before handing back to the retry.
+    static let maxDrags = 5
 
     /// Which way to swipe so content at `frame` moves into `screen`, or nil if it
     /// already overlaps the screen (then it's covered, not off screen). Pure.
