@@ -46,8 +46,7 @@ public extension KassElement {
     @discardableResult
     func tap(file: StaticString = #filePath, line: UInt = #line) -> KassElement {
         perform("tap", kind: .tap, file: file, line: line) { element in
-            guard element.exists else { throw KassError("does not exist") }
-            guard element.isHittable else { throw KassError("exists but is not hittable") }
+            try makeHittable(element)
             element.tap()
         }
     }
@@ -55,8 +54,7 @@ public extension KassElement {
     @discardableResult
     func typeText(_ text: String, file: StaticString = #filePath, line: UInt = #line) -> KassElement {
         perform("typeText('\(text)')", kind: .type, file: file, line: line) { element in
-            guard element.exists else { throw KassError("does not exist") }
-            guard element.isHittable else { throw KassError("exists but is not hittable") }
+            try makeHittable(element)
             element.tap()
             element.typeText(text)
         }
@@ -289,37 +287,12 @@ public extension KassElement {
 
     // MARK: - Controls
 
-    /// Toggles a switch to the desired state (no-op if already there).
-    ///
-    /// A SwiftUI `Toggle` outside a `Form`/`List` toggles only when its inner
-    /// switch control is tapped (not the row), so we tap the descendant switch
-    /// when present and fall back to the element itself (UIKit `UISwitch`).
-    @discardableResult
-    func setSwitch(on: Bool, file: StaticString = #filePath, line: UInt = #line) -> KassElement {
-        perform("setSwitch(on: \(on))", kind: .control, file: file, line: line) { element in
-            guard element.exists else { throw KassError("does not exist") }
-            guard (element.value as? String) != (on ? "1" : "0") else { return }
-            let control = element.switches.firstMatch
-            (control.exists ? control : element).tap()
-        }
-    }
-
-    /// Flips a switch unconditionally (unlike `setSwitch(on:)`, which only taps when the state differs).
-    @discardableResult
-    func toggle(file: StaticString = #filePath, line: UInt = #line) -> KassElement {
-        perform("toggle", kind: .control, file: file, line: line) { element in
-            guard element.exists else { throw KassError("does not exist") }
-            let control = element.switches.firstMatch
-            (control.exists ? control : element).tap()
-        }
-    }
-
     #if os(iOS)
     /// Drags a slider to a normalized position in `0...1`.
     @discardableResult
     func adjustSlider(toNormalizedPosition position: CGFloat, file: StaticString = #filePath, line: UInt = #line) -> KassElement {
         perform("adjustSlider(\(position))", kind: .control, file: file, line: line) { element in
-            guard element.exists else { throw KassError("does not exist") }
+            try makeHittable(element)
             element.adjust(toNormalizedSliderPosition: position)
         }
     }
@@ -330,6 +303,10 @@ public extension KassElement {
         perform("adjustPicker('\(value)')", kind: .control, file: file, line: line) { element in
             guard element.exists else { throw KassError("does not exist") }
             element.adjust(toPickerWheelValue: value)
+            guard config.verifyActionOutcome else { return }
+            guard kassPoll(within: kassOutcomeWindow, { Self.textOf(element) == value }) else {
+                throw KassError("was set to '\(value)' but reads '\(Self.textOf(element))'")
+            }
         }
     }
     #endif
@@ -386,24 +363,31 @@ public extension KassElement {
 
     /// Clears any existing text, then types `text`. Shares `clearText`'s
     /// delete-by-length limitation on secure/formatted fields.
+    ///
+    /// With ``KassConfig/verifyActionOutcome`` (the default) the field is read
+    /// back: it must read `text`, or the same letters and digits once the field's
+    /// own formatting is ignored ("2,000" for "2000"). Otherwise the attempt fails
+    /// and the retry clears and types again. Secure fields aren't read back.
     @discardableResult
     func replaceText(_ text: String, file: StaticString = #filePath, line: UInt = #line) -> KassElement {
         perform("replaceText('\(text)')", kind: .type, file: file, line: line) { element in
-            guard element.exists else { throw KassError("does not exist") }
-            guard element.isHittable else { throw KassError("exists but is not hittable") }
+            try makeHittable(element)
             element.tap()
             if let value = element.value as? String, !value.isEmpty {
                 element.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: value.count))
             }
             element.typeText(text)
+            guard config.verifyActionOutcome, element.elementType != .secureTextField else { return }
+            guard kassPoll(within: kassOutcomeWindow, { KassTextMatch.matches(Self.textOf(element), typed: text) }) else {
+                throw KassError("typed '\(text)' but the field reads '\(Self.textOf(element))'")
+            }
         }
     }
 
     @discardableResult
     func doubleTap(file: StaticString = #filePath, line: UInt = #line) -> KassElement {
         perform("doubleTap", kind: .tap, file: file, line: line) { element in
-            guard element.exists else { throw KassError("does not exist") }
-            guard element.isHittable else { throw KassError("exists but is not hittable") }
+            try makeHittable(element)
             element.doubleTap()
         }
     }
@@ -411,8 +395,7 @@ public extension KassElement {
     @discardableResult
     func longPress(forDuration duration: TimeInterval = 1.0, file: StaticString = #filePath, line: UInt = #line) -> KassElement {
         perform("longPress(\(duration)s)", kind: .gesture, file: file, line: line) { element in
-            guard element.exists else { throw KassError("does not exist") }
-            guard element.isHittable else { throw KassError("exists but is not hittable") }
+            try makeHittable(element)
             element.press(forDuration: duration)
         }
     }
@@ -428,7 +411,7 @@ public extension KassElement {
 
     private func swipe(_ direction: KassScrollDirection, file: StaticString, line: UInt) -> KassElement {
         perform("swipe(\(direction))", kind: .gesture, file: file, line: line) { element in
-            guard element.exists else { throw KassError("does not exist") }
+            try revealIfOffscreen(element)
             switch direction {
             case .up: element.swipeUp()
             case .down: element.swipeDown()
@@ -442,7 +425,7 @@ public extension KassElement {
     @discardableResult
     func pinch(scale: CGFloat, velocity: CGFloat, file: StaticString = #filePath, line: UInt = #line) -> KassElement {
         perform("pinch(scale: \(scale))", kind: .gesture, file: file, line: line) { element in
-            guard element.exists else { throw KassError("does not exist") }
+            try revealIfOffscreen(element)
             element.pinch(withScale: scale, velocity: velocity)
         }
     }
@@ -450,7 +433,7 @@ public extension KassElement {
     @discardableResult
     func rotate(_ rotation: CGFloat, velocity: CGFloat, file: StaticString = #filePath, line: UInt = #line) -> KassElement {
         perform("rotate(\(rotation))", kind: .gesture, file: file, line: line) { element in
-            guard element.exists else { throw KassError("does not exist") }
+            try revealIfOffscreen(element)
             element.rotate(rotation, withVelocity: velocity)
         }
     }
@@ -458,8 +441,7 @@ public extension KassElement {
     @discardableResult
     func twoFingerTap(file: StaticString = #filePath, line: UInt = #line) -> KassElement {
         perform("twoFingerTap", kind: .tap, file: file, line: line) { element in
-            guard element.exists else { throw KassError("does not exist") }
-            guard element.isHittable else { throw KassError("exists but is not hittable") }
+            try makeHittable(element)
             element.twoFingerTap()
         }
     }
@@ -469,7 +451,7 @@ public extension KassElement {
     @discardableResult
     func tapAtNormalizedOffset(x: CGFloat, y: CGFloat, file: StaticString = #filePath, line: UInt = #line) -> KassElement {
         perform("tapAtNormalizedOffset(\(x), \(y))", kind: .tap, file: file, line: line) { element in
-            guard element.exists else { throw KassError("does not exist") }
+            try revealIfOffscreen(element)
             element.coordinate(withNormalizedOffset: CGVector(dx: x, dy: y)).tap()
         }
     }
@@ -489,7 +471,7 @@ public extension KassElement {
     @discardableResult
     func drag(to target: KassElement, file: StaticString = #filePath, line: UInt = #line) -> KassElement {
         perform("drag(to: \(target.description))", kind: .gesture, file: file, line: line) { element in
-            guard element.exists else { throw KassError("does not exist") }
+            try makeHittable(element)
             let destination = target.resolve()
             guard destination.exists else { throw KassError("target \(target.description) does not exist") }
             element.press(forDuration: 0.5, thenDragTo: destination)
