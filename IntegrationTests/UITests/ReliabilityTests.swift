@@ -5,6 +5,7 @@ final class ReliabilityScreen: KassScreen {
     lazy var deadSwitch = switchControl("rel.deadSwitch")
     lazy var name = textField("rel.name")
     lazy var price = textField("rel.price")
+    lazy var code = textField("rel.code")
     lazy var lossy = textField("rel.lossy")
     lazy var ticker = staticText("rel.ticker")
     lazy var steady = staticText("rel.steady")
@@ -66,6 +67,8 @@ final class ReliabilityTests: KassTestCase {
             screen.price.replaceText("179.00").assertHasValue("179.00")
             screen.price.clearText()
             screen.price.replaceText("5").assertHasValue("5")
+            // The value equals the placeholder but is real text.
+            screen.code.replaceText("424242").assertHasValue("424242")
         }
     }
 

@@ -80,7 +80,9 @@ extension KassElement {
     /// trailing edge. If text is still left, the field's clear button is tried.
     func emptyField(_ element: XCUIElement) {
         element.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).tap()
-        guard let value = element.value as? String, !Self.isEmptyFieldValue(value, of: element) else { return }
+        // A value equal to the placeholder may be real text ("000000" in a field
+        // whose placeholder is "000000"), so delete anyway: extra deletes are harmless.
+        guard let value = element.value as? String, !value.isEmpty else { return }
         element.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: value.count))
         if let left = element.value as? String, !Self.isEmptyFieldValue(left, of: element) {
             let clear = element.buttons.firstMatch
