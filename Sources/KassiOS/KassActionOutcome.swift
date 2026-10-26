@@ -188,6 +188,7 @@ enum KassAutoScroll {
     /// A drag across half the container that holds still at the end, so the
     /// content moves a predictable distance with no fling and the next frame
     /// check sees where it stopped. Much quicker than a slow swipe.
+    @MainActor
     static func swipe(_ container: XCUIElement, _ direction: KassScrollDirection) {
         #if os(iOS)
         let (from, to): (CGVector, CGVector)
