@@ -1,0 +1,4 @@
+Target dependency graph (2 targets)
+Target 'KassDemoUITests' in project 'KassIntegration'
+➜ Explicit dependency on target 'KassDemo' in project 'KassIntegration'
+Target 'KassDemo' in project 'KassIntegration' (no dependencies)

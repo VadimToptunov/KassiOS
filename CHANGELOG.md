@@ -6,6 +6,21 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- `kassios-mutants --parallel n`: runs n defects at once, each on its own clone
+  of the destination simulator, and splits the clean run across them. Needs
+  `"action": "test-without-building"`. The clones are deleted when the run ends
+  or is stopped. Each result line now shows how long the run took.
+- `kassios-mutants` retries a run once when xcodebuild reported none of its
+  tests, such as when the simulator refuses to launch the test runner ("Busy").
+
+### Fixed
+- `kassios-mutants` passes `-collect-test-diagnostics never` and gives each run
+  its own result bundle in the log directory. A killed defect fails its test on
+  purpose, and collecting diagnostics for that failure could hold xcodebuild for
+  600 s after the test had finished; two runs starting in the same second also
+  wrote to the same result bundle. A manifest that sets either flag keeps its own.
+
 ## [1.8.0] - 2026-10-27
 
 ### Added

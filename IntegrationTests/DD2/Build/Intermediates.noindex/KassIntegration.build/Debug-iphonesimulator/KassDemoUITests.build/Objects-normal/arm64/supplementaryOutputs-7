@@ -1,0 +1,37 @@
+{
+  "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/UITests/AccessibilityAuditTests.swift" : {
+    "const-values" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/AccessibilityAuditTests.swiftconstvalues",
+    "dependencies" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/AccessibilityAuditTests.d",
+    "diagnostics" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/AccessibilityAuditTests.dia",
+    "object" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/AccessibilityAuditTests.o",
+    "swift-dependencies" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/AccessibilityAuditTests.swiftdeps"
+  },
+  "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/UITests/ActionHelperTests.swift" : {
+    "const-values" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/ActionHelperTests.swiftconstvalues",
+    "dependencies" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/ActionHelperTests.d",
+    "diagnostics" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/ActionHelperTests.dia",
+    "object" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/ActionHelperTests.o",
+    "swift-dependencies" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/ActionHelperTests.swiftdeps"
+  },
+  "/Users/vadimtoptunov/iOSProjects/KassiOS/Sources/KassiOS/MainActorBox.swift" : {
+    "const-values" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/MainActorBox.swiftconstvalues",
+    "dependencies" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/MainActorBox.d",
+    "diagnostics" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/MainActorBox.dia",
+    "object" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/MainActorBox.o",
+    "swift-dependencies" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/MainActorBox.swiftdeps"
+  },
+  "/Users/vadimtoptunov/iOSProjects/KassiOS/Sources/KassiOS/StabilizingSynchronizer.swift" : {
+    "const-values" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/StabilizingSynchronizer.swiftconstvalues",
+    "dependencies" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/StabilizingSynchronizer.d",
+    "diagnostics" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/StabilizingSynchronizer.dia",
+    "object" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/StabilizingSynchronizer.o",
+    "swift-dependencies" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/StabilizingSynchronizer.swiftdeps"
+  },
+  "/Users/vadimtoptunov/iOSProjects/KassiOS/Sources/KassiOS/Waiter.swift" : {
+    "const-values" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/Waiter.swiftconstvalues",
+    "dependencies" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/Waiter.d",
+    "diagnostics" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/Waiter.dia",
+    "object" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/Waiter.o",
+    "swift-dependencies" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/Waiter.swiftdeps"
+  }
+}

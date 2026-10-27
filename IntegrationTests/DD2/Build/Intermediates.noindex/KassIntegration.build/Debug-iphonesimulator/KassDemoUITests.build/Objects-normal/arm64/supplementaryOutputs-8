@@ -1,0 +1,37 @@
+{
+  "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/UITests/ApiErgonomicsTests.swift" : {
+    "const-values" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/ApiErgonomicsTests.swiftconstvalues",
+    "dependencies" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/ApiErgonomicsTests.d",
+    "diagnostics" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/ApiErgonomicsTests.dia",
+    "object" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/ApiErgonomicsTests.o",
+    "swift-dependencies" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/ApiErgonomicsTests.swiftdeps"
+  },
+  "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/UITests/ClearerNamesTests.swift" : {
+    "const-values" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/ClearerNamesTests.swiftconstvalues",
+    "dependencies" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/ClearerNamesTests.d",
+    "diagnostics" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/ClearerNamesTests.dia",
+    "object" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/ClearerNamesTests.o",
+    "swift-dependencies" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/ClearerNamesTests.swiftdeps"
+  },
+  "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/UITests/DeepAssertionsTests.swift" : {
+    "const-values" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/DeepAssertionsTests.swiftconstvalues",
+    "dependencies" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/DeepAssertionsTests.d",
+    "diagnostics" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/DeepAssertionsTests.dia",
+    "object" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/DeepAssertionsTests.o",
+    "swift-dependencies" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/DeepAssertionsTests.swiftdeps"
+  },
+  "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/UITests/DemoScreens.swift" : {
+    "const-values" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/DemoScreens.swiftconstvalues",
+    "dependencies" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/DemoScreens.d",
+    "diagnostics" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/DemoScreens.dia",
+    "object" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/DemoScreens.o",
+    "swift-dependencies" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/DemoScreens.swiftdeps"
+  },
+  "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/UITests/DemoUITests.swift" : {
+    "const-values" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/DemoUITests.swiftconstvalues",
+    "dependencies" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/DemoUITests.d",
+    "diagnostics" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/DemoUITests.dia",
+    "object" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/DemoUITests.o",
+    "swift-dependencies" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/DemoUITests.swiftdeps"
+  }
+}

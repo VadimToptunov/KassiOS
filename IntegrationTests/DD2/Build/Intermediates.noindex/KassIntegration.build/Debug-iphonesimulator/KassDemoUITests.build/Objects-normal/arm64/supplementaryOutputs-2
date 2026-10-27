@@ -1,0 +1,44 @@
+{
+  "/Users/vadimtoptunov/iOSProjects/KassiOS/Sources/KassiOS/KassCombinators.swift" : {
+    "const-values" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/KassCombinators.swiftconstvalues",
+    "dependencies" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/KassCombinators.d",
+    "diagnostics" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/KassCombinators.dia",
+    "object" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/KassCombinators.o",
+    "swift-dependencies" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/KassCombinators.swiftdeps"
+  },
+  "/Users/vadimtoptunov/iOSProjects/KassiOS/Sources/KassiOS/KassConfig.swift" : {
+    "const-values" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/KassConfig.swiftconstvalues",
+    "dependencies" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/KassConfig.d",
+    "diagnostics" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/KassConfig.dia",
+    "object" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/KassConfig.o",
+    "swift-dependencies" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/KassConfig.swiftdeps"
+  },
+  "/Users/vadimtoptunov/iOSProjects/KassiOS/Sources/KassiOS/KassDevice.swift" : {
+    "const-values" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/KassDevice.swiftconstvalues",
+    "dependencies" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/KassDevice.d",
+    "diagnostics" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/KassDevice.dia",
+    "object" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/KassDevice.o",
+    "swift-dependencies" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/KassDevice.swiftdeps"
+  },
+  "/Users/vadimtoptunov/iOSProjects/KassiOS/Sources/KassiOS/KassDeviceTierC.swift" : {
+    "const-values" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/KassDeviceTierC.swiftconstvalues",
+    "dependencies" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/KassDeviceTierC.d",
+    "diagnostics" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/KassDeviceTierC.dia",
+    "object" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/KassDeviceTierC.o",
+    "swift-dependencies" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/KassDeviceTierC.swiftdeps"
+  },
+  "/Users/vadimtoptunov/iOSProjects/KassiOS/Sources/KassiOS/KassDiagnostic.swift" : {
+    "const-values" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/KassDiagnostic.swiftconstvalues",
+    "dependencies" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/KassDiagnostic.d",
+    "diagnostics" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/KassDiagnostic.dia",
+    "object" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/KassDiagnostic.o",
+    "swift-dependencies" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/KassDiagnostic.swiftdeps"
+  },
+  "/Users/vadimtoptunov/iOSProjects/KassiOS/Sources/KassiOS/KassDocloc.swift" : {
+    "const-values" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/KassDocloc.swiftconstvalues",
+    "dependencies" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/KassDocloc.d",
+    "diagnostics" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/KassDocloc.dia",
+    "object" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/KassDocloc.o",
+    "swift-dependencies" : "/Users/vadimtoptunov/iOSProjects/KassiOS/IntegrationTests/DD2/Build/Intermediates.noindex/KassIntegration.build/Debug-iphonesimulator/KassDemoUITests.build/Objects-normal/arm64/KassDocloc.swiftdeps"
+  }
+}
