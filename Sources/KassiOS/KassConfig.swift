@@ -68,6 +68,24 @@ public struct KassConfig: Sendable {
     /// fails (simulator only; best-effort).
     public var recordVideoOnFailure: Bool
 
+    /// When `true` (default), actions that set a state (`setSwitch`, `toggle`,
+    /// `replaceText`, `adjustPicker`) read the element back afterwards and fail if
+    /// the state didn't change, instead of returning as if they had worked. A
+    /// switch whose tap never reaches the control is the classic silent no-op.
+    public var verifyActionOutcome: Bool
+
+    /// When `true` (default), an interaction on an element that exists but sits
+    /// off screen swipes the screen's scroll container toward it, one swipe per
+    /// attempt, within the usual budget. Works for eagerly rendered content
+    /// (`ScrollView` + `VStack`); a lazy `List` row that isn't rendered yet still
+    /// needs ``KassElement/scrollTo(in:direction:file:line:)``.
+    public var autoScroll: Bool
+
+    /// When `true` (default), an interaction on an element covered by the
+    /// keyboard (or the input accessory bar above it) dismisses the keyboard
+    /// first. See ``KassScreen/dismissKeyboard()`` for how.
+    public var dismissKeyboardWhenCovering: Bool
+
     public init(
         timeout: TimeInterval = 15,
         pollInterval: TimeInterval = 0.5,
@@ -81,7 +99,10 @@ public struct KassConfig: Sendable {
         interceptors: [KassInterceptor] = [KassRetryInterceptor()],
         disableAnimations: Bool = false,
         recordVideoOnFailure: Bool = false,
-        suggestSimilarIdentifiersOnFailure: Bool = true
+        suggestSimilarIdentifiersOnFailure: Bool = true,
+        verifyActionOutcome: Bool = true,
+        autoScroll: Bool = true,
+        dismissKeyboardWhenCovering: Bool = true
     ) {
         self.timeout = timeout
         self.pollInterval = pollInterval
@@ -96,6 +117,9 @@ public struct KassConfig: Sendable {
         self.disableAnimations = disableAnimations
         self.recordVideoOnFailure = recordVideoOnFailure
         self.suggestSimilarIdentifiersOnFailure = suggestSimilarIdentifiersOnFailure
+        self.verifyActionOutcome = verifyActionOutcome
+        self.autoScroll = autoScroll
+        self.dismissKeyboardWhenCovering = dismissKeyboardWhenCovering
     }
 
     public static let `default` = KassConfig()

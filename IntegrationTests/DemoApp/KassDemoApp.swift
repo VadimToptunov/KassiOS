@@ -55,12 +55,89 @@ struct RootView: View {
 
     var body: some View {
         NavigationStack {
-            if loggedIn {
+            if ProcessInfo.processInfo.arguments.contains("-reliability") {
+                ReliabilityView()
+            } else if loggedIn {
                 HomeView()
             } else {
                 LoginView(email: $email, password: $password) { loggedIn = true }
             }
         }
+    }
+}
+
+/// KassiOS 1.8.0 "reliability" coverage, reached with the `-reliability` launch
+/// argument. An eager `ScrollView` (not a lazy `List`), so everything exists from
+/// the start and auto-scroll has something to scroll to.
+struct ReliabilityView: View {
+    @State private var liveSwitch = false
+    @State private var name = ""
+    @State private var price = "189.07"
+    @State private var code = "000000"
+    @State private var lossy = ""
+    @State private var ticks = 0
+    @State private var taps = 0
+    @State private var farTapped = false
+    @State private var bottomTapped = false
+    @State private var typed = ""
+    @FocusState private var typing: Bool
+    private let timer = Timer.publish(every: 0.5, on: .main, in: .common).autoconnect()
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                // A switch whose tap works, and one bound to a constant: a tap
+                // never changes it, which `setSwitch` must report.
+                Toggle("Live switch", isOn: $liveSwitch).accessibilityIdentifier("rel.liveSwitch")
+                Toggle("Dead switch", isOn: .constant(false)).accessibilityIdentifier("rel.deadSwitch")
+
+                TextField("Name", text: $name).accessibilityIdentifier("rel.name")
+                TextField("Price", text: $price)
+                    .multilineTextAlignment(.trailing)
+                    .keyboardType(.decimalPad)
+                    .accessibilityIdentifier("rel.price")
+                TextField("000000", text: $code)
+                    .multilineTextAlignment(.center)
+                    .keyboardType(.numberPad)
+                    .accessibilityIdentifier("rel.code")
+                // Keeps only the first three characters, so typing more never "takes".
+                TextField("Lossy", text: $lossy)
+                    .onChange(of: lossy) { value in if value.count > 3 { lossy = String(value.prefix(3)) } }
+                    .accessibilityIdentifier("rel.lossy")
+
+                Text("\(ticks)").accessibilityIdentifier("rel.ticker")
+                Text("steady").accessibilityIdentifier("rel.steady")
+
+                Button("Count") { taps += 1 }.accessibilityIdentifier("rel.counter.button")
+                Text("\(taps)").accessibilityIdentifier("rel.counter")
+
+                TextField("Type here", text: $typed)
+                    .focused($typing)
+                    .accessibilityIdentifier("rel.typing")
+
+                Color.clear.frame(height: 1400)
+                Button("Far away") { farTapped = true }.accessibilityIdentifier("rel.far.button")
+                Text(farTapped ? "far tapped" : "far waiting").accessibilityIdentifier("rel.far.result")
+                Text(bottomTapped ? "bottom tapped" : "bottom waiting").accessibilityIdentifier("rel.bottom.result")
+            }
+            .padding()
+        }
+        .onReceive(timer) { _ in ticks += 1 }
+        // Pinned to the bottom edge and kept there when the keyboard comes up, so
+        // the keyboard covers it.
+        .overlay(alignment: .bottom) {
+            Button("Bottom") { bottomTapped = true }
+                .padding(.bottom, 8)
+                .accessibilityIdentifier("rel.bottom.button")
+        }
+        .ignoresSafeArea(.keyboard)
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Done") { typing = false }
+            }
+        }
+        .navigationTitle("Reliability")
     }
 }
 

@@ -175,6 +175,9 @@ element.clearText()
 element.doubleTap()
 element.longPress(forDuration: 1.5)
 element.swipeUp()   // .swipeDown() / .swipeLeft() / .swipeRight()
+element.swipe(.up, velocity: .fast)                 // iOS
+element.drag(byX: 0, y: -200)                       // iOS: press and drag by an offset
+element.rapidTap(times: 2)                          // iOS: same spot, no waiting between taps
 
 // Scroll a container until the element is on screen
 row.scrollTo(in: list, direction: .up)
@@ -193,6 +196,7 @@ element.assertLabelContains("part")
 element.assertValueMatches("^\\d{4}$")     // regex on value-or-label
 element.assertHittable()          // .assertNotHittable()
 element.waitUntil("is selected") { $0.isSelected }
+element.assertUnchanged(for: 3)  // the text must not change for 3 s
 
 // Deep assertions — beyond presence-only checks
 element.assertValue(closeTo: 92.5, tolerance: 0.01)  // numeric, locale-aware ("$92.50")
@@ -215,6 +219,27 @@ element.replaceText("new")        // clears, then types
 element.pinch(scale: 2, velocity: 1)
 element.rotate(.pi / 4, velocity: 1)
 element.twoFingerTap()
+```
+
+### What an action checks for you
+
+- **It gets the element into reach.** An element that exists but is off screen is
+  scrolled to (one swipe of the screen's scroll container per attempt). If the
+  keyboard or its accessory bar covers it, the keyboard is dismissed first, with
+  the bar's Done or the keyboard's Done / Hide key, never Return. A lazy `List`
+  row that isn't rendered yet still needs `scrollTo(in:)`.
+- **It checks that a state change happened.** `setSwitch`, `toggle`,
+  `replaceText` and `adjustPicker` read the element back. A switch that didn't
+  flip gets one more tap on its trailing edge and then fails the test.
+  `replaceText` accepts the field's own formatting ("2,000" for "2000").
+
+All three can be switched off in `KassConfig` (`autoScroll`,
+`dismissKeyboardWhenCovering`, `verifyActionOutcome`).
+
+To compare values that change over time, read them from one snapshot:
+
+```swift
+let t = home.readTexts(["home.total", "home.account.EUR", "home.account.USD"])
 ```
 
 ### Failure diagnostics: "did you mean?"
@@ -515,6 +540,48 @@ before { launch() }.after { device.screenshot("end") }.run {
     step("Checkout") { … }
 }
 ```
+
+## Arranging state over HTTP: `KassHTTP`
+
+When the app has an API, set the state up through it and check the UI, instead of
+tapping through the whole flow first. Each call shows up in the report.
+
+```swift
+let api = KassHTTP(baseURL: URL(string: "http://localhost:8080")!,
+                   headers: ["Authorization": "Bearer \(token)"])
+api.post("/v1/transfers", json: ["from": "EUR", "amount": "100.00"], expect: 201)
+let balance = api.get("/v1/accounts/EUR")["balance"]
+```
+
+## Mutation checks: `kassios-mutants`
+
+If your app can switch defects on at launch (a debug flag, an environment
+variable), `kassios-mutants` checks that each defect turns its tests red. A
+defect that leaves its tests green is a hole in the suite.
+
+```json
+{
+  "xcodebuild": ["-project", "App.xcodeproj", "-scheme", "AppUITests",
+                 "-destination", "platform=iOS Simulator,name=iPhone 17"],
+  "inject": "TEST_RUNNER_APP_DEFECTS",
+  "mutants": {
+    "successToastMissing": ["AppUITests/TransferTests/test_transfer_happyPath_completes"],
+    "pnlSign": ["AppUITests/PortfolioValueTests/test_portfolio_tslaLoss_isRenderedAsLoss"]
+  }
+}
+```
+
+```sh
+swift run kassios-mutants mutants.json --clean
+```
+
+Add `"action": "test-without-building"` and run `xcodebuild build-for-testing` once
+first, so the defects don't each rebuild the project.
+
+`--clean` first runs every listed test without a defect; they must pass, or a
+"kill" proves nothing. Each defect then runs its tests with `inject` set to the
+defect's id. The report lists survivors first, and the exit code is non-zero if
+any defect survived.
 
 ## Configure
 

@@ -17,7 +17,10 @@ let package = Package(
         // The in-app network-stub bridge. An app links this *in debug only* and
         // calls `KassiOSStubs.installIfConfigured()` at launch; the UI test's
         // `launch(stubs:)` then drives its responses. Foundation-only, no server.
-        .library(name: "KassiOSStubs", targets: ["KassiOSStubs"])
+        .library(name: "KassiOSStubs", targets: ["KassiOSStubs"]),
+        // Mutation checks for a UI suite: runs each injected defect's tests and
+        // reports which defects no test catches. Host-side (macOS), like the agent.
+        .executable(name: "kassios-mutants", targets: ["KassiOSMutantsCLI"])
     ],
     targets: [
         // The library imports XCTest so it can wrap XCUIElement. This is the same
@@ -58,6 +61,25 @@ let package = Package(
             name: "KassiOSStubsTests",
             dependencies: ["KassiOSStubs"],
             path: "Tests/KassiOSStubsTests",
+            swiftSettings: [.swiftLanguageMode(.v6)]
+        ),
+        // The mutation runner's logic (manifest, xcodebuild verdicts, report),
+        // separate from the CLI so it is unit-tested without running xcodebuild.
+        .target(
+            name: "KassiOSMutants",
+            path: "Sources/KassiOSMutants",
+            swiftSettings: [.swiftLanguageMode(.v6)]
+        ),
+        .executableTarget(
+            name: "KassiOSMutantsCLI",
+            dependencies: ["KassiOSMutants"],
+            path: "Sources/KassiOSMutantsCLI",
+            swiftSettings: [.swiftLanguageMode(.v6)]
+        ),
+        .testTarget(
+            name: "KassiOSMutantsTests",
+            dependencies: ["KassiOSMutants"],
+            path: "Tests/KassiOSMutantsTests",
             swiftSettings: [.swiftLanguageMode(.v6)]
         )
     ]

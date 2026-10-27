@@ -6,6 +6,46 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- `setSwitch`, `toggle`, `replaceText` and `adjustPicker` read the element back
+  after acting and fail if the state didn't change. A switch whose tap never
+  reaches the control used to return as if it had worked. A switch gets one
+  more tap on its trailing edge before failing; `replaceText` accepts the field's
+  own formatting ("2,000" for "2000"). Off with `config.verifyActionOutcome = false`.
+- Interactions scroll to an element that exists but is off screen, one short drag of
+  the screen's scroll container per attempt, within the usual budget
+  (`config.autoScroll`). Content that isn't rendered yet (a lazy `List` row)
+  still needs `scrollTo(in:)`.
+- Interactions dismiss the keyboard when it, or the input accessory bar above
+  it, covers the target (`config.dismissKeyboardWhenCovering`). The accessory
+  bar's Done or the keyboard's Done / Hide key is used; Return is never pressed.
+  Also available as `KassScreen.dismissKeyboard()`.
+- `KassScreen.readTexts(_:)`: the text of several elements from one hierarchy
+  snapshot, so values that change over time are compared at the same instant.
+- `KassElement.assertUnchanged(for:)`: fails if the element's text changes
+  during the window.
+- `KassElement.rapidTap(times:)`: taps on the same spot without re-checking the
+  element between them, for double-submit bugs.
+- `swipe(_:velocity:)` and `drag(byX:y:holdFor:)`.
+- `KassHTTP`: a small synchronous HTTP client for arranging state through an
+  app's API, each call recorded as a report activity.
+- `kassios-mutants`: runs each injected defect's tests from a JSON manifest and
+  reports the defects no test catches (`--clean` checks those tests pass
+  without a defect first).
+
+### Changed
+- Swipes, pinch, rotate and `tapAtNormalizedOffset` scroll an off-screen target
+  into view first; `twoFingerTap`, `drag(to:)` and `adjustSlider` wait for the
+  element to be hittable, like `tap`.
+
+### Fixed
+- `replaceText` and `clearText` put the cursor after the text before deleting.
+  A tap at the field's centre could land the cursor mid-value in a
+  right-aligned field, so only part of the old value was deleted and the new
+  text was typed in front of the rest ("179.009.07"). If text is still left,
+  the field's clear button is tried; `clearText` now fails if the field isn't
+  empty afterwards.
+
 ## [1.7.0] - 2026-10-24
 
 ### Fixed
