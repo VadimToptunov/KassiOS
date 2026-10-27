@@ -6,6 +6,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.9.0] - 2026-10-27
+
 ### Added
 - `kassios-mutants --parallel n`: runs n defects at once, each on its own clone
   of the destination simulator, and splits the clean run across them. Needs
@@ -629,7 +631,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Initial DSL: `KassTestCase`, `KassScreen`, `KassElement`, implicit waits,
   flaky-safety (`Waiter`), step logging, and `onScreen`.
 
-[Unreleased]: https://github.com/VadimToptunov/KassiOS/compare/1.8.0...HEAD
+[Unreleased]: https://github.com/VadimToptunov/KassiOS/compare/1.9.0...HEAD
+[1.9.0]: https://github.com/VadimToptunov/KassiOS/compare/1.8.0...1.9.0
 [1.8.0]: https://github.com/VadimToptunov/KassiOS/compare/1.7.0...1.8.0
 [1.7.0]: https://github.com/VadimToptunov/KassiOS/compare/1.6.0...1.7.0
 [1.6.0]: https://github.com/VadimToptunov/KassiOS/compare/1.4.0...1.6.0
