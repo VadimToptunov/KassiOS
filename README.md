@@ -583,6 +583,15 @@ first, so the defects don't each rebuild the project.
 defect's id. The report lists survivors first, and the exit code is non-zero if
 any defect survived.
 
+`--parallel 3` runs three defects at once, each on its own clone of the
+destination simulator; the clean run is split across them too. It needs
+`test-without-building` (parallel builds would share one DerivedData). The
+clones are deleted at the end, or on Ctrl-C. Tests that share state outside the
+simulator, such as one backend server, can see each other's writes, so run those
+sequentially.
+
+Each run's log and result bundle are kept in `--log-dir`.
+
 ## Configure
 
 ```swift
