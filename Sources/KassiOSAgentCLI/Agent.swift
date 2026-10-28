@@ -8,17 +8,17 @@ import Darwin
 ///
 /// Security posture (this shells out to the host — treat it like it):
 ///  - Binds **127.0.0.1 only**. Never `0.0.0.0`.
-///  - Requires a token (env `KASSIOS_AGENT_TOKEN`) on every request.
+///  - Requires a token on every request: `KASSIOS_AGENT_TOKEN`, or a random
+///    one per run, published in the 0600 discovery file.
 ///  - Runs an **allowlisted** `simctl` command set — never arbitrary argv.
 ///  - The caller supplies the target `udid` per request (parallel-safe).
 @main
 struct Agent {
     static func main() {
         let env = ProcessInfo.processInfo.environment
-        guard let token = env["KASSIOS_AGENT_TOKEN"], !token.isEmpty else {
-            FileHandle.standardError.write(Data("kassios-agent: set KASSIOS_AGENT_TOKEN\n".utf8))
-            exit(2)
-        }
+        // No token given: make one for this run. The test reads it from the
+        // discovery file, so nobody has to pass it around.
+        let token = env["KASSIOS_AGENT_TOKEN"].flatMap { $0.isEmpty ? nil : $0 } ?? UUID().uuidString
         let port = UInt16(env["KASSIOS_AGENT_PORT"] ?? "8437") ?? 8437
         let runner = SimctlRunner()
         let recordingManager = RecordingManager()

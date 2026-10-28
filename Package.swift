@@ -20,7 +20,11 @@ let package = Package(
         .library(name: "KassiOSStubs", targets: ["KassiOSStubs"]),
         // Mutation checks for a UI suite: runs each injected defect's tests and
         // reports which defects no test catches. Host-side (macOS), like the agent.
-        .executable(name: "kassios-mutants", targets: ["KassiOSMutantsCLI"])
+        .executable(name: "kassios-mutants", targets: ["KassiOSMutantsCLI"]),
+        // One front end for the host-side tools: `kassios agent start`,
+        // `kassios mutants …`, `kassios lint …` (the linter ships in the release
+        // bundle; it's built from Plugins/ to keep swift-syntax out of this package).
+        .executable(name: "kassios", targets: ["KassiOSToolCLI"])
     ],
     targets: [
         // The library imports XCTest so it can wrap XCUIElement. This is the same
@@ -74,6 +78,23 @@ let package = Package(
             name: "KassiOSMutantsCLI",
             dependencies: ["KassiOSMutants"],
             path: "Sources/KassiOSMutantsCLI",
+            swiftSettings: [.swiftLanguageMode(.v6)]
+        ),
+        .target(
+            name: "KassiOSTool",
+            path: "Sources/KassiOSTool",
+            swiftSettings: [.swiftLanguageMode(.v6)]
+        ),
+        .executableTarget(
+            name: "KassiOSToolCLI",
+            dependencies: ["KassiOSTool"],
+            path: "Sources/KassiOSToolCLI",
+            swiftSettings: [.swiftLanguageMode(.v6)]
+        ),
+        .testTarget(
+            name: "KassiOSToolTests",
+            dependencies: ["KassiOSTool"],
+            path: "Tests/KassiOSToolTests",
             swiftSettings: [.swiftLanguageMode(.v6)]
         ),
         .testTarget(
