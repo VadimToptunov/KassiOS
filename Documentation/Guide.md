@@ -4,6 +4,7 @@ A complete tour of KassiOS — a Kaspresso-style DSL over XCUITest with implicit
 waits, flaky-safety, readable reports, and zero external dependencies.
 
 - [Installation](#installation)
+- [Host-side tools](#host-side-tools)
 - [Core concepts](#core-concepts)
 - [Screens & elements](#screens--elements)
 - [Interactions](#interactions)
@@ -14,7 +15,7 @@ waits, flaky-safety, readable reports, and zero external dependencies.
 - [Parameterized tests](#parameterized-tests)
 - [Steps & scenarios](#steps--scenarios)
 - [Device helpers](#device-helpers)
-- [Device control: kassios-agent (Tier C)](#device-control-kassios-agent-tier-c)
+- [Device control: kassios-agent](#device-control-kassios-agent)
 - [Reporting: screenshots & Allure](#reporting-screenshots--allure)
 - [Localized screenshots (Docloc)](#localized-screenshots-docloc)
 - [Synchronization backends](#synchronization-backends)
@@ -41,6 +42,32 @@ Swift Package Manager, linked to your **UI Test target**:
 ```
 
 The library wraps XCUITest, so it builds with Xcode (not bare `swift build`).
+
+## Host-side tools
+
+Four command-line tools run on the Mac, outside the simulator. They come as one
+Homebrew formula, prebuilt for Apple silicon and Intel:
+
+```sh
+brew install vadimtoptunov/tap/kassios
+```
+
+| Command | What it's for |
+|---|---|
+| `kassios agent start` / `stop` / `status` | [simulator control](#device-control-kassios-agent) for `device.*` calls and video on failure |
+| `kassios lint <paths> [--strict]` | [checking screen objects](#static-lint-kassios-lint) before a run |
+| `kassios mutants <manifest> [options]` | [checking that each defect turns its tests red](#mutation-checks-kassios-mutants) |
+| `kassios version` | the tools' version |
+
+`kassios` hands over to `kassios-agent`, `kassios-lint` and `kassios-mutants`,
+installed next to it; they can also be run directly. Without Homebrew, download
+`kassios-<version>-macos.zip` from
+[Releases](https://github.com/VadimToptunov/KassiOS/releases) and put its `bin/`
+on your `PATH`, or run the tools from a checkout of this repository with
+`swift run kassios …` (the linter: `cd Plugins && swift run kassios-lint …`).
+
+The library doesn't need any of them: a suite that uses none of device control,
+the linter or the mutation runner works without installing anything.
 
 ---
 
@@ -523,10 +550,10 @@ kass-simctl openurl "acme://deep/link"
 
 ---
 
-## Device control: `kassios-agent` (Tier C)
+## Device control: `kassios-agent`
 
 The `device` helpers above and `kass-simctl.sh` cover most needs, but some things
-a test genuinely can't do from inside the simulator — grant permissions without a
+a test can't do from inside the simulator — grant permissions without a
 dialog, freeze the status bar, set location, push a notification, flip appearance,
 record video — because `xcrun simctl` is a **host-side** command and the XCUITest
 process lives on the simulator and can't shell out. `kassios-agent` bridges that
@@ -564,8 +591,9 @@ Best-effort and simulator-only — no agent means a silent no-op, never a hang.
 The agent shells out to the host, so it's built to be treated like it:
 
 - **Loopback only.** Binds `127.0.0.1`, never `0.0.0.0`.
-- **Token-authenticated.** A per-run token is required on every request (checked
-  in constant time); unauthorized requests are refused before anything runs.
+- **Token-authenticated.** Every request needs the run's token (checked in
+  constant time); unauthorized requests are refused before anything runs. The
+  agent picks a random token at start, unless `KASSIOS_AGENT_TOKEN` sets one.
 - **Allowlisted.** It maps a fixed command set to `simctl` and **never** forwards
   arbitrary argv or runs through a shell. Screen recording is no exception — the
   agent picks the output path itself; the client never supplies a filename.
@@ -578,27 +606,44 @@ On startup the agent writes its port + token to `~/.kassios-agent.json` (mode
 `0600`); the in-simulator test discovers it via `$SIMULATOR_HOST_HOME` — the one
 channel that actually reaches the XCUITest runner process.
 
-### Running it in CI
+### Starting it
 
-Build and start the agent before the UI-test step; nothing else to wire up:
+```sh
+kassios agent start      # waits until it listens, then returns
+kassios agent status
+kassios agent stop       # also removes ~/.kassios-agent.json
+```
+
+`start` runs the agent in the background, on port 8437 (`--port` to change it),
+with its log in `~/Library/Logs/kassios-agent.log` (`--log` to change it). It
+survives the terminal or CI step that started it, until `stop`. Starting it
+twice is harmless. To run it in the foreground instead, use `kassios agent run`.
+
+**In CI**, start it before the UI-test step:
 
 ```bash
-swift build --product kassios-agent
-KASSIOS_AGENT_TOKEN="$(uuidgen)" KASSIOS_AGENT_PORT=8437 \
-  nohup .build/debug/kassios-agent >agent.log 2>&1 &
-sleep 2
-
+brew install vadimtoptunov/tap/kassios
+kassios agent start --log agent.log
 xcodebuild test -scheme MyAppUITests -destination '…'
 ```
 
-The agent is a **separate product** — the core library depends on nothing new,
-and test targets that don't want the bridge don't build it.
+**In Xcode**, add a Run Script pre-action to the scheme's Test action, so the
+agent is up whenever you press ⌘U. Pre-actions don't get your shell's `PATH`:
+
+```bash
+PATH="/opt/homebrew/bin:/usr/local/bin:$PATH" kassios agent start
+```
+
+`kassios-agent` is a separate product: the library depends on nothing new, and
+nothing builds the agent unless you ask for it.
 
 ---
 
 ## Reporting: screenshots & Allure
 
-A failing test automatically attaches a screenshot of its final state.
+A failing test gets a screenshot of the screen at that moment and the full
+accessibility tree attached to its result, and, with `recordVideoOnFailure` and
+the agent running, a video of the simulator screen.
 
 Attach an `AllureReporter` for machine-readable [Allure 2](https://allurereport.org)
 results — nested steps, interactions and screenshots:
@@ -844,20 +889,17 @@ screen-object source before anything runs and flags `KassScreen` subclasses with
 no non-empty `onLoad` (**KAS001**) and element builders whose identifier isn't a
 static string literal (**KAS002**).
 
-It lives in a nested package at `Plugins/`, so swift-syntax never becomes a
-dependency of the core library. Run it as a standalone tool or an SPM command
-plugin:
+It's built from a nested package at `Plugins/`, so swift-syntax never becomes a
+dependency of the library:
 
 ```sh
-cd Plugins
-swift run kassios-lint ../MyApp/UITests   # informational; --strict fails on any finding
-# or
-swift package kassios-lint
+kassios lint MyApp/UITests            # informational; --strict fails on any finding
 ```
 
-Add `swift run kassios-lint --strict UITests` to CI to keep every screen object
-identifier-clean. The DocC article *Static linting with kassios-lint* has the
-details.
+Add `kassios lint --strict UITests` to CI to keep every screen object
+identifier-clean. From a checkout, `cd Plugins && swift run kassios-lint …` and
+the SPM command plugin `swift package kassios-lint` do the same. The DocC article
+*Static linting with kassios-lint* has the details.
 
 ## Failure diagnostics
 
@@ -866,15 +908,15 @@ Every failed interaction appends a one-line snapshot of the offending element �
 `captureScreenshotOnFailure`) attaches a screenshot of the screen at the moment
 of failure to the report. The message names the exact element, so a red run
 points straight at the problem. A failing test also attaches the full
-accessibility tree (`app.debugDescription`) in `tearDown` — invaluable when an
-element wasn't where you expected.
+accessibility tree (`app.debugDescription`) in `tearDown`, for when an element
+wasn't where you expected.
 
 ### Did you mean? — similar-identifier suggestions
 
 When a locator built from an accessibility identifier (`button("home.welcom")`,
 say) fails because the element genuinely doesn't exist, the failure message
-appends the closest actual identifiers/labels found on screen — a self-correct
-for a wrong-id guess, the kind an AI author makes constantly:
+appends the closest identifiers and labels actually on screen, so a mistyped
+identifier shows its likely fix in the failure itself:
 
 ```
 KassiOS: text 'welcom' — assertVisible failed: does not exist
@@ -1008,7 +1050,7 @@ List the defects and the tests each one must fail in a manifest:
 ```sh
 xcodebuild build-for-testing -project App.xcodeproj -scheme AppUITests \
   -destination 'platform=iOS Simulator,name=iPhone 17'
-swift run kassios-mutants mutants.json --clean
+kassios mutants mutants.json --clean
 ```
 
 Each defect runs its tests with `inject` set to the defect's id. With
@@ -1049,7 +1091,7 @@ fails CI when the generated file is out of date.
 
 ## When to use KassiOS — and when not to
 
-KassiOS is a thin, opinionated layer, not a silver bullet. An honest take:
+KassiOS is an opinionated layer over XCUITest, and it doesn't fit every suite.
 
 **Reach for it when**
 - You write a lot of UI tests and want Kaspresso-parity ergonomics out of the box:

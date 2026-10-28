@@ -430,7 +430,7 @@ config = KassConfig(recordVideoOnFailure: true)   // .mp4 attached only on failu
 Without the agent, or on a real device, each call skips the test with a message
 instead of hanging. The full API, how the agent is locked down (loopback only, a
 token on every request, a fixed set of `simctl` commands) and the CI and Xcode
-setup are in the [Guide](Documentation/Guide.md#device-control-kassios-agent-tier-c).
+setup are in the [Guide](Documentation/Guide.md#device-control-kassios-agent).
 
 ## Reusable flows (scenarios)
 

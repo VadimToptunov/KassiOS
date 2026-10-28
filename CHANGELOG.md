@@ -6,6 +6,20 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- `kassios`, one front end for the host-side tools: `kassios agent start|stop|status|run`,
+  `kassios mutants …`, `kassios lint …`, `kassios version`. `agent start` runs the
+  agent in the background in its own session and returns once it listens.
+- Prebuilt tools: `Scripts/build-tools.sh <version>` builds kassios, kassios-agent,
+  kassios-mutants and kassios-lint as universal binaries into
+  `kassios-<version>-macos.zip`; `release.yml` attaches it to each published
+  release and updates the Homebrew formula (`brew install vadimtoptunov/tap/kassios`).
+
+### Changed
+- `kassios-agent` picks a random token when `KASSIOS_AGENT_TOKEN` isn't set, so
+  starting it needs no configuration.
+- README, Guide and DocC show the tools through `kassios`; plainer wording.
+
 ### Documentation
 - The Guide now covers what 1.7–1.9 added: what an action checks for you,
   `rapidTap`, `assertUnchanged`, `readTexts`, the `KassConfig` switches,

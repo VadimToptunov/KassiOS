@@ -1,7 +1,7 @@
 # Accessibility identifiers
 
-The naming convention KassiOS matches on — and how the enforcement, audit, and
-lint keep you honest about it.
+The naming convention KassiOS matches on, and how the enforcement, the audit and
+the linter check that the app follows it.
 
 ## Overview
 
@@ -49,8 +49,8 @@ final class MarketsScreen: KassScreen {
   `element(_:)`, `descendant(_:_:)`) matches the real accessibility identifier
   first; it only falls back to XCUITest's label-matching subscript when no
   element actually carries that identifier. This makes the label-fallback case —
-  the one worth flagging — an honest, detectable event rather than a silent
-  coincidence.
+  the one worth flagging — something KassiOS can detect and report, rather than a
+  silent coincidence.
 - **Runtime enforcement** (``KassConfig/accessibilityIdentifierPolicy``): the
   **default is `.warn`** — an element matched *without* a real identifier (the
   id-first fallback kicked in) logs an Xcode message but the test still passes.
