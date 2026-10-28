@@ -6,6 +6,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Documentation
+- The Guide now covers what 1.7–1.9 added: what an action checks for you,
+  `rapidTap`, `assertUnchanged`, `readTexts`, the `KassConfig` switches,
+  `kassios-lint`, `KassHTTP` and `kassios-mutants`.
+
 ## [1.9.0] - 2026-10-27
 
 ### Added
