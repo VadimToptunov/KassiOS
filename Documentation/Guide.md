@@ -22,9 +22,12 @@ waits, flaky-safety, readable reports, and zero external dependencies.
 - [Enforcing accessibility identifiers](#enforcing-accessibility-identifiers)
 - [Scaffolding screen objects](#scaffolding-screen-objects)
 - [Accessibility audit](#accessibility-audit)
+- [Static lint: kassios-lint](#static-lint-kassios-lint)
 - [Failure diagnostics](#failure-diagnostics)
+- [Arranging state over HTTP: KassHTTP](#arranging-state-over-http-kasshttp)
 - [Suites & structured runs](#suites--structured-runs)
 - [Snapshot regression](#snapshot-regression)
+- [Mutation checks: kassios-mutants](#mutation-checks-kassios-mutants)
 - [When to use KassiOS — and when not to](#when-to-use-kassios--and-when-not-to)
 
 ---
@@ -127,6 +130,9 @@ element.replaceText("new")              // clear, then type
 element.doubleTap()
 element.longPress(forDuration: 1.5)
 element.swipeUp()                       // .swipeDown/.swipeLeft/.swipeRight
+element.swipe(.up, velocity: .fast)     // iOS
+element.drag(byX: 0, y: -200)           // iOS: press and drag by an offset
+element.rapidTap(times: 2)              // iOS: same spot, no waiting between taps
 
 element.setSwitch(on: true)             // toggles only if needed
 element.toggle()                        // flips unconditionally, regardless of current state
@@ -162,6 +168,46 @@ let text = field.readValue()
 let label = row.readLabel()
 ```
 
+`rapidTap` is for double-submit bugs. The tap point is captured before the
+first tap, and the taps go out one after another without waiting for the element
+or checking it in between, so the second tap lands where a finger would, even
+if the first one already started changing the screen. It isn't
+`tap(withNumberOfTaps:)`: the system turns that into one multi-tap gesture, and a
+SwiftUI button then sees one tap fewer.
+
+### What an action checks for you
+
+Every action runs within one time budget (`config.timeout`). Internal retries
+share it: three attempts at a 10-second action take 10 seconds, not 30. Within
+that budget an action:
+
+- **Waits** for the element to exist and be hittable, finding it again on every
+  attempt. A `KassElement` stores a resolver, not an `XCUIElement`, so a view
+  SwiftUI rebuilt between attempts is found fresh.
+- **Gets the element into reach.** An element that exists but is off screen is
+  scrolled to (one swipe of the screen's scroll container per attempt). If the
+  keyboard or its accessory bar covers it, the keyboard is dismissed first, with
+  the bar's Done or the keyboard's Done / Hide key, never Return, which could
+  submit a form. A lazy `List` row that isn't rendered yet still needs
+  `scrollTo(in:)`.
+- **Performs the action once.** Only the preconditions are retried. Once a tap
+  has been sent it isn't sent again, so the framework can neither cause a double
+  submit nor hide one.
+- **Checks that a state change happened.** `setSwitch`, `toggle`, `replaceText`
+  and `adjustPicker` read the element back and fail if the state didn't change.
+  A switch that didn't flip gets one more tap on its trailing edge, then the test
+  fails. `replaceText` taps the field's trailing edge before deleting, so a
+  right-aligned, pre-filled field is cleared completely, and it accepts the
+  field's own formatting ("2,000" for "2000"):
+
+```
+KassiOS: textField 'order.limitPriceField' — replaceText('179.00') failed:
+  typed '179.00' but the field reads '179.009.07'
+```
+
+Scrolling, keyboard dismissal and the read-back can each be switched off in
+`KassConfig` (`autoScroll`, `dismissKeyboardWhenCovering`, `verifyActionOutcome`).
+
 For anything unwrapped, `perform` runs your closure under the same flaky-safety:
 
 ```swift
@@ -191,6 +237,7 @@ element.assertValueMatches("^\\d{4}$")   // regex on value-or-label
 
 element.assertPlaceholder("Email")
 element.waitUntil("is selected") { $0.isSelected }
+element.assertUnchanged(for: 3)         // the text must not change for 3 s
 ```
 
 Every assertion waits up to `config.timeout` before failing, and reports a
@@ -213,6 +260,26 @@ element.readNumber()   // Double?, non-waiting, locale-aware parse of value-or-l
 // For a success toast that appears then auto-dismisses.
 toast.assertAppears(within: 2)
 ```
+
+`assertUnchanged(for:)` waits for the element with the normal budget, then
+samples its text for the whole window and fails on the first change, with both
+values in the message. Use it for values that must hold still: a price captured
+on an order ticket that shouldn't follow the live feed, a balance that shouldn't
+move while a request is pending.
+
+### Reading several values at once
+
+To compare values that change over time (a ticking price, a running total), read
+them from one snapshot of the hierarchy. Separate reads would each see a
+different moment:
+
+```swift
+let t = home.readTexts(["home.total", "home.account.EUR", "home.account.USD"])
+// [String: String], keyed by identifier
+```
+
+`readTexts` waits within the config's timeout until every identifier is present,
+and fails the test with the missing ones if some never appear.
 
 ### Soft assertions: `verifyAll`
 
@@ -667,6 +734,18 @@ config = KassConfig(
 )
 ```
 
+Other switches, all `var`s you can set after creating the config:
+
+| Property | Default | What it does |
+|---|---|---|
+| `verifyActionOutcome` | `true` | `setSwitch`, `toggle`, `replaceText`, `adjustPicker` read the element back and fail if nothing changed |
+| `autoScroll` | `true` | scroll an off-screen element into view before acting |
+| `dismissKeyboardWhenCovering` | `true` | dismiss the keyboard when it covers the target |
+| `suggestSimilarIdentifiersOnFailure` | `true` | append "did you mean?" candidates to not-found failures |
+| `recordVideoOnFailure` | `false` | record the simulator screen and attach it if the test fails (needs `kassios-agent`) |
+| `screenshotEachStep` | `false` | attach a screenshot after every `step` |
+| `disableAnimations` | `false` | launch with `KASS_DISABLE_ANIMATIONS=1` (the app must honour it) |
+
 Set it in `setUp` after `super.setUp()`; the reporter starts lazily on first use,
 so a config assigned there is already in place.
 
@@ -758,6 +837,28 @@ if #available(iOS 17.0, *) {
 }
 ```
 
+## Static lint: kassios-lint
+
+The audit above runs at test time, on a live app. `kassios-lint` reads your
+screen-object source before anything runs and flags `KassScreen` subclasses with
+no non-empty `onLoad` (**KAS001**) and element builders whose identifier isn't a
+static string literal (**KAS002**).
+
+It lives in a nested package at `Plugins/`, so swift-syntax never becomes a
+dependency of the core library. Run it as a standalone tool or an SPM command
+plugin:
+
+```sh
+cd Plugins
+swift run kassios-lint ../MyApp/UITests   # informational; --strict fails on any finding
+# or
+swift package kassios-lint
+```
+
+Add `swift run kassios-lint --strict UITests` to CI to keep every screen object
+identifier-clean. The DocC article *Static linting with kassios-lint* has the
+details.
+
 ## Failure diagnostics
 
 Every failed interaction appends a one-line snapshot of the offending element —
@@ -802,6 +903,26 @@ launch(stubs: ["profile": "fixtures/profile.json", "feed": "empty"])
 
 The app side (reading the vars and returning fixtures or booting a local stub
 server) is yours; KassiOS just standardises the convention.
+
+## Arranging state over HTTP: KassHTTP
+
+When the app has an API, set the state up through it and check the result in the
+UI, instead of tapping through the whole flow first: create the transfer through
+the API, check it in the history on screen.
+
+```swift
+let api = KassHTTP(baseURL: URL(string: "http://localhost:8080")!,
+                   headers: ["Authorization": "Bearer \(token)"])
+api.post("/v1/transfers", json: ["from": "EUR", "amount": "100.00"], expect: 201)
+let balance = api.get("/v1/accounts/EUR")["balance"]   // a top-level JSON field, as text
+```
+
+`get`, `post`, `put` and `delete` are shortcuts for `request(_:_:json:headers:expect:)`.
+Each call is an activity in the report ("POST /v1/transfers → 201") with the
+request and response bodies attached. With `expect`, a different status fails the
+test (the response is still returned); a transport failure fails the test and
+returns status 0. The response also has `status`, `headers`, `body`, `text` and
+`json`. Per-call headers override the ones given to `init`. Foundation only.
 
 ## Suites & structured runs
 
@@ -861,6 +982,70 @@ On a mismatch KassiOS attaches three images to the report — the **reference**,
 the **actual**, and a generated **diff** (unchanged UI dimmed to faint
 grayscale, changed pixels flagged red) — so you can see *what* moved straight
 from the `.xcresult` without eyeballing two screenshots side by side.
+
+## Mutation checks: kassios-mutants
+
+A green suite doesn't tell you whether it would turn red. If your app can switch
+defects on at launch (a debug flag, an environment variable), `kassios-mutants`
+checks that each defect turns its tests red. A defect that leaves its tests green
+is a hole in the suite.
+
+List the defects and the tests each one must fail in a manifest:
+
+```json
+{
+  "xcodebuild": ["-project", "App.xcodeproj", "-scheme", "AppUITests",
+                 "-destination", "platform=iOS Simulator,name=iPhone 17"],
+  "action": "test-without-building",
+  "inject": "TEST_RUNNER_APP_DEFECTS",
+  "mutants": {
+    "successToastMissing": ["AppUITests/TransferTests/test_transfer_happyPath_completes"],
+    "pnlSign": ["AppUITests/PortfolioValueTests/test_portfolio_tslaLoss_isRenderedAsLoss"]
+  }
+}
+```
+
+```sh
+xcodebuild build-for-testing -project App.xcodeproj -scheme AppUITests \
+  -destination 'platform=iOS Simulator,name=iPhone 17'
+swift run kassios-mutants mutants.json --clean
+```
+
+Each defect runs its tests with `inject` set to the defect's id. With
+`"action": "test-without-building"` the app is built once, by the
+`build-for-testing` step, instead of once per defect.
+
+```text
+mutant                 verdict
+zeroAmountAccepted     SURVIVED  (still green: …/TransferTests/test_transfer_zeroAmount_disablesContinue)
+balanceAfterAdds       killed
+...
+58 of 59 killed
+```
+
+The report lists survivors first, and the exit code is non-zero if any defect
+survived.
+
+Options:
+
+- `--clean` first runs every listed test without a defect. They must pass, or a
+  "kill" proves nothing: a test that's already red "catches" everything.
+- `--only id,id` runs just these defects.
+- `--log-dir dir` keeps each run's log and result bundle there (default: a temp
+  directory).
+- `--parallel n` runs n defects at once, each on its own clone of the destination
+  simulator; the clean run is split across them too. It needs
+  `test-without-building`, because parallel builds would share one DerivedData.
+  The clones are deleted at the end, or on Ctrl-C. Tests that share state outside
+  the simulator, such as one backend server, can see each other's writes, so run
+  those sequentially. On a machine with few cores, parallel runs can be slower
+  than sequential ones and timing-sensitive tests can start failing under load.
+
+A run that reports no tests at all (the simulator refusing to launch the app, for
+example) is retried once. The
+[ChaosBank reference suite](https://github.com/VadimToptunov/ChaosBank-KassiOS-Tests)
+generates its manifest from a ``/// Catches `id` `` comment above each test and
+fails CI when the generated file is out of date.
 
 ## When to use KassiOS — and when not to
 
