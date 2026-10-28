@@ -83,11 +83,10 @@ swift-syntax. You opt into the tool explicitly.
 
 ## Running it
 
-From a checkout of the KassiOS repo (or after vendoring the `Plugins/` folder):
+The linter comes with the host-side tools (`brew install vadimtoptunov/tap/kassios`):
 
 ```sh
-cd Plugins
-swift run kassios-lint ../MyApp/UITests
+kassios lint MyApp/UITests
 ```
 
 Each finding prints as `file:line:col: warning: message [RULE]`. By default the
@@ -95,14 +94,12 @@ tool exits `0` (findings are informational); pass `--strict` to exit non-zero on
 any finding, which is what you want in CI:
 
 ```sh
-swift run kassios-lint --strict ../MyApp/UITests
+kassios lint --strict MyApp/UITests
 ```
 
-It's also registered as an SPM command plugin:
-
-```sh
-swift package kassios-lint
-```
+From a checkout of the KassiOS repo, `cd Plugins && swift run kassios-lint …`
+does the same, and it's also registered as an SPM command plugin,
+`swift package kassios-lint`.
 
 ## Cross-file resolution
 

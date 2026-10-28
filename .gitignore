@@ -9,3 +9,4 @@ DerivedData/
 .claude/
 CLAUDE.md
 IntegrationTests/DD*/
+dist/

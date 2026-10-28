@@ -7,21 +7,18 @@
 [![Docs](https://img.shields.io/badge/docs-DocC-informational)](https://vadimtoptunov.github.io/KassiOS/documentation/kassios/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-**Swift Testing doesn't do UI testing.** Apple's new framework replaces XCTest for
-*unit* tests — but driving a real app's UI still means XCUITest, and XCUITest still
-makes you hand-manage timing, retries, and stale element references.
-
-KassiOS is a **UI-testing suite** on top of XCUITest — not a thin helper, but the
-full stack Kaspresso gives Android: readable screen objects, implicit waits under
-one shared flaky-safety budget, structured reports (Allure + JUnit), strict
-accessibility-identifier enforcement, parameterized runs, and zero-dependency
-snapshot regression. **Zero external dependencies**, one-line SPM install,
-**Swift 6** ready.
+KassiOS is a layer over XCUITest in the style of
+[Kaspresso](https://github.com/KasperskyLab/Kaspresso): screen objects, waits and
+retries inside every action, steps in the report, Allure and JUnit output,
+parameterized tests and snapshot checks. The library has no dependencies and goes
+into your UI-test target. A few host-side tools come with it: `kassios-agent` for
+simulator control, `kassios-mutants` for checking that tests catch the defects
+they're written for, and `kassios-lint` for screen objects.
 
 ## Why
 
-Raw XCUITest makes you manage timing by hand. KassiOS bakes waiting and retries
-into every interaction, so tests read like a script.
+In raw XCUITest, waiting and retrying are up to you. In KassiOS every action
+waits and retries within one time budget, and checks what it did.
 
 **Before — raw XCUITest:**
 
@@ -51,11 +48,10 @@ onScreen(HomeScreen.self) { home in
 }
 ```
 
-No `waitForExistence`. No `sleep`. No stale references.
-
 ### Where Swift Testing fits
 
-Swift Testing and KassiOS are complementary, not competitors:
+Swift Testing doesn't drive an app's UI (in Xcode 27.1 its only template is for
+unit tests), so the two cover different layers:
 
 | | Swift Testing | KassiOS |
 | --- | --- | --- |
@@ -64,33 +60,51 @@ Swift Testing and KassiOS are complementary, not competitors:
 | Runs in-process with your types | yes | no (separate UI-test target) |
 | Parameterized cases | `@Test(arguments:)` | `parameterized(_:)` |
 
-Use Swift Testing for your model and view-model logic; use KassiOS for the flows
-a user actually taps through. They live in different targets and never collide.
+Use Swift Testing for model and view-model logic and KassiOS for the flows a
+user taps through. They live in different targets.
 
 > Types use a short `Kass` prefix (`KassScreen`, `KassElement`, `KassTestCase`, `KassConfig`). Change with one find-replace if you prefer another.
 
-📖 **Full [documentation guide](Documentation/Guide.md)** — every feature, plus an
-honest [when-to-use / when-not-to](Documentation/Guide.md#when-to-use-kassios--and-when-not-to).
-Guides in the [DocC reference](https://vadimtoptunov.github.io/KassiOS/documentation/kassios/):
-**Coming from Kaspresso**, **Why your XCUITest suite flakes**, **Parameterized UI
-tests**, and a **CI recipe**. Migrating an existing suite?
-[Migration guide](Documentation/Migration.md). Release notes:
-[CHANGELOG.md](CHANGELOG.md).
+Documentation:
 
-🧪 **See a real suite:** [ChaosBank ⨯ KassiOS](https://github.com/VadimToptunov/ChaosBank-KassiOS-Tests)
-is a complete, hand-written KassiOS suite driving
-[ChaosBank](https://github.com/VadimToptunov/ChaosBank-iOS) — a deliberately-buggy
-fintech app — end to end (WKWebView login, live market feed, money flows). It
-passes on the clean build and turns **red** on each injected defect, so you can
-read real screen objects and tests instead of toy snippets.
+- [Guide](Documentation/Guide.md): every feature in detail, and
+  [when to use KassiOS and when not to](Documentation/Guide.md#when-to-use-kassios--and-when-not-to).
+- [DocC reference](https://vadimtoptunov.github.io/KassiOS/documentation/kassios/),
+  with articles on coming from Kaspresso, why XCUITest suites flake,
+  parameterized UI tests and CI.
+- [Migration guide](Documentation/Migration.md) for an existing suite, and the
+  [changelog](CHANGELOG.md).
+
+A real suite to read: [ChaosBank ⨯ KassiOS](https://github.com/VadimToptunov/ChaosBank-KassiOS-Tests)
+tests [ChaosBank](https://github.com/VadimToptunov/ChaosBank-iOS), a banking app
+with switchable defects (a WKWebView login, a live market feed, money flows). It
+passes on the clean build and turns red on each defect it lists.
 
 ## Install
 
-Swift Package Manager. Add the package and link it to your **UI Test target**:
+Add the package with Swift Package Manager and link `KassiOS` to your UI-test target:
 
 ```swift
-.package(url: "https://github.com/VadimToptunov/KassiOS.git", from: "1.9.0")
+.package(url: "https://github.com/VadimToptunov/KassiOS.git", from: "1.10.0")
 ```
+
+The host-side tools (`kassios`, `kassios-agent`, `kassios-mutants`,
+`kassios-lint`) come as one Homebrew formula, prebuilt for Apple silicon and Intel:
+
+```sh
+brew install vadimtoptunov/tap/kassios
+```
+
+```sh
+kassios agent start                 # simulator control for device.* calls; `kassios agent stop`
+kassios lint UITests --strict       # check screen objects before a run
+kassios mutants mutants.json --clean
+```
+
+Without Homebrew, download `kassios-<version>-macos.zip` from
+[Releases](https://github.com/VadimToptunov/KassiOS/releases) and put its `bin/`
+on your `PATH`, or run them from a checkout with `swift run kassios …`. The
+library doesn't need any of the tools; each is only for the features named here.
 
 ## Use
 
@@ -134,23 +148,18 @@ final class LoginFlowUITests: KassTestCase {
 
 ## How it compares
 
-| | Raw XCUITest | EarlGrey | **KassiOS** |
+| | Raw XCUITest | EarlGrey | KassiOS |
 | --- | --- | --- | --- |
-| Implicit waits / flaky-safety | manual `waitForExistence` | idling resources | **built-in, one shared budget** |
-| Stale-safe (re-resolve each attempt) | no | n/a | **yes** |
-| Screen-object DSL | roll your own | none | **`KassScreen`** |
-| Flow primitives (`anyOf`/`continuously`) | no | partial | **yes** |
-| Parameterized (data-driven) tests | no | no | **yes** |
-| Reporting | `.xcresult` only | none | **Allure + JUnit** |
-| Accessibility-id enforcement + audit | no | no | **yes** |
-| Snapshot regression | external lib | no | **built-in, zero-dep** |
-| Idle synchronization | — | **core strength (in-process)** | pluggable (EarlGrey adapter) |
-| Dependencies | — | heavy | **zero** |
-| Setup | none | non-trivial | **one-line SPM** |
+| Waiting and retries | `waitForExistence` by hand | idling resources, in process | in every action, one shared budget |
+| Element found again on each attempt | by hand | n/a | yes |
+| Screen objects | your own | your own | `KassScreen` |
+| Reports | `.xcresult` | `.xcresult` | `.xcresult`, Allure, JUnit |
+| Knows when the app is idle | no | yes | through a synchronizer hook (EarlGrey adapter included) |
+| Setup | none | framework in the app | SPM package in the UI-test target |
 
-EarlGrey's edge is in-process idle synchronization; KassiOS stays out-of-process
-(pure XCUITest) but exposes a synchronizer seam to plug EarlGrey in. See the
-honest [when-to-use / when-not-to](Documentation/Guide.md#when-to-use-kassios--and-when-not-to).
+EarlGrey runs inside the app and knows when it's idle. KassiOS stays out of
+process, like XCUITest, and polls. More on the trade-offs in
+[when to use KassiOS and when not to](Documentation/Guide.md#when-to-use-kassios--and-when-not-to).
 
 ## Interactions & assertions
 
@@ -247,8 +256,8 @@ let t = home.readTexts(["home.total", "home.account.EUR", "home.account.USD"])
 A not-found failure appends a one-line snapshot of the element (`exists`,
 `hittable`, `id`, `label`, `type`, `frame`) plus, when the locator was built
 from an accessibility identifier that genuinely doesn't exist, the closest
-matching identifiers/labels actually on screen — so a wrong-id guess (common
-from an AI author) self-corrects instead of a second round trip:
+matching identifiers and labels on screen, so a mistyped identifier shows its
+likely fix in the failure itself:
 
 ```
 KassiOS: text 'welcom' — assertVisible failed: does not exist
@@ -370,9 +379,9 @@ let springboard = device.springboard         // home screen / system alerts host
 
 ### Discovery: `dumpIdentifiers`
 
-An agent-facing inventory of the current screen — every element's identifier,
-type, label and hittability — for scaffolding `KassScreen` objects or a quick
-discovery pass without eyeballing `debugDescription`:
+A list of the elements on the current screen, with each one's identifier, type,
+label and hittability, for writing `KassScreen` objects without reading
+`debugDescription`:
 
 ```swift
 let inventory = device.dumpIdentifiers()               // only real accessibility ids
@@ -385,24 +394,31 @@ isHittable }`, read from one accessibility snapshot of the app (so `isHittable`
 here means "on screen", not occlusion-aware); the walk is bounded (400 elements),
 same as the "did you mean?" suggestions above.
 
-### Tier B — relaunch with locale / language / Dynamic Type
+### Relaunch with another locale, language or Dynamic Type size
 
-Some device settings can't change live; KassiOS models them honestly as a
-relaunch (launch arguments — works on the simulator *and* real devices):
+Some device settings can't change while the app runs, so KassiOS relaunches it
+with launch arguments. This works on the simulator and on real devices:
 
 ```swift
 device.relaunch { $0.locale("de_DE").language("de") }
 device.relaunch { $0.dynamicType("UICTContentSizeCategoryAccessibilityXL") }
 ```
 
-## Device control: `kassios-agent` (Tier C)
+## Device control: `kassios-agent`
 
-Some things a test can't reach from inside the simulator — granting permissions
-without a dialog, freezing the status bar, setting location, pushing a
-notification, flipping appearance, recording video on failure — because
-`xcrun simctl` is a **host-side** command the XCUITest process can't exec.
-`kassios-agent` bridges that gap: a tiny, loopback-only, token-authenticated Mac
-process the in-simulator test talks to over `localhost`.
+Some things a test can't do from inside the simulator: grant permissions
+without a dialog, freeze the status bar, set a location, send a push, switch
+appearance, record the screen. They need `xcrun simctl`, which runs on the Mac.
+`kassios-agent` is a small Mac process that the test talks to over `127.0.0.1`.
+Start it before the tests:
+
+```sh
+kassios agent start      # in CI, or in the scheme's Test pre-action
+```
+
+It picks a random token for the run and writes it, with the port, to
+`~/.kassios-agent.json` (mode 0600), where the test finds it. There's nothing to
+configure.
 
 ```swift
 try device.statusBar.freeze(time: "9:41", battery: 100, cellularBars: 4)
@@ -411,12 +427,10 @@ try device.appearance(.dark)
 config = KassConfig(recordVideoOnFailure: true)   // .mp4 attached only on failure
 ```
 
-Each call **`XCTSkip`s with an actionable message** — never hangs — when no agent
-is running or on a real device, so a suite without the agent still goes green.
-The full API, the **security posture** (loopback-only, per-run token auth,
-allowlisted `simctl` mapping — never arbitrary argv), **video-on-failure**, and
-the **CI setup** live in the
-[Guide](Documentation/Guide.md#device-control-kassios-agent-tier-c).
+Without the agent, or on a real device, each call skips the test with a message
+instead of hanging. The full API, how the agent is locked down (loopback only, a
+token on every request, a fixed set of `simctl` commands) and the CI and Xcode
+setup are in the [Guide](Documentation/Guide.md#device-control-kassios-agent).
 
 ## Reusable flows (scenarios)
 
@@ -441,10 +455,13 @@ func test_home() {
 }
 ```
 
-A failing test automatically attaches a screenshot of its final state to the
-report.
+## Reports and failure artifacts
 
-## Allure reports
+A failing test gets a screenshot of the screen at that moment and the full
+accessibility tree attached to its result. With `recordVideoOnFailure` and the
+agent running, it also gets a video of the simulator screen.
+
+### Allure
 
 Attach an `AllureReporter` and KassiOS writes [Allure 2](https://allurereport.org)
 result files — nested steps, interactions and screenshots included:
@@ -503,7 +520,7 @@ Run Apple's accessibility audit too:
 if #available(iOS 17.0, *) { assertNoAccessibilityIssues() }
 ```
 
-### Static lint — `kassios-lint`
+### Static lint: `kassios-lint`
 
 The audit above runs at test time, on a live app. `kassios-lint` is its
 compile-time twin: a SwiftSyntax linter that reads your screen-object *source*
@@ -511,20 +528,16 @@ and flags the same class of problems before you even launch the simulator —
 `KassScreen` subclasses with no non-empty `onLoad` (**KAS001**) and element
 builders whose identifier isn't a static string literal (**KAS002**).
 
-It lives in a **nested package** at `Plugins/` so swift-syntax never becomes a
-dependency of the core library — adding KassiOS to your app pulls in nothing.
-Run it as a command plugin or a standalone tool:
+It's built from a nested package at `Plugins/`, so swift-syntax never becomes a
+dependency of the library. Run it with:
 
 ```sh
-# From a checkout of this repo (or vendor the Plugins/ folder):
-cd Plugins
-swift run kassios-lint ../MyApp/UITests   # informational; --strict to fail on any finding
-# or, as an SPM command plugin:
-swift package kassios-lint
+kassios lint MyApp/UITests            # informational; --strict fails on any finding
 ```
 
-Add `swift run kassios-lint --strict UITests` to CI to keep every screen object
-identifier-clean. See the DocC guide *Static linting with kassios-lint*.
+Add `kassios lint --strict UITests` to CI to keep every screen object
+identifier-clean. From a checkout, `cd Plugins && swift run kassios-lint …` does
+the same. See the DocC article *Static linting with kassios-lint*.
 
 Share one config across a group with `KassSuite`, and structure a body with
 `before`/`after`/`run` (`after` runs even on a hard failure):
@@ -572,7 +585,7 @@ defect that leaves its tests green is a hole in the suite.
 ```
 
 ```sh
-swift run kassios-mutants mutants.json --clean
+kassios mutants mutants.json --clean
 ```
 
 Add `"action": "test-without-building"` and run `xcodebuild build-for-testing` once
@@ -625,46 +638,21 @@ Lint locally with [SwiftLint](https://github.com/realm/SwiftLint):
 swiftlint lint --strict
 ```
 
-CI (`.github/workflows/ci.yml`) runs three jobs on every push and PR — SwiftLint,
-unit tests on macOS, and UI tests on a simulator. A separate workflow
-(`.github/workflows/docs.yml`) publishes the DocC site to GitHub Pages (enable
-Pages with the "GitHub Actions" source in repo settings).
+CI (`.github/workflows/ci.yml`) runs SwiftLint, the unit tests, the linter's own
+tests and the UI tests on a simulator on every push and PR. `docs.yml` publishes
+the DocC site to GitHub Pages. `release.yml` builds the host-side tools when a
+release is published, attaches the zip to it and updates the Homebrew formula;
+`Scripts/build-tools.sh <version>` does the same build locally.
 
 ## Status
 
-**1.9.0 — stable. The public API is frozen under [semantic versioning](https://semver.org)
-since 1.0.0**; releases since are additive (see the [changelog](CHANGELOG.md)).
-
-Core DSL, waits, flaky-safety, step logging, gestures + scroll-to +
-multitouch + coordinate/drag + pull-to-refresh, slider/switch/picker controls,
-rich assertions (strict `assertVisible` vs. soft `assertPresent`,
-label-contains/value-regex/placeholder/`waitUntil`), **soft assertions**
-(`verifyAll` — run the whole block, report *every* mismatch), per-call
-`within(timeout:)`, element collections, scoped child elements, **web content**
-(`webView`/`link`/`links`), wait-combinators + app-alert DSL, Kaspresso-style
-flow primitives, **page objects, robots & scenarios**
-(`KassScreen`/`KassRobot`/`KassScenario`), parameterized tests, `KassSuite` +
-structured `before`/`after`/`run`, an **accessibility-identifier policy**
-(`ignore`/`warn`/`enforce`) + **accessibility audit** + **screen-object codegen**
-(`KassScaffold`), precise failure diagnostics (+ accessibility-tree dump +
-**"did you mean?" identifier suggestions**), an **identifier inventory**
-(`device.dumpIdentifiers`) for agent-driven discovery/scaffolding,
-device/permission/deep-link/stub helpers + a `kass-simctl` CI toolkit, localized
-screenshot runs, reusable scenarios, **Allure + JUnit** reporters, **video-on-failure**,
-zero-dep snapshot regression, the `kassios-lint` compile-time linter, and a
-pluggable synchronizer applied to every wait — including a built-in, dependency-free
-**`StabilizingSynchronizer`** (idle-waiting without EarlGrey). Real UI coverage
-runs on the simulator in CI (SwiftLint + unit + UI), with DocC auto-published to
-Pages. See the [full guide](Documentation/Guide.md).
-
-Verified end-to-end against Apple's open-source
-[Food Truck](https://github.com/apple/sample-food-truck) app on the iOS
-Simulator — multi-screen navigation, flow primitives, screenshots and Allure
-export all green. It's also dogfooded against
-[ChaosBank](https://github.com/VadimToptunov/ChaosBank-iOS), a purpose-built
-buggy fintech app: the full [ChaosBank ⨯ KassiOS](https://github.com/VadimToptunov/ChaosBank-KassiOS-Tests)
-suite passes the clean build and goes red on each planted defect — a complete,
-worked example you can read.
+1.10.0. The public API has followed [semantic versioning](https://semver.org)
+since 1.0.0, and releases since then add to it (see the [changelog](CHANGELOG.md)).
+CI runs SwiftLint, the unit tests and the UI tests on a simulator on every pull
+request. Besides the bundled demo app, KassiOS has been run against Apple's
+[Food Truck](https://github.com/apple/sample-food-truck) sample and is tested
+against [ChaosBank](https://github.com/VadimToptunov/ChaosBank-iOS) by the
+[ChaosBank ⨯ KassiOS](https://github.com/VadimToptunov/ChaosBank-KassiOS-Tests) suite.
 
 ## License
 
