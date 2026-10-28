@@ -6,6 +6,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+- `release.yml` pushes the Homebrew formula with an SSH deploy key
+  (`HOMEBREW_TAP_DEPLOY_KEY`) instead of a personal access token, so there's no
+  token to renew.
+
 ## [1.10.0] - 2026-10-28
 
 ### Added

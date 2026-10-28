@@ -1,6 +1,6 @@
 # Homebrew formula for the KassiOS host-side tools. The release workflow fills in
-# the version and checksum; copy the result to the tap
-# (github.com/VadimToptunov/homebrew-tap, Formula/kassios.rb).
+# the version and checksum and pushes the result to the tap
+# (github.com/VadimToptunov/homebrew-tap, Formula/kassios.rb) without these comments.
 class Kassios < Formula
   desc "Host-side tools for KassiOS: kassios-agent, kassios-mutants, kassios-lint"
   homepage "https://github.com/VadimToptunov/KassiOS"
