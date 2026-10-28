@@ -85,7 +85,7 @@ passes on the clean build and turns red on each defect it lists.
 Add the package with Swift Package Manager and link `KassiOS` to your UI-test target:
 
 ```swift
-.package(url: "https://github.com/VadimToptunov/KassiOS.git", from: "1.9.0")
+.package(url: "https://github.com/VadimToptunov/KassiOS.git", from: "1.10.0")
 ```
 
 The host-side tools (`kassios`, `kassios-agent`, `kassios-mutants`,
@@ -646,7 +646,7 @@ release is published, attaches the zip to it and updates the Homebrew formula;
 
 ## Status
 
-1.9.0. The public API has followed [semantic versioning](https://semver.org)
+1.10.0. The public API has followed [semantic versioning](https://semver.org)
 since 1.0.0, and releases since then add to it (see the [changelog](CHANGELOG.md)).
 CI runs SwiftLint, the unit tests and the UI tests on a simulator on every pull
 request. Besides the bundled demo app, KassiOS has been run against Apple's

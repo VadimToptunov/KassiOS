@@ -6,6 +6,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.10.0] - 2026-10-28
+
 ### Added
 - `kassios`, one front end for the host-side tools: `kassios agent start|stop|status|run`,
   `kassios mutants …`, `kassios lint …`, `kassios version`. `agent start` runs the
@@ -650,7 +652,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Initial DSL: `KassTestCase`, `KassScreen`, `KassElement`, implicit waits,
   flaky-safety (`Waiter`), step logging, and `onScreen`.
 
-[Unreleased]: https://github.com/VadimToptunov/KassiOS/compare/1.9.0...HEAD
+[Unreleased]: https://github.com/VadimToptunov/KassiOS/compare/1.10.0...HEAD
+[1.10.0]: https://github.com/VadimToptunov/KassiOS/compare/1.9.0...1.10.0
 [1.9.0]: https://github.com/VadimToptunov/KassiOS/compare/1.8.0...1.9.0
 [1.8.0]: https://github.com/VadimToptunov/KassiOS/compare/1.7.0...1.8.0
 [1.7.0]: https://github.com/VadimToptunov/KassiOS/compare/1.6.0...1.7.0
