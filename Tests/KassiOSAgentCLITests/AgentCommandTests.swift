@@ -1,3 +1,7 @@
+// The agent CLI is macOS-only (its `Process`/Darwin-socket internals are gated
+// under `#if os(macOS)`), so these tests, which reach those internals, are too —
+// otherwise `build-for-testing` on a non-macOS destination would fail to compile.
+#if os(macOS)
 import XCTest
 @testable import KassiOSAgentCLI
 
@@ -105,3 +109,4 @@ final class AgentCommandTests: XCTestCase {
         XCTAssertNil(response.data)
     }
 }
+#endif

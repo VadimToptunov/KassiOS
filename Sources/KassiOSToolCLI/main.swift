@@ -1,3 +1,4 @@
+#if os(macOS)
 import Foundation
 #if canImport(Darwin)
 import Darwin
@@ -139,3 +140,12 @@ case .agentRun(let port):
 case .forward(let tool, let arguments):
     exec(locate(tool), arguments)
 }
+
+#else
+// Host-only tool: on iOS/tvOS/watchOS/visionOS (e.g. Swift Package Index builds of the
+// whole package) it compiles to a harmless no-op.
+import Foundation
+
+FileHandle.standardError.write(Data("kassios is macOS-only.\n".utf8))
+exit(0)
+#endif

@@ -6,6 +6,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+- Host-only tools (`kassios-agent`, `kassios-mutants`, `kassios`) are now gated to
+  macOS (`#if os(macOS)`; elsewhere they compile to a no-op that prints a notice),
+  so the whole package builds for iOS and visionOS and the Swift Package Index build
+  no longer fails on `Process` and other host-only APIs. macOS behaviour is unchanged.
+
 ### Changed
 - `release.yml` pushes the Homebrew formula with an SSH deploy key
   (`HOMEBREW_TAP_DEPLOY_KEY`) instead of a personal access token, so there's no

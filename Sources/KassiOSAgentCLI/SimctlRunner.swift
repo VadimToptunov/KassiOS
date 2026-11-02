@@ -1,3 +1,4 @@
+#if os(macOS)
 import Foundation
 #if canImport(Darwin)
 import Darwin
@@ -86,3 +87,5 @@ struct SimctlRunner {
         )
     }
 }
+
+#endif

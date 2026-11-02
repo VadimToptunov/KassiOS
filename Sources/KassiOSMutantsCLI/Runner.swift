@@ -1,3 +1,4 @@
+#if os(macOS)
 import Foundation
 import KassiOSMutants
 
@@ -135,3 +136,5 @@ enum SimulatorClones {
         return String(bytes: data, encoding: .utf8) ?? ""
     }
 }
+
+#endif

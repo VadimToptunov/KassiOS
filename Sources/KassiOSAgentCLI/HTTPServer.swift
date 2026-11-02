@@ -1,3 +1,4 @@
+#if os(macOS)
 import Foundation
 #if canImport(Darwin)
 import Darwin
@@ -114,3 +115,5 @@ struct HTTPServer {
         return response
     }
 }
+
+#endif

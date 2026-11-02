@@ -1,3 +1,4 @@
+#if os(macOS)
 import Foundation
 #if canImport(Darwin)
 import Darwin
@@ -91,3 +92,18 @@ struct Agent {
         FileManager.default.createFile(atPath: url.path, contents: data, attributes: [.posixPermissions: 0o600])
     }
 }
+
+#else
+// Host-only tool: on iOS/tvOS/watchOS/visionOS (e.g. Swift Package Index builds of the
+// whole package) it compiles to a harmless no-op.
+import Foundation
+
+/// Entry point for non-macOS builds: the agent drives `simctl`, which only exists on a Mac.
+@main
+struct AgentUnsupported {
+    static func main() {
+        FileHandle.standardError.write(Data("kassios-agent is macOS-only.\n".utf8))
+        exit(0)
+    }
+}
+#endif

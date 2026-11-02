@@ -47,6 +47,38 @@ jobs:
         if: failure()
         run: grep -E "error:|failed \(|with [1-9]+ failure" swift-test.log || true
 
+  ios-build:
+    name: iOS library build
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show toolchain
+        run: xcodebuild -version
+
+      # Guard that the iOS-shipped products — the KassiOS library and KassiOSStubs
+      # — actually compile for iOS. `swift test` above builds for the macOS host,
+      # so it can't catch host-only code (Process/Darwin sockets/posix_spawn)
+      # creeping into a target that's compiled into an iOS app — which is what
+      # broke Swift Package Index.
+      #
+      # We build the library schemes, NOT the whole `KassiOS-Package`: the
+      # kassios-agent/mutants/tool products are macOS-only CLIs (gated under
+      # `#if os(macOS)`), and this runner's Xcode 16.4 can't link a SwiftPM
+      # executable product for iOS at all ("unable to open dependencies file
+      # main.d"), device or simulator. SPI builds the full package for iOS on
+      # Xcode 27 — that's the signal for the executable targets. This job covers
+      # the library, where ongoing iOS regressions are most likely.
+      - name: Build the iOS library products
+        run: |
+          set -o pipefail
+          xcodebuild build -scheme KassiOS       -destination 'generic/platform=iOS Simulator' 2>&1 | tee ios-build.log | tail -15
+          xcodebuild build -scheme KassiOSStubs  -destination 'generic/platform=iOS Simulator' 2>&1 | tee -a ios-build.log | tail -15
+
+      - name: Failing iOS build
+        if: failure()
+        run: grep -E "error:|BUILD FAILED" ios-build.log || true
+
   plugin-lint:
     name: kassios-lint (plugin package)
     runs-on: macos-15

@@ -1,3 +1,4 @@
+#if os(macOS)
 import Foundation
 import KassiOSMutants
 
@@ -115,3 +116,12 @@ print("logs: \(logDir.path)")
 if results.verdicts.contains(where: { $0.verdict != .killed }) { ok = false }
 withExtendedLifetime(stopSources) {}
 exit(ok ? 0 : 1)
+
+#else
+// Host-only tool: on iOS/tvOS/watchOS/visionOS (e.g. Swift Package Index builds of the
+// whole package) it compiles to a harmless no-op.
+import Foundation
+
+FileHandle.standardError.write(Data("kassios-mutants is macOS-only.\n".utf8))
+exit(0)
+#endif
