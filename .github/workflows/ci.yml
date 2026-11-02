@@ -48,7 +48,7 @@ jobs:
         run: grep -E "error:|failed \(|with [1-9]+ failure" swift-test.log || true
 
   ios-build:
-    name: iOS package build
+    name: iOS library build
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
@@ -56,21 +56,24 @@ jobs:
       - name: Show toolchain
         run: xcodebuild -version
 
-      # Build the whole package for iOS. `swift test` above builds for the macOS
-      # host, so it can't catch host-only code (Process/Darwin sockets/posix_spawn
-      # in the kassios-agent/mutants/tool targets) leaking into the iOS build —
-      # which is exactly what broke Swift Package Index. This job is the guard
-      # that keeps the SPI iOS compatibility green.
+      # Guard that the iOS-shipped products — the KassiOS library and KassiOSStubs
+      # — actually compile for iOS. `swift test` above builds for the macOS host,
+      # so it can't catch host-only code (Process/Darwin sockets/posix_spawn)
+      # creeping into a target that's compiled into an iOS app — which is what
+      # broke Swift Package Index.
       #
-      # Destination is the iOS *Simulator*, not a generic iOS device: SPI builds
-      # `generic/platform=iOS` on Xcode 27, but this runner's Xcode 16.4 can't
-      # link a SwiftPM executable product for an iOS device ("unable to open
-      # dependencies file main.d"). The simulator destination still compiles every
-      # target for iOS, so it catches the same host-only-leak regression.
-      - name: Build KassiOS-Package for iOS
+      # We build the library schemes, NOT the whole `KassiOS-Package`: the
+      # kassios-agent/mutants/tool products are macOS-only CLIs (gated under
+      # `#if os(macOS)`), and this runner's Xcode 16.4 can't link a SwiftPM
+      # executable product for iOS at all ("unable to open dependencies file
+      # main.d"), device or simulator. SPI builds the full package for iOS on
+      # Xcode 27 — that's the signal for the executable targets. This job covers
+      # the library, where ongoing iOS regressions are most likely.
+      - name: Build the iOS library products
         run: |
           set -o pipefail
-          xcodebuild build -scheme KassiOS-Package -destination 'generic/platform=iOS Simulator' 2>&1 | tee ios-build.log | tail -25
+          xcodebuild build -scheme KassiOS       -destination 'generic/platform=iOS Simulator' 2>&1 | tee ios-build.log | tail -15
+          xcodebuild build -scheme KassiOSStubs  -destination 'generic/platform=iOS Simulator' 2>&1 | tee -a ios-build.log | tail -15
 
       - name: Failing iOS build
         if: failure()
