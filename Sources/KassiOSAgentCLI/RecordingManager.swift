@@ -1,3 +1,4 @@
+#if os(macOS)
 import Foundation
 #if canImport(Darwin)
 import Darwin
@@ -94,3 +95,5 @@ final class RecordingManager: @unchecked Sendable {
         }
     }
 }
+
+#endif

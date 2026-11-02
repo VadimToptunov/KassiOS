@@ -47,6 +47,29 @@ jobs:
         if: failure()
         run: grep -E "error:|failed \(|with [1-9]+ failure" swift-test.log || true
 
+  ios-build:
+    name: iOS package build
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show toolchain
+        run: xcodebuild -version
+
+      # Build the whole package for a generic iOS device — exactly what Swift
+      # Package Index does. `swift test` above builds for the macOS host, so it
+      # can't catch host-only code (Process/Darwin sockets/posix_spawn in the
+      # kassios-agent/mutants/tool targets) leaking into the iOS build. This job
+      # is the guard that keeps the SPI iOS compatibility green.
+      - name: Build KassiOS-Package for iOS
+        run: |
+          set -o pipefail
+          xcodebuild build -scheme KassiOS-Package -destination 'generic/platform=iOS' 2>&1 | tee ios-build.log | tail -25
+
+      - name: Failing iOS build
+        if: failure()
+        run: grep -E "error:|BUILD FAILED" ios-build.log || true
+
   plugin-lint:
     name: kassios-lint (plugin package)
     runs-on: macos-15
