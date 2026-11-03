@@ -2,7 +2,7 @@ import Foundation
 
 /// The version of the `kassios` tools. The release script checks it against the tag.
 public enum KassiOSToolVersion {
-    public static let current = "1.10.0"
+    public static let current = "1.10.1"
 }
 
 /// What `kassios <args>` asked for.

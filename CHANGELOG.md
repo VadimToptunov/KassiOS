@@ -6,6 +6,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.10.1] - 2026-11-03
+
 ### Fixed
 - Host-only tools (`kassios-agent`, `kassios-mutants`, `kassios`) are now gated to
   macOS (`#if os(macOS)`; elsewhere they compile to a no-op that prints a notice),
@@ -663,7 +665,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Initial DSL: `KassTestCase`, `KassScreen`, `KassElement`, implicit waits,
   flaky-safety (`Waiter`), step logging, and `onScreen`.
 
-[Unreleased]: https://github.com/VadimToptunov/KassiOS/compare/1.10.0...HEAD
+[Unreleased]: https://github.com/VadimToptunov/KassiOS/compare/1.10.1...HEAD
+[1.10.1]: https://github.com/VadimToptunov/KassiOS/compare/1.10.0...1.10.1
 [1.10.0]: https://github.com/VadimToptunov/KassiOS/compare/1.9.0...1.10.0
 [1.9.0]: https://github.com/VadimToptunov/KassiOS/compare/1.8.0...1.9.0
 [1.8.0]: https://github.com/VadimToptunov/KassiOS/compare/1.7.0...1.8.0
